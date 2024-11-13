@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recipe Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2> <img src="{{ url_for('static', filename='logonew.png') }}" alt="Logo" class="logo">  Recipe Management</h2>
+        <ul>
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/raw_material">Raw Material</a></li>
+            <li><a href="/recipes">Recipe</a></li>
+            <li><a href="/admin">Admin</a></li>
+        </ul>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="navbar">
+            <div class="user-info">
+                <span>Admin</span>
+                <a href="/profile"><i class="fa-solid fa-user"></i></a>
+            </div>
+        </div>
+        
+        <div class="content-header">
+            <h1>Recipe Details for Recipe ID: {{ recipe_details['Recipe_ID'] }}</h1>
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="button-section">
+            <button onclick="toggleSection('details')" class="nav-button">Recipe Details</button>
+            <button onclick="toggleSection('submenu')" class="nav-button">Sub Menu</button>
+            <button onclick="window.history.back();" class="back-button">Back</button>
+        </div>
+
+        <!-- Recipe Details Section -->
+        <div id="details-section" class="details-section">
+            <h2>Recipe Details</h2>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Id</th><th>Pos1</th><th>Pos2</th><th>Pos3</th><th>Pos4</th><th>Pos5</th><th>Pos6</th><th>Pos7</th><th>Pos8</th><th>Pos9</th><th>Alu Coil Width</th><th>Alu Roller Type</th><th>Spacer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ recipe_details['Id'] }}</td>
+                        <td>{{ recipe_details['Pos1'] }}</td>
+                        <td>{{ recipe_details['Pos2'] }}</td>
+                        <td>{{ recipe_details['Pos3'] }}</td>
+                        <td>{{ recipe_details['Pos4'] }}</td>
+                        <td>{{ recipe_details['Pos5'] }}</td>
+                        <td>{{ recipe_details['Pos6'] }}</td>
+                        <td>{{ recipe_details['Pos7'] }}</td>
+                        <td>{{ recipe_details['Pos8'] }}</td>
+                        <td>{{ recipe_details['Pos9'] }}</td>
+                        <td>{{ recipe_details['Alu_Coil_Width'] }}</td>
+                        <td>{{ recipe_details['Alu_Roller_Type'] }}</td>
+                        <td>{{ recipe_details['Spacer'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- Sub Menu Section -->
+    <div id="submenu-section" class="submenu-section" style="display: none;">
+        <h2>Sub Menu</h2>
+        <table class="details-table">
+            <thead>
+                <tr>
+                    <th>Motor Speed</th><th>Motor Stroke</th><th>Other Speed Force</th><th>Alu Coil Width</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ sub_menu['motor_speed'] }}</td>
+                    <td>{{ sub_menu['motor_stroke'] }}</td>
+                    <td>{{ sub_menu['other_speed_force'] }}</td>
+                    <td>{{ sub_menu['alu_coil_width'] }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    </div>
+
+</body>
+</html>
