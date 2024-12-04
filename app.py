@@ -216,17 +216,6 @@ def raw_material():
         total_pages=total_pages
     )
 
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/recipe/<int:recipe_id>')
 def recipe_details(recipe_id):
     if 'username' not in session:
