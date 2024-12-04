@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Tag Overview</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Tag ID</th>
+                <th>Tag Name</th>
+                <th>Tag Address</th>
+                <th>Plc ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tag in tags %}
+            <tr>
+                <td>{{ tag.tagId }}</td>
+                <td>{{ tag.tagName }}</td>
+                <td>{{ tag.tagAddress }}</td>
+                <td>{{ tag.plcId }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

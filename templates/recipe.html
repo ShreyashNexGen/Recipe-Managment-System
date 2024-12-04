@@ -1,49 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Recipe Management</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style1.css') }}">
-    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-    
+{% extends "base.html" %}
 
-</head>
-<body>
-    <!-- Sidebar -->
-     
-    <div class="sidebar">
-        <h2> <img src="{{ url_for('static', filename='logonew.png') }}" alt="Logo" class="logo">  Recipe Management</h2>
-        <ul>
-            <li><a href="/">Dashboard</a></li>
-            <li><a href="/raw_material">Raw Material</a></li>
-            <li><a href="/recipes">Recipe</a></li>
-            <li><a href="/admin">Admin</a></li>
-        </ul>
-        <a href="/logout" class="logout">Logout</a>
-    </div>
+{% block title %}Recipe Management{% endblock %}
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="navbar">
-            <div class="user-info">
-                <span>Admin</span>
-                <!-- <a href="/notifications"><i class="fa-solid fa-user"></i></a> -->
-                <a href="/profile"><i class="fa-solid fa-user"></i></a>
-            </div>
-        </div>
-        
-        <div class="content-header">
-            <h1>Raw Material</h1>
-            <button onclick="toggleRecipeForm()"  class="add-button">+ Add Recipe</button>
-        </div>
+{% block content %}
+<div class="content-header">
+    <h1>Recipe Overview</h1>
+    <button onclick="toggleRecipeForm()" class="add-button">+ Add Recipe</button>
+</div>
 
-      <div id="add-recipe-section">
+<div id="add-recipe-section">
     <div id="recipe-form">
         <h3>Add New Recipe</h3>
-         <button type="button" class="close-button" onclick="toggleRecipeForm()">X</button>
+        <button type="button" class="close-button" onclick="toggleRecipeForm()">X</button>
         <form action="/add_recipe" method="POST">
-            <!-- Recipe table fields -->
             <label for="recipe_id">Recipe ID:</label>
             <input type="text" id="recipe_id" name="recipe_id" required>
 
@@ -56,11 +25,6 @@
             <label for="art_no">Art No:</label>
             <input type="text" id="art_no" name="art_no" required>
 
-            <!-- Recipe_Details1 table fields -->
-            <!-- <label for="id">ID:</label>
-            <input type="text" id="id" name="id" required> -->
-
-            <!-- Dropdowns for Pos fields -->
             {% for i in range(1, 10) %}
             <label for="pos{{ i }}">Pos{{ i }}:</label>
             <select id="pos{{ i }}" name="pos{{ i }}">
@@ -80,56 +44,49 @@
             <label for="Spacer">Spacer:</label>
             <input type="text" id="Spacer" name="Spacer">
 
-            <!-- Submit button -->
             <button type="submit" class="submit-button">Submit Recipe</button>
         </form>
     </div>
 </div>
 
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Recipe ID</th>
-                        <th>Filter Size</th>
-                        <th>Filter Code</th>
-                        <th>Art No</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for recipe in recipes %}
-                    <tr>
-                        <td><a href="{{ url_for('recipe_details', recipe_id=recipe['Recipe_ID']) }}">{{ recipe['Recipe_ID'] }}</a></td>
-                        <td>{{ recipe['Filter_Size'] }}</td>
-                        <td>{{ recipe['Filter_Code'] }}</td>
-                        <td>{{ recipe['Art_No'] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="pagination-container">
-            <!-- Previous Button -->
-            {% if page > 1 %}
-              <a href="{{ url_for('index', page=page - 1) }}" class="pagination-btn">Previous</a>
-            {% else %}
-              <span class="pagination-btn disabled">Previous</span>
-            {% endif %}
-          
-            <!-- Page Numbers -->
-            {% for p in range(1, total_pages + 1) %}
-              <a href="{{ url_for('index', page=p) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Recipe ID</th>
+                <th>Filter Size</th>
+                <th>Filter Code</th>
+                <th>Art No</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recipe in recipes %}
+            <tr>
+                <td><a href="{{ url_for('recipe_details', recipe_id=recipe['Recipe_ID']) }}">{{ recipe['Recipe_ID'] }}</a></td>
+                <td>{{ recipe['Filter_Size'] }}</td>
+                <td>{{ recipe['Filter_Code'] }}</td>
+                <td>{{ recipe['Art_No'] }}</td>
+            </tr>
             {% endfor %}
-          
-            <!-- Next Button -->
-            {% if page < total_pages %}
-              <a href="{{ url_for('index', page=page + 1) }}" class="pagination-btn">Next</a>
-            {% else %}
-              <span class="pagination-btn disabled">Next</span>
-            {% endif %}
-          </div>
-    </div>
+        </tbody>
+    </table>
+</div>
+
+<div class="pagination-container">
+    {% if page > 1 %}
+      <a href="{{ url_for('index', page=page - 1) }}" class="pagination-btn">Previous</a>
+    {% else %}
+      <span class="pagination-btn disabled">Previous</span>
+    {% endif %}
     
-</body>
-</html>
+    {% for p in range(1, total_pages + 1) %}
+      <a href="{{ url_for('index', page=p) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+    
+    {% if page < total_pages %}
+      <a href="{{ url_for('index', page=page + 1) }}" class="pagination-btn">Next</a>
+    {% else %}
+      <span class="pagination-btn disabled">Next</span>
+    {% endif %}
+</div>
+{% endblock %}

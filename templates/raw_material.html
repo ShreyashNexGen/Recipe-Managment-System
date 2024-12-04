@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Recipe Management{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Raw Material</h1>
+    <button onclick="toggleMaterialForm()" class="add-button">+ Add Material</button>    
+</div>
+<div class="search-section">
+    <h3>Search Material</h3>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search here..." onkeyup="searchTable()">
+    </div>
+</div>
+
+
+
+<div id="add-material-section">
+    <button type="button" class="btn btn-primary" onclick="toggleMaterialForm()">Add New Material</button>
+
+    <!-- Add Material Form (Initially Hidden) -->
+    <div id="material-form" style="display: none;" class="card p-3 mt-3">
+        <h3>Add New Material</h3>
+        <button type="button" class="btn-close mb-3" onclick="toggleMaterialForm()"></button>
+        <form action="/raw-material" method="POST">
+            <div class="mb-3">
+                <label for="material_Id" class="form-label">Material ID:</label>
+                <input type="text" id="material_Id" name="material_Id" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="typeCode" class="form-label">Type Code:</label>
+                <input type="text" id="typeCode" name="typeCode" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="lotNo" class="form-label">Lot No:</label>
+                <input type="text" id="lotNo" name="lotNo" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="make" class="form-label">make:</label>
+                <input type="text" id="make" name="make" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="user" class="form-label">User:</label>
+                <input type="text" id="user" name="user" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="materialType" class="form-label">Material Type:</label>
+                <input type="text" id="materialType" name="materialType" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="barcode" class="form-label">Barcode:</label>
+                <input type="text" id="barcode" name="barcode" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success">Submit Material</button>
+        </form>
+    </div>
+</div>
+
+<!-- Table Section -->
+<div class="table-container">
+    <table id="rawMaterialTable">
+        <thead>
+            <tr>
+                
+                <th>Material ID</th>
+                <th>TypeCode</th>
+                <th>Lot No</th>
+                <th>Make</th>
+                <th>User</th>
+                <th>Material Type</th>
+                <th>Barcode</th>
+                <th>Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for material in raw_materials %}
+            <tr>
+                
+                <td>{{ material['material_Id'] }}</td>
+                <td>{{ material['typecode'] }}</td>
+                <td>{{ material['lotNo'] }}</td>
+                <td>{{ material['make'] }}</td>
+                <td>{{ material['user'] }}</td>
+                <td>{{ material['materialType'] }}</td>
+                <td>{{ material['barcode'] }}</td>
+                
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination Section -->
+<div class="pagination-container">
+    <!-- Previous Button -->
+    {% if page > 1 %}
+      <a href="{{ url_for('raw_material', page=page - 1) }}" class="pagination-btn">Previous</a>
+    {% else %}
+      <span class="pagination-btn disabled">Previous</span>
+    {% endif %}
+
+    <!-- Page Numbers -->
+    {% for p in range(1, total_pages + 1) %}
+      <a href="{{ url_for('raw_material', page=p) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+
+    <!-- Next Button -->
+    {% if page < total_pages %}
+      <a href="{{ url_for('raw_material', page=page + 1) }}" class="pagination-btn">Next</a>
+    {% else %}
+      <span class="pagination-btn disabled">Next</span>
+    {% endif %}
+</div>
+
+{% endblock %}
