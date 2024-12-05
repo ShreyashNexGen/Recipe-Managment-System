@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>PLC</h1>
+    <h2 class="highlighted-box">PLC Details</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>PLC ID</th>
+                <th>PLC Name</th>
+                <th>Machine ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plc in plc_tags %}
+            <tr>
+                <td>{{ plc.plcId }}</td>
+                <td>{{ plc.plcName }}</td>
+                <td>{{ plc.mId }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <h2 class="highlighted-box">Machine Details</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Machine ID</th>
+                <th>Machine Name</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for machine in machine_tags %}
+            <tr>
+                <td>{{ machine.machineId }}</td>
+                <td>{{ machine.machineName }}</td>
+                <td>{{ machine.URL }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

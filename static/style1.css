@@ -84,7 +84,7 @@
     padding: 20px;
     background-color: #f8f8fc;
     min-height: 100vh;
-    font-size: 13px;
+    font-size: 10px;
     color: #333;
     transition: background 0.3s ease;
 }
@@ -624,9 +624,63 @@ select:focus {
 }
 
 
+.highlighted-box {
+    background-color: #f3e8ff; /* Light purple background */
+    color: #4a148c;           /* Dark purple text */
+    padding: 10px 15px;       /* Spacing inside the box */
+    border: 2px solid #d1b3ff; /* Border with a darker purple shade */
+    border-radius: 5px;       /* Rounded corners */
+    text-align: left;       /* Center the text */
+    font-family: 'poppins', sans-serif; /* Optional font styling */
+    font-weight: lighter;        /* Bold text */
+    margin-top: 30px;
+    margin-bottom: 5px;
+}
+
+
+.pie-chart-container {
+    display: flex;
+    justify-content: space-around; /* Space evenly between charts */
+    align-items: center;           /* Align charts vertically */
+    flex-wrap: wrap;               /* Wrap charts on smaller screens */
+    margin-top: 10px; 
+    margin-bottom: 30px;             /* Add some spacing */
+}
+
+.pie-chart {
+    width: 35%; /* Each chart takes 45% of the container width */
+    max-width: 400px; /* Ensure charts don't grow too large */
+    height: auto;
+}
 
 
 
+
+/* Styling for the status bars */
+.status-bars {
+    display: flex;
+    justify-content: space-between; /* Makes the status bars appear side by side */
+    margin-top: 20px;
+    margin-bottom: 30px;
+    margin-left: 100px;
+}
+
+.status-bar {
+    width: 48%; /* Adjust width so they fit side by side */
+    margin-bottom: 20px;
+    margin-left: 100px;
+}
+
+.progress {
+    height: 30px; /* Set the height of the progress bar */
+}
+
+.progress-bar {
+    
+    font-weight: bold;
+    text-align: center;
+    color: white;
+}
 
 
 

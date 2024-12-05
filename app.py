@@ -93,6 +93,12 @@ def logout():
 
 
 
+@app.route('/dashboard')
+def dashboard():
+    if 'username' not in session:  # Check if user is logged in
+        return redirect(url_for('login'))  # Redirect to login page if not logged in
+
+    return render_template('dashboard.html')  # Render the dashboard template
 
 
 
@@ -161,6 +167,25 @@ def live_tag():
         active_submenu='live-tag'  # Highlight the Live Tags submenu
     )
 
+@app.route('/plc')
+def plc():
+    # Connect to the database
+    conn = sqlite3.connect('a2z_database.db')
+    conn.row_factory = sqlite3.Row  # Return rows as dictionaries
+    cursor = conn.cursor()
+
+    # Fetch the data (example for live_tags, adjust to your actual query)
+    cursor.execute('SELECT * FROM Plc_Table')  # Adjust query as per your DB schema
+    plc_tags = cursor.fetchall()
+    cursor.execute('SELECT * FROM Machine_Table')  # Adjust query as per your DB schema
+    machine_tags = cursor.fetchall()
+
+    conn.close()
+
+    # Render the template with the live_tags data
+    return render_template('plc.html', plc_tags=plc_tags, machine_tags=machine_tags)
+    
+
 
 
 @app.route('/raw-material', methods=['GET', 'POST'])
@@ -217,15 +242,29 @@ def raw_material():
     )
 
 
+@app.route('/recipe')
+def recipe_list():
+    # Logic for listing recipes
+    page = max(1, request.args.get('page', 1, type=int))
+    per_page = 10
+    offset = (page - 1) * per_page
 
+    conn = get_db_connection()
+    recipes = conn.execute(
+        'SELECT * FROM Recipe LIMIT ? OFFSET ?', (per_page, offset)
+    ).fetchall()
+    pos_values = [row[0] for row in conn.execute("SELECT DISTINCT Pos_Values FROM Pos_Options").fetchall()]
+    total_count = conn.execute('SELECT COUNT(*) FROM Recipe').fetchone()[0]
+    total_pages = (total_count + per_page - 1) // per_page
+    conn.close()
 
-
-
-
-
-
-
-
+    return render_template(
+        'recipe.html',
+        recipes=recipes,
+        pos_values=pos_values,
+        page=page,
+        total_pages=total_pages
+    )
 
 @app.route('/recipe/<int:recipe_id>')
 def recipe_details(recipe_id):
