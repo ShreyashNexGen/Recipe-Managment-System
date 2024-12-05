@@ -92,7 +92,7 @@ def index():
     conn.close()
 
     return render_template(
-        'index.html',
+        'recipe.html',
         recipes=recipes,
         pos_values=pos_values,
         page=page,
