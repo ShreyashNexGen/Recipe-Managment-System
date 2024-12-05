@@ -92,6 +92,37 @@ def index():
     conn.close()
 
     return render_template(
+        'dashboard.html',
+        recipes=recipes,
+        pos_values=pos_values,
+        page=page,
+        total_pages=total_pages
+    )
+
+@app.route('/dashboard')
+def dashboard():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    return render_template('dashboard.html')
+
+@app.route('/recipe')
+def recipe_list():
+    # Logic for listing recipes
+    page = max(1, request.args.get('page', 1, type=int))
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    conn = get_db_connection()
+    recipes = conn.execute(
+        'SELECT * FROM Recipe LIMIT ? OFFSET ?', (per_page, offset)
+    ).fetchall()
+    pos_values = [row[0] for row in conn.execute("SELECT DISTINCT Pos_Values FROM Pos_Options").fetchall()]
+    total_count = conn.execute('SELECT COUNT(*) FROM Recipe').fetchone()[0]
+    total_pages = (total_count + per_page - 1) // per_page
+    conn.close()
+
+    return render_template(
         'recipe.html',
         recipes=recipes,
         pos_values=pos_values,
