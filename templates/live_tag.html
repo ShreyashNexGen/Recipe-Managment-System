@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4">
     <h1>Live Tags</h1>
-    <table class="table table-bordered">
+    <table class="table table-bordered" id="liveDataTable">
         <thead>
             <tr>
                 <th>Tag ID</th>
@@ -12,14 +12,96 @@
             </tr>
         </thead>
         <tbody>
-            {% for tag in live_tags %}
+            <!-- {% for tag in live_tags %}
             <tr>
                 <td>{{ tag.tagId }}</td>
                 <td>{{ tag.value }}</td>
                 <td>{{ tag.timestamp }}</td>
             </tr>
-            {% endfor %}
+            {% endfor %} -->
         </tbody>
     </table>
 </div>
+
+<divclass="container mt-4">
+    <h1>Live PLC Data</h1>
+    <table class="table table-bordered" id="liveDataTable1">
+    <thead>
+        <tr>
+            <th>Tag ID</th>
+            <th>Value</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>      </tbody>
+        </table>
+</div>
+
+<script> function fetchLiveData() {
+    fetch('http://localhost:5000/getLiveValues')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tableBody = document.getElementById('liveDataTable').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = ''; // Clear previous rows
+                
+                data.data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.tagId}</td>
+                        <td>${row.value}</td>
+                        <td>${row.timestamp}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } else {
+                console.error('Failed to fetch live data:', data.error);
+            }
+        })
+        .catch(error => console.error('Error fetching live data:', error));
+}
+
+// Fetch live data every 10 seconds
+setInterval(fetchLiveData, 1000);
+
+// Fetch live data once on page load
+window.onload = fetchLiveData;
+</script>
+
+<script>
+    function fetchLivePLCData() {
+        fetch('http://localhost:5000/readValues')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const tableBody = document.getElementById('liveDataTable1').getElementsByTagName('tbody')[0];
+                    tableBody.innerHTML = ''; // Clear previous rows
+
+                    data.results.forEach(item => { // Access the 'results' array
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.nodeId}</td>
+                            <td>${item.value}</td>
+                            <td>${item.timestamp}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    console.error('Error fetching live PLC data:', data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Fetch data every 5 seconds
+    setInterval(fetchLivePLCData, 1000); // Adjusted to 5 seconds
+
+    // Fetch data once on page load
+    window.onload = fetchLivePLCData;
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock %}

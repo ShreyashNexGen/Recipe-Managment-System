@@ -1,14 +1,53 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
+import datetime
 from datetime import timedelta
-
+from flask_socketio import SocketIO, emit
+from opcua import Client, ua
+from flask import send_from_directory
+import threading
+from threading import Thread
+import time
+from flask_cors import CORS
 app = Flask(__name__)
-
+app = Flask(__name__)
+CORS(app)  # Enable CORS for frontend communication
+socketio = SocketIO(app, cors_allowed_origins="*")  # Allow connections from any origin
+# OPC UA connection options
+ENDPOINT_URL = "opc.tcp://192.168.0.1:4840"
+# SQLite database setup
 # Secret key for session encryption
 app.secret_key = 'your_secret_key'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.permanent_session_lifetime = timedelta(minutes=30)  # Session timeout
+DB_PATH = 'a2z_database.db'
+# Function to browser
+def init_db():
+    """Initialize the SQLite database."""
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS Tag_Table (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tagId TEXT UNIQUE NOT NULL,
+                tagName TEXT UNIQUE NOT NULL,
+                tagAddress TEXT NOT NULL,
+                plcId TEXT NOT NULL
+            )
+        ''')
+         # Create Live_Tags table to store continuously updated tag values
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS Live_Tags (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tagId TEXT NOT NULL,
+                value REAL NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (tagId) REFERENCES Tag_Table(tagId)
+            )
+        ''')
+        conn.commit()
+
 
 # Hardcoded user data for simplicity 
 USER_DATA = {
@@ -53,7 +92,7 @@ def index():
     conn.close()
 
     return render_template(
-        'recipe.html',
+        'index.html',
         recipes=recipes,
         pos_values=pos_values,
         page=page,
@@ -84,17 +123,6 @@ def logout():
     session.pop('username', None)  # Clear session
     flash("Logged out successfully.", 'info')
     return redirect(url_for('login'))
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -279,5 +307,305 @@ def add_recipe():
 
     return redirect(url_for('index'))
 
+# shreyash's new changes 
+@app.route('/addTag', methods=['POST'])
+def add_tag():
+    data = request.json
+    tag_id = data.get("tagId")
+    tag_name = data.get("tagName")
+    tag_address = data.get("tagAddress")
+    plc_id = data.get("plcId")
+
+    if not tag_id or not tag_name or not tag_address or not plc_id:
+        return jsonify({"success": False, "error": "Missing fields in the request."})
+
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO Tag_Table (tagId, tagName, tagAddress, plcId)
+                VALUES (?, ?, ?, ?)
+            ''', (tag_id, tag_name, tag_address, plc_id))
+            conn.commit()
+            # After adding the tag to the Tag_Table, fetch and update the live value for that tag
+        # update_live_tags_for_new_entry(tag_address)
+        fetch_and_update_live_value(tag_address)
+        return jsonify({"success": True, "message": "Tag added successfully."})
+
+    except sqlite3.IntegrityError:
+        return jsonify({"success": False, "error": "TagId already exists."})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+    
+
+def fetch_and_update_live_value(tag_address):
+    """Fetch live value for a tag and update the Live_Tags table."""
+    client = Client(ENDPOINT_URL)
+    try:
+        client.connect()
+
+        # Fetch the value from the OPC UA server for the given tagAddress
+        node = client.get_node(tag_address)
+        value = node.get_value()
+
+        # Fetch the tagId from the Tag_Table for this tagAddress
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''SELECT Tagid FROM Tag_Table WHERE tagAddress = ?''', (tag_address,))
+            tag_id = cursor.fetchone()
+
+            if tag_id:
+                tag_id = tag_id[0]  # Extract tag_id from the tuple
+
+                # Check if this tagId already has an entry in the Live_Tags table
+                cursor.execute('''SELECT id FROM Live_Tags WHERE tagId = ? ORDER BY timestamp DESC LIMIT 1''', (tag_id,))
+                existing_entry = cursor.fetchone()
+
+                if existing_entry:
+                    # Update the value in Live_Tags table if an entry exists
+                    cursor.execute('''UPDATE Live_Tags SET value = ?, timestamp = CURRENT_TIMESTAMP WHERE id = ?''',
+                                   (value, existing_entry[0]))
+                else:
+                    # Insert the new value into Live_Tags table
+                    cursor.execute('''INSERT INTO Live_Tags (value, tagId, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)''',
+                                   (value, tag_id))
+
+                conn.commit()
+
+        # Emit live data to the frontend via SocketIO
+        socketio.emit('liveData', {"success": True, "tagAddress": tag_address, "value": value})
+
+    except Exception as e:
+        socketio.emit('liveData', {"success": False, "error": str(e)})
+
+    finally:
+        client.disconnect()
+
+def update_all_live_tags():
+    """Fetch all entries from Live_Tags, resolve tagAddress from Tag_Table, and update live values."""
+    client = Client(ENDPOINT_URL)
+    try:
+        print("Connecting to OPC UA server...")
+        client.connect()
+        print("Connected to OPC UA server!")
+
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            # Fetch all tagIds from Live_Tags
+            cursor.execute('''SELECT id, tagId FROM Live_Tags''')
+            live_tags = cursor.fetchall()
+
+            for live_tag in live_tags:
+                live_tag_id, tag_id = live_tag
+                try:
+                    # Fetch tagAddress for the current tagId from Tag_Table
+                    cursor.execute('''SELECT tagAddress FROM Tag_Table WHERE Tagid = ?''', (tag_id,))
+                    result = cursor.fetchone()
+                    if not result:
+                        print(f"No tagAddress found for tagId {tag_id}. Skipping update.")
+                        continue
+
+                    tag_address = result[0]
+
+                    # Fetch the live value from OPC UA server
+                    node = client.get_node(tag_address)
+                    value = node.get_value()
+
+                    # Update the value in Live_Tags table
+                    cursor.execute('''
+                        UPDATE Live_Tags
+                        SET value = ?, timestamp = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ''', (value, live_tag_id))
+                    conn.commit()
+
+                    print(f"Updated Live_Tags entry for tagId {tag_id} with value {value}.")
+                except Exception as e:
+                    print(f"Error updating live value for tagId {tag_id}: {e}")
+
+    except Exception as e:
+        print(f"Error connecting to OPC UA server: {e}")
+    finally:
+        client.disconnect()
+        print("Disconnected from OPC UA server.")
+
+@app.route('/writeValue', methods=['POST'])
+def write_value():
+    data = request.json
+    print("Received Data:", data)  # This will print the data to the console
+    node_id = data.get("nodeId")
+    value = data.get("value")
+
+    if not node_id or value is None:
+        return jsonify({"success": False, "error": "Missing nodeId or value in the request."})
+
+    try:
+        # Connect to the OPC UA server
+        client = Client(ENDPOINT_URL)
+        client.connect()
+
+        # Get the node object
+        node = client.get_node(node_id)
+        print("Received node:", node)  # This will print the data to the console
+
+        # Fetch the DataType of the node
+        data_type = node.get_data_type_as_variant_type()
+        # print("Received datatype:", data_type)  # This will print the data to the console
+        if not data_type:
+            raise Exception(f"Could not fetch DataType for NodeId: {node_id}")
+
+        print(f"Fetched DataType: {data_type}")
+
+        # Wrap the value in a ua.Variant object with the correct DataType
+         # Wrap the value in a ua.Variant object with the correct DataType
+        variant = ua.DataValue(ua.Variant(value, data_type))
+
+        # Perform the write operation
+        node.set_value(variant)
+       
+        # Disconnect from the client
+        client.disconnect()
+
+        return jsonify({"success": True, "message": f"Value written successfully to NodeId: {node_id}"})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+# @app.route('/readValues', methods=['POST'])
+# def read_values():
+#     data = request.json
+#     node_ids = data.get("nodeIds", [])
+
+#     try:
+#         client = Client(ENDPOINT_URL)
+#         client.connect()
+
+#         results = []
+#         for node_id in node_ids:
+#             node = client.get_node(node_id)
+#             value = node.get_value()
+#             results.append({"nodeId": node_id, "value": value})
+
+#         client.disconnect()
+#         return jsonify({"success": True, "results": results})
+
+#     except Exception as e:
+#         return jsonify({"success": False, "error": str(e)})
+
+@app.route('/readValues', methods=['GET'])
+def read_values():
+    try:
+        # Connect to SQL Database
+        conn = sqlite3.connect('a2z_database.db')  # Update with your DB details
+        cursor = conn.cursor()
+
+
+        # Fetch node IDs from the SQL table
+        cursor.execute("SELECT DISTINCT tagAddress FROM Tag_Table")  # Update table/column names
+        node_ids = [row[0] for row in cursor.fetchall()]
+        print("Node IDs: {}".format(node_ids));
+        if not node_ids:
+            return jsonify({"success": False, "error": "No node IDs found in the database"})
+
+        # Connect to the PLC
+        client = Client(ENDPOINT_URL)
+        client.connect()
+
+        results = []
+        for node_id in node_ids:
+            try:
+                node = client.get_node(node_id)
+                value = node.get_value()
+                timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add current timestamp
+                results.append({"nodeId": node_id, "value": value, "timestamp": timestamp})
+            except Exception as e:
+                timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Include timestamp for errors
+                results.append({"nodeId": node_id, "error": str(e), "timestamp": timestamp})
+
+        client.disconnect()
+        conn.close()
+        return jsonify({"success": True, "results": results})
+
+    except sqlite3.Error as db_error:
+        return jsonify({"success": False, "error": f"Database error: {str(db_error)}"})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Unexpected error: {str(e)}"})
+
+
+def read_live_values(node_ids):
+    """Connect to OPC UA server and emit live data to the frontend."""
+    client = Client(ENDPOINT_URL)
+    try:
+        print("Attempting to connect to OPC UA server...")
+        client.connect()
+        print("Connected to OPC UA server!")
+
+        while True:
+            results = []
+            print("Fetching data for node IDs:", node_ids)  # Debug node IDs
+            for node_id in node_ids:
+                try:
+                    print(f"Reading value for node ID: {node_id}")  # Log node ID
+                    node = client.get_node(node_id)
+                    value = node.get_value()
+                    print(f"Value for node {node_id}: {value}")  # Log fetched value
+                    results.append({"nodeId": node_id, "value": value})
+                except Exception as e:
+                    print(f"Error reading node {node_id}: {e}")  # Log errors
+                    results.append({"nodeId": node_id, "error": str(e)})
+
+            print("Emitting data to frontend:", results)  # Debug emitted data
+            socketio.emit('liveData', {"success": True, "results": results})
+            time.sleep(1)  # Fetch data every 2 seconds
+    except Exception as e:
+        print(f"Error in OPC UA connection: {e}")  # Log connection errors
+        socketio.emit('liveData', {"success": False, "error": str(e)})
+    finally:
+        client.disconnect()
+        print("Disconnected from OPC UA server!")  # Debug disconnection
+@app.route('/getLiveValues', methods=['GET'])
+def get_live_values():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT Id,value, timestamp,tagId
+                FROM Live_Tags 
+            ''')
+            live_values = cursor.fetchall()
+
+        results = [{"tagId": value[3], "value": value[1], "timestamp": value[2]} for value in live_values]
+        return jsonify({"success": True, "data": results})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route('/startLiveRead', methods=['POST'])
+def start_live_read():
+    """API endpoint to initiate live data reading."""
+    data = request.json
+    print("Received request to start live reading:", data)  # Log request data
+
+    node_ids = data.get("nodeIds", [])
+    if not node_ids:
+        print("No node IDs provided in request!")  # Log missing node IDs
+        return jsonify({"success": False, "message": "No node IDs provided"}), 400
+
+    print("Starting live reading for node IDs:", node_ids)  # Log starting point
+    # Start the live reading thread
+    thread = threading.Thread(target=read_live_values, args=(node_ids,))
+    thread.daemon = True  # Ensures thread stops when the main app stops
+    thread.start()
+
+    return jsonify({"success": True, "message": "Live data reading started"})
+# if __name__ == '__main__':
+#     app.run(debug=False)
+def run_periodic_update():
+    while True:
+        update_all_live_tags()
+        time.sleep(1)  # Update every 10 seconds
 if __name__ == '__main__':
-    app.run(debug=False)
+    print("Starting Flask app...")
+    threading.Thread(target=run_periodic_update, daemon=True).start()
+    socketio.run(app, host='0.0.0.0', port=5000)

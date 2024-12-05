@@ -1,4 +1,5 @@
 // Mobile Sidebar Toggle Function
+
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('closed');
@@ -30,14 +31,6 @@ window.addEventListener('click', function (event) {
 });
 
 
-
-
-
-
-
-
-
-
     function toggleTags() {
         const dropdown = document.getElementById('tagsDropdown');
         dropdown.classList.toggle('show');
@@ -49,17 +42,6 @@ window.addEventListener('click', function (event) {
         });
     });
     
-
-
-
-
-
-
-
-
-
-
-
 
 function toggleSection(section) {
     const detailsSection = document.getElementById('details-section');
@@ -173,46 +155,71 @@ function toggleSection(section) {
       return true;
     }
   }
+//   function fetchLiveData() {
+//     fetch('http://localhost:5000/getLiveValues')
+//         .then(response => response.json())
+//         .then(data => {
+//             if (data.success) {
+//                 const tableBody = document.getElementById('liveDataTable').getElementsByTagName('tbody')[0];
+//                 tableBody.innerHTML = ''; // Clear previous rows
+                
+//                 data.data.forEach(row => {
+//                     const tr = document.createElement('tr');
+//                     tr.innerHTML = `
+//                         <td>${row.tagId}</td>
+//                         <td>${row.value}</td>
+//                         <td>${row.timestamp}</td>
+//                     `;
+//                     tableBody.appendChild(tr);
+//                 });
+//             } else {
+//                 console.error('Failed to fetch live data:', data.error);
+//             }
+//         })
+//         .catch(error => console.error('Error fetching live data:', error));
+// }
 
+// // Fetch live data every 10 seconds
+// setInterval(fetchLiveData, 10000);
 
+// // Fetch live data once on page load
+// window.onload = fetchLiveData;
 
+// socket.on('liveData', (data) => {
+//     if (data.success) {
+//         // Create table rows dynamically
+//         const rows = data.results.map(item => `
+//             <tr>
+//                 <td>${item.nodeId}</td>
+//                 <td>${item.value || item.error}</td>
+//             </tr>`).join('');
 
+//         // Populate the table
+//         document.getElementById('dataContainer').innerHTML = `
+//             <table border="1" style="width:100%; border-collapse: collapse;">
+//                 <thead>
+//                     <tr>
+//                         <th>Node</th>
+//                         <th>Value</th>
+//                     </tr>
+//                 </thead>
+//                 <tbody>
+//                     ${rows}
+//                 </tbody>
+//             </table>`;
+//     } else {
+//         document.getElementById('dataContainer').innerHTML = `<p>Error: ${data.error}</p>`;
+//     }
+// });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// // Trigger live reading from backend
+// fetch('http://localhost:5000/startLiveRead', {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify({ nodeIds: ['ns=3;s="DataBlock"."data1"', 'ns=3;s="DataBlock"."data2"'] })
+// }).then(response => response.json())
+//   .then(data => console.log(data))
+//   .catch(error => console.error('Error:', error));
 
 
 
