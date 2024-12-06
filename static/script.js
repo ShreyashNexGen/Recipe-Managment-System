@@ -259,3 +259,55 @@ function toggleMaterialForm() {
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         });
     });    
+
+
+
+
+
+
+
+
+    function confirmDelete(tagId) {
+        if (confirm("Do you want to delete this tag?")) {
+            fetch(`/delete-tag/${tagId}`, {
+                method: "DELETE",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        // Remove the row from the table
+                        const row = document.getElementById(`row-${tagId}`);
+                        if (row) row.remove();
+                        alert("Tag deleted successfully.");
+                    } else {
+                        alert(`Failed to delete tag: ${data.error || "Unknown error"}`);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("An error occurred while deleting the tag.");
+                });
+        }
+    }
+    function confirmDelete(material_Id) {
+        if (confirm("Do you want to delete this raw material?")) {
+            fetch(`/delete-raw-material/${material_Id}`, {
+                method: "DELETE",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        // Remove the row from the table
+                        const row = document.getElementById(`row-${material_Id}`);
+                        if (row) row.remove();
+                        alert('Raw material deleted successfully!');
+                    } else {
+                        alert(`Failed to delete Raw Material: ${data.error || "Unknown error"}`);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("An error occurred while deleting the raw material.");
+                });
+        }
+    }

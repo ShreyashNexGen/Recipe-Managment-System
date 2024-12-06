@@ -75,15 +75,20 @@
         </thead>
         <tbody>
             {% for material in raw_materials %}
-            <tr>
+            <tr id="row-{{ material.material_Id}}">
                 
-                <td>{{ material['material_Id'] }}</td>
-                <td>{{ material['typecode'] }}</td>
-                <td>{{ material['lotNo'] }}</td>
-                <td>{{ material['make'] }}</td>
-                <td>{{ material['user'] }}</td>
-                <td>{{ material['materialType'] }}</td>
-                <td>{{ material['barcode'] }}</td>
+                <td>{{ material.material_Id }}</td>
+                <td>{{ material.typecode }}</td>
+                <td>{{ material.lotNo }}</td>
+                <td>{{ material.make }}</td>
+                <td>{{ material.user }}</td>
+                <td>{{ material.materialType }}</td>
+                <td>{{ material.barcode }}</td>
+                <td>
+                    <button class="delete-button" onclick="confirmDelete('{{ material.material_Id }}')">
+                        <i class="fa fa-trash"></i> Delete
+                    </button>
+                </td>
                 
             </tr>
             {% endfor %}
