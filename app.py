@@ -360,6 +360,32 @@ def delete_raw_material(raw_material_id):
 
 
 
+@app.route('/delete-recipe/<recipe_id>', methods=['DELETE'])
+def delete_recipe(recipe_id):
+    try:
+        # Debugging: Check if session contains username
+        if 'username' not in session:
+            print("Session does not contain 'username'. Current session:", session)
+            return jsonify({"success": False, "error": "Unauthorized access"}), 401
+        
+        # Database connection and deletion logic
+        conn = sqlite3.connect('RMS.db')
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM Recipe WHERE Recipe_ID = ?', (recipe_id,))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "Recipe not found"}), 404
+
+        return jsonify({"success": True, "message": "Recipe deleted successfully"})
+    
+    except Exception as e:
+        print(f"Error while deleting recipe: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+    
+    finally:
+        conn.close()
+
 
 
 @app.route('/recipe/<int:recipe_id>')

@@ -57,15 +57,22 @@
                 <th>Filter Size</th>
                 <th>Filter Code</th>
                 <th>Art No</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for recipe in recipes %}
-            <tr>
-                <td><a href="{{ url_for('recipe_details', recipe_id=recipe['Recipe_ID']) }}">{{ recipe['Recipe_ID'] }}</a></td>
-                <td>{{ recipe['Filter_Size'] }}</td>
-                <td>{{ recipe['Filter_Code'] }}</td>
-                <td>{{ recipe['Art_No'] }}</td>
+            <tr id="row-{{ recipe.Recipe_ID }}">
+                <td><a href="{{ url_for('recipe_details', recipe_id=recipe.Recipe_ID) }}">{{ recipe.Recipe_ID }}</a></td>
+                <td>{{ recipe.Filter_Size }}</td>
+                <td>{{ recipe.Filter_Code }}</td>
+                <td>{{ recipe.Art_No }}</td>
+                <td>
+                    <!-- Delete Button -->
+                    <button class="delete-button" onclick="confirmDeleteRecipe('{{ recipe.Recipe_ID }}')">
+                        <i class="fa fa-trash"></i> Delete
+                    </button>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
