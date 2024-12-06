@@ -289,7 +289,7 @@ function toggleMaterialForm() {
                 });
         }
     }
-    function confirmDelete(material_Id) {
+    function confirmDeleteRawMaterial(material_Id) {
         if (confirm("Do you want to delete this raw material?")) {
             fetch(`/delete-raw-material/${material_Id}`, {
                 method: "DELETE",
