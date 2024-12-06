@@ -10,17 +10,23 @@
                 <th>Tag Name</th>
                 <th>Tag Address</th>
                 <th>Plc ID</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for tag in tags %}
-            <tr>
-                <td>{{ tag.tagId }}</td>
-                <td>{{ tag.tagName }}</td>
-                <td>{{ tag.tagAddress }}</td>
-                <td>{{ tag.plcId }}</td>
+            <tr id="row-{{ tag.tagId }}">
+               <td>{{ tag.tagId }}</td>
+               <td>{{ tag.tagName }}</td>
+               <td>{{ tag.tagAddress }}</td>
+               <td>{{ tag.plcId }}</td>
+               <td>
+                   <button class="delete-button" onclick="confirmDelete('{{ tag.tagId }}')">
+                      <i class="fa fa-trash"></i>
+                   </button>
+                </td>
             </tr>
-            {% endfor %}
+{% endfor %}  
         </tbody>
     </table>
 </div>

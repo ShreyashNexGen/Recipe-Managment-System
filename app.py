@@ -194,6 +194,34 @@ def tag_overview():
         active_submenu='tag-overview'  # Highlight active submenu
     )
 
+@app.route('/delete-tag/<int:tag_id>', methods=['DELETE'])
+def delete_tag(tag_id):
+    try:
+        # Check if user is logged in
+        if 'username' not in session:
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+        # Connect to the specific database
+        conn = sqlite3.connect('a2z_database.db')  # Make sure we're connecting to the right database
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        # Execute deletion query
+        cursor.execute('DELETE FROM Tag_Table WHERE tagId = ?', (tag_id,))
+        conn.commit()
+
+        # Check if the deletion actually occurred
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "Tag not found"}), 404
+
+        return jsonify({"success": True})
+    
+    except Exception as e:
+        print(f"Error while deleting tag: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+    
+    finally:
+        conn.close()
 
 
 
@@ -306,6 +334,34 @@ def raw_material():
     )
 
 
+@app.route('/delete-raw-material/<int:raw_material_id>', methods=['DELETE'])
+def delete_raw_material(raw_material_id):
+    try:
+        # Check if user is logged in
+        if 'username' not in session:
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+        # Connect to the specific database (a2z_database.db)
+        conn = sqlite3.connect('a2z_database.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        # Execute deletion query
+        cursor.execute('DELETE FROM Raw_Materials WHERE material_Id = ?', (raw_material_id,))
+        conn.commit()
+
+        # Check if the deletion actually occurred
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "Raw material not found"}), 404
+
+        return jsonify({"success": True})
+    
+    except Exception as e:
+        print(f"Error while deleting raw material: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+    
+    finally:
+        conn.close()
 
 
 

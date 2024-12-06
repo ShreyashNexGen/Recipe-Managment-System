@@ -683,6 +683,16 @@ select:focus {
 }
 
 
+.delete-button {
+    background-color: transparent;
+    border: none;
+    color: rgb(163, 98, 238);
+    cursor: pointer;
+}
+
+.delete-button i {
+    font-size: 1.2em;
+}
 
 
 
