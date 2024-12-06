@@ -353,15 +353,6 @@ def delete_raw_material(raw_material_id):
         conn.close()
 
 
-
-
-
-
-
-
-
-
-
 @app.route('/recipe/<int:recipe_id>')
 def recipe_details(recipe_id):
     if 'username' not in session:
