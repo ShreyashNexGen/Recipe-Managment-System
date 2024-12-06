@@ -353,7 +353,6 @@ def delete_raw_material(raw_material_id):
         conn.close()
 
 
-<<<<<<< HEAD
 
 
 
@@ -389,8 +388,6 @@ def delete_recipe(recipe_id):
 
 
 
-=======
->>>>>>> a6f2317819cb1a0398eeea6748277a9402e0ebdb
 @app.route('/recipe/<int:recipe_id>')
 def recipe_details(recipe_id):
     if 'username' not in session:
