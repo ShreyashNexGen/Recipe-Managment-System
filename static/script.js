@@ -311,3 +311,26 @@ function toggleMaterialForm() {
                 });
         }
     }
+
+    function confirmDeleteRecipe(recipe_Id) {
+        if (confirm("Do you want to delete this Recipe?")) {
+            fetch(`/delete-recipe/${recipe_Id}`, {
+                method: "DELETE",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        // Remove the row from the table
+                        const row = document.getElementById(`row-${recipe_Id}`);
+                        if (row) row.remove();
+                        alert('Recipe deleted successfully!');
+                    } else {
+                        alert(`Failed to delete Recipe: ${data.error || "Unknown error"}`);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("An error occurred while deleting the recipe.");
+                });
+        }
+    }
