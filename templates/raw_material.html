@@ -17,43 +17,39 @@
 
 
 <div id="add-material-section">
-    <!-- Add Material Form (Initially Hidden) -->
-    <div id="material-form" style="display: none;" class="card p-3 mt-3">
+    <div id="material-form">
         <h3>Add New Material</h3>
-        <button type="button" class="btn-close mb-3" onclick="toggleMaterialForm()"></button>
+        <button type="button" class="close-button" onclick="toggleMaterialForm()">
+            <i class="fas fa-times"></i> <!-- Font Awesome close icon -->
+        </button>
+        
         <form action="/raw-material" method="POST">
-            <div class="mb-3">
-                <label for="material_Id" class="form-label">Material ID:</label>
-                <input type="text" id="material_Id" name="material_Id" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="typeCode" class="form-label">Type Code:</label>
-                <input type="text" id="typeCode" name="typeCode" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="lotNo" class="form-label">Lot No:</label>
-                <input type="text" id="lotNo" name="lotNo" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="make" class="form-label">make:</label>
-                <input type="text" id="make" name="make" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="user" class="form-label">User:</label>
-                <input type="text" id="user" name="user" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="materialType" class="form-label">Material Type:</label>
-                <input type="text" id="materialType" name="materialType" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="barcode" class="form-label">Barcode:</label>
-                <input type="text" id="barcode" name="barcode" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-success">Submit Material</button>
+            <label for="material_Id">Material ID:</label>
+            <input type="text" id="material_Id" name="material_Id" required>
+
+            <label for="typeCode">Type Code:</label>
+            <input type="text" id="typeCode" name="typeCode" required>
+
+            <label for="lotNo">Lot No:</label>
+            <input type="text" id="lotNo" name="lotNo" required>
+
+            <label for="make">Make:</label>
+            <input type="text" id="make" name="make" required>
+
+            <label for="user">User:</label>
+            <input type="text" id="user" name="user" required>
+
+            <label for="materialType">Material Type:</label>
+            <input type="text" id="materialType" name="materialType" required>
+
+            <label for="barcode">Barcode:</label>
+            <input type="text" id="barcode" name="barcode" required>
+
+            <button type="submit" class="submit-button">Submit Material</button>
         </form>
     </div>
 </div>
+
 
 <!-- Table Section -->
 <div class="table-container">
