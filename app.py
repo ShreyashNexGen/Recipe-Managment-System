@@ -93,10 +93,6 @@ def index():
 
     return render_template(
         'dashboard.html',
-        recipes=recipes,
-        pos_values=pos_values,
-        page=page,
-        total_pages=total_pages
     )
 
 @app.route('/dashboard')
@@ -351,12 +347,6 @@ def delete_raw_material(raw_material_id):
     
     finally:
         conn.close()
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> 3e8fcf430eedcae37df8793267f7b736bee0a15a
 @app.route('/delete-recipe/<recipe_id>', methods=['DELETE'])
 def delete_recipe(recipe_id):
     try:
@@ -404,6 +394,8 @@ def recipe_details(recipe_id):
 
     return render_template('recipe_details.html', recipe_details=recipe_details, sub_menu=sub_menu)
 
+
+
 @app.route('/add_recipe', methods=['POST'])
 def add_recipe():
     if 'username' not in session:
@@ -421,11 +413,11 @@ def add_recipe():
     update_plc_with_pos_values(pos_values)
     if not (recipe_id and filter_size and filter_code and art_no):
         flash("All required fields must be filled!", "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('recipe_list'))
 
     conn = get_db_connection()
     if not conn:
-        return redirect(url_for('index'))
+        return redirect(url_for('recipe_list'))
 
     try:
         cursor = conn.cursor()
@@ -447,7 +439,7 @@ def add_recipe():
     finally:
         conn.close()
 
-    return redirect(url_for('index'))
+    return redirect(url_for('recipe_list'))
 # Function to update PLC via OPC UA based on POS values
 from opcua import Client, ua
 
@@ -566,118 +558,6 @@ def fetch_and_update_live_value(tag_address):
     finally:
         client.disconnect()
 
-# def update_all_live_tags():
-#     """Fetch all entries from Live_Tags, resolve tagAddress from Tag_Table, and update live values."""
-#     client = Client(ENDPOINT_URL)
-#     try:
-#         print("Connecting to OPC UA server...")
-#         client.connect()
-#         start_time = time.time()  # Start timing
-#         print("Connected to OPC UA server!")
-
-#         with sqlite3.connect(DB_PATH) as conn:
-#             cursor = conn.cursor()
-
-#             # Fetch all tagIds from Live_Tags
-#             cursor.execute('''SELECT id, tagId FROM Live_Tags''')
-#             live_tags = cursor.fetchall()
-
-#             for live_tag in live_tags:
-#                 live_tag_id, tag_id = live_tag
-#                 try:
-#                     # Fetch tagAddress for the current tagId from Tag_Table
-#                     cursor.execute('''SELECT tagAddress FROM Tag_Table WHERE Tagid = ?''', (tag_id,))
-#                     result = cursor.fetchone()
-#                     if not result:
-#                         print(f"No tagAddress found for tagId {tag_id}. Skipping update.")
-#                         continue
-
-#                     tag_address = result[0]
-
-#                     # Fetch the live value from OPC UA server
-#                     node = client.get_node(tag_address)
-#                     value = node.get_value()
-
-#                     # Update the value in Live_Tags table
-#                     cursor.execute('''
-#                         UPDATE Live_Tags
-#                         SET value = ?, timestamp = CURRENT_TIMESTAMP
-#                         WHERE id = ?
-#                     ''', (value, live_tag_id))
-#                     conn.commit()
-
-#                     print(f"Updated Live_Tags entry for tagId {tag_id} with value {value}.")
-#                 except Exception as e:
-#                     print(f"Error updating live value for tagId {tag_id}: {e}")
-
-#     except Exception as e:
-#         print(f"Error connecting to OPC UA server: {e}")
-#     finally:
-#         client.disconnect()
-#         end_time = time.time()  # End timing
-#         elapsed_time = end_time - start_time
-#         print(f"Disconnected from OPC UA server. Session duration: {elapsed_time * 1000:.2f} ms.")
-
-
-
-#update to make it faster
-# def update_all_live_tags():
-#     """Fetch all entries from Live_Tags, resolve tagAddress from Tag_Table, and update live values."""
-#     try:
-#         # Step 1: Fetch data from the database
-#         with sqlite3.connect(DB_PATH) as conn:
-#             cursor = conn.cursor()
-#             cursor.execute('''
-#                 SELECT lt.id, lt.tagId, tt.tagAddress 
-#                 FROM Live_Tags lt 
-#                 LEFT JOIN Tag_Table tt ON lt.tagId = tt.Tagid
-#             ''')
-#             live_tags = cursor.fetchall()
-
-#         # Step 2: Connect to OPC UA server and update values
-#         client = Client(ENDPOINT_URL)
-#         print("Connecting to OPC UA server...")
-#         client.connect()
-#         print("Connected to OPC UA server!")
-#         start_time = time.time()  # Start timing
-
-#         updates = []
-#         for live_tag in live_tags:
-#             live_tag_id, tag_id, tag_address = live_tag
-#             if not tag_address:
-#                 print(f"No tagAddress found for tagId {tag_id}. Skipping update.")
-#                 continue
-#             start_time = time.time()  # Start timing
-
-#             try:
-#                 # Fetch the live value from OPC UA server
-#                 node = client.get_node(tag_address)
-#                 value = node.get_value()
-#                 end_time = time.time()  # End timing
-#                 updates.append((value, live_tag_id))
-
-#                 print(f"Fetched value {value} for tagId {tag_id}.")
-#             except Exception as e:
-#                 print(f"Error fetching live value for tagId {tag_id}: {e}")
-
-#         client.disconnect()
-#         end_time = time.time()  # End timing
-#         elapsed_time = (end_time - start_time)*1000;
-#         print(f"Disconnected from OPC UA server. Session duration: {elapsed_time:.2f} ms.")
-
-#         # Step 3: Update the database
-#         with sqlite3.connect(DB_PATH) as conn:
-#             cursor = conn.cursor()
-#             cursor.executemany('''
-#                 UPDATE Live_Tags
-#                 SET value = ?, timestamp = CURRENT_TIMESTAMP
-#                 WHERE id = ?
-#             ''', updates)
-#             conn.commit()
-#             print(f"Updated {len(updates)} entries in the database.")
-
-#     except Exception as e:
-#         print(f"Error: {e}")
 def fetch_live_tag_data():
     """
     Fetch live tags and their corresponding tag addresses from the database.
@@ -811,26 +691,6 @@ def write_value():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
-# @app.route('/readValues', methods=['POST'])
-# def read_values():
-#     data = request.json
-#     node_ids = data.get("nodeIds", [])
-
-#     try:
-#         client = Client(ENDPOINT_URL)
-#         client.connect()
-
-#         results = []
-#         for node_id in node_ids:
-#             node = client.get_node(node_id)
-#             value = node.get_value()
-#             results.append({"nodeId": node_id, "value": value})
-
-#         client.disconnect()
-#         return jsonify({"success": True, "results": results})
-
-#     except Exception as e:
-#         return jsonify({"success": False, "error": str(e)})
 
 @app.route('/readValues', methods=['GET'])
 def read_values():
