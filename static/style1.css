@@ -78,6 +78,28 @@
     transform: translateX(5px);
 }
 
+
+
+
+
+/*css for icons of dashboard*/
+.nav-link i {
+    margin-right: 10px; /* Adds space to the right of the icon */
+    font-size: 18px; /* Optional: Adjust icon size if needed */
+    vertical-align: middle; /* Ensures alignment with text */
+}
+
+.nav-link {
+    display: flex; /* Ensures icon and text align properly */
+    align-items: center; /* Vertically aligns icon with text */
+     /* Optional: Adjusts padding around the link */
+}
+
+
+
+
+
+
 /* Main Content */
 .main-content {
     margin-left: 250px;
@@ -650,8 +672,8 @@ select:focus {
 
 .dropdown:hover .dropdown-menu {
     display: block; /* Show on hover */
+    
 }
-
 
 .highlighted-box {
     background-color: #f3e8ff; /* Light purple background */
