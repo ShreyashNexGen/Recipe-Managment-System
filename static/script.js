@@ -340,3 +340,48 @@ function toggleMaterialForm() {
                 });
         }
     }
+
+
+   function toggleUpdateMaterialForm(materialId = null) {
+    const formSection = document.getElementById('update-material-section');
+    formSection.style.display = formSection.style.display === 'none' ? 'flex' : 'none';
+
+    // If materialId is provided, prefill the form with existing data
+    if (materialId) {
+        fetch(`/get_raw_material/${materialId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('update_material_Id').value = data.raw_material.material_Id;
+                    document.getElementById('update_typeCode').value = data.raw_material.typeCode;
+                    document.getElementById('update_lotNo').value = data.raw_material.lotNo;
+                    document.getElementById('update_make').value = data.raw_material.make;
+                    document.getElementById('update_user').value = data.raw_material.user;
+                    document.getElementById('update_materialType').value = data.raw_material.materialType;
+                    document.getElementById('update_barcode').value = data.raw_material.barcode;
+                } else {
+                    alert('Failed to fetch material data.');
+                }
+            });
+    }
+}
+
+function submitUpdate() {
+    const materialId = document.getElementById('update_material_Id').value;
+    const formData = new FormData(document.getElementById('updateMaterialForm'));
+
+    fetch(`/update_raw_material/${materialId}`, {
+        method: 'POST',
+        body: formData,
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Material updated successfully!');
+                location.reload(); // Reload the page to see changes
+            } else {
+                alert(`Failed to update material: ${data.error}`);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
