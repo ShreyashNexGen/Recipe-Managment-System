@@ -243,14 +243,20 @@ function toggleSection(section) {
         rows[i].style.display = match ? '' : 'none';
     }
 }
+
+
 function toggleMaterialForm() {
-        var form = document.getElementById("material-form");
-        if (form.style.display === "none" || form.style.display === "") {
-            form.style.display = "block";
-        } else {
-            form.style.display = "none";
-        }
+    const addMaterialSection = document.getElementById('add-material-section');
+    if (addMaterialSection.style.display === 'flex') {
+        addMaterialSection.style.display = 'none';
+    } else {
+        addMaterialSection.style.display = 'flex';
     }
+}
+
+
+
+
 
     document.querySelectorAll('.dropdown-toggle').forEach(item => {
         item.addEventListener('click', function (e) {

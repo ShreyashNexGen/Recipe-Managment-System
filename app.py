@@ -353,16 +353,7 @@ def delete_raw_material(raw_material_id):
         conn.close()
 
 
-<<<<<<< HEAD
-=======
 
-
-
-
-
-
-
->>>>>>> 44152c41b0773e7a170a6a237aa71d4c59bb8a7c
 @app.route('/delete-recipe/<recipe_id>', methods=['DELETE'])
 def delete_recipe(recipe_id):
     try:
