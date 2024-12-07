@@ -16,6 +16,7 @@ CORS(app)  # Enable CORS for frontend communication
 socketio = SocketIO(app, cors_allowed_origins="*")  # Allow connections from any origin
 # OPC UA connection options
 ENDPOINT_URL = "opc.tcp://192.168.0.1:4840"
+
 # SQLite database setup
 # Secret key for session encryption
 app.secret_key = 'your_secret_key'
@@ -385,6 +386,16 @@ def recipe_details(recipe_id):
         return redirect(url_for('login'))
 
     recipe_details = conn.execute('SELECT * FROM Recipe_Details1 WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
+   
+    try:
+        pos_values = extract_pos_values(recipe_details)
+        # print (dict(recipe_details));
+        # print("Values from subtable: ",pos_values)
+        update_plc_with_pos_values(pos_values)
+        flash(f"POS values written to PLC successfully for Recipe ID {recipe_id}.", "success")
+    except Exception as e:
+        flash(f"Error writing POS values: {e}", "danger")
+
     sub_menu = conn.execute('SELECT * FROM Sub_Menu WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
     conn.close()
 
@@ -394,7 +405,24 @@ def recipe_details(recipe_id):
 
     return render_template('recipe_details.html', recipe_details=recipe_details, sub_menu=sub_menu)
 
-
+def extract_pos_values(recipe_details):
+    # Extract the required POS values from the recipe_details
+    pos_values = [
+        recipe_details['pos1'],  
+        recipe_details['pos2'],
+        recipe_details['pos3'],
+        recipe_details['pos4'],
+        recipe_details['pos5'],
+        recipe_details['pos6'],
+        recipe_details['pos7'],
+        recipe_details['pos8'],
+        recipe_details['pos9'],
+        recipe_details['recipe_id'],
+        # Add other POS fields as needed
+                # Add other POS fields as needed
+    ]
+   
+    return pos_values
 
 @app.route('/add_recipe', methods=['POST'])
 def add_recipe():
@@ -409,8 +437,8 @@ def add_recipe():
     alu_coil_width = request.form.get('Alu_coil_width')
     alu_roller_type = request.form.get('Alu_roller_type')
     spacer = request.form.get('Spacer')
-    print(pos_values);
-    update_plc_with_pos_values(pos_values)
+    # print("Pos values from form: ",pos_values);
+    # update_plc_with_pos_values(pos_values)
     if not (recipe_id and filter_size and filter_code and art_no):
         flash("All required fields must be filled!", "danger")
         return redirect(url_for('recipe_list'))
@@ -441,48 +469,64 @@ def add_recipe():
 
     return redirect(url_for('recipe_list'))
 # Function to update PLC via OPC UA based on POS values
-from opcua import Client, ua
+
 
 def update_plc_with_pos_values(pos_values):
+    """
+    Update PLC with POS values and Recipe ID (assumed as the last element in pos_values).
+    """
     client = Client(ENDPOINT_URL)
     try:
-        print("Connecting to OPC UA server...")
         client.connect()
-        print("Connected to OPC UA server.")
+        # Ensure pos_values is a list with at least 10 elements (9 POS values + 1 Recipe ID)
+        if not isinstance(pos_values, list) or len(pos_values) < 10:
+            raise ValueError("pos_values must be a list with at least 10 elements (including Recipe ID).")
 
-        # Ensure pos_values is a list with at least 9 elements
-        if not isinstance(pos_values, list) or len(pos_values) < 9:
-            raise ValueError("pos_values must be a list with at least 9 elements.")
+        # Extract Recipe ID (last element)
+        recipe_id = pos_values[-1]
+        pos_values = pos_values[:-1]  # Remove Recipe ID from the list, keeping only POS values
 
-        # Iterate through POS values (1 to 9)
+        # Write POS values (1 to 9) to PLC nodes
         for i in range(1, 10):
             pos_value = pos_values[i - 1]  # Access by index (0-based for lists)
             node_id = f'ns=3;s="OpenRecipe"."selectedRoll{i}"'
-            print(f"Processing node: {node_id}, POS value: {pos_value}")
+            
 
             try:
                 # Get the node object
                 node = client.get_node(node_id)
-                print(f"Fetched node for Node ID: {node_id}")
+              
 
                 # Determine the value to set
                 if pos_value:  # Check if the value is present (not None or empty)
-                    node.set_value( ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
-                    print(f"Set value True for Node ID: {node_id}")
+                    node.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
+                   
                 else:
-                    node.set_value( ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
-                    print(f"Set value False for Node ID: {node_id}")
+                    node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+                   
 
             except Exception as node_error:
                 print(f"Error processing Node ID {node_id}: {node_error}")
 
-        # Disconnect from the client
-        print("Disconnecting from OPC UA server...")
-        client.disconnect()
-        print("Disconnected successfully.")
+        # Write the Recipe ID to a specific OPC UA node
+        try:
+            recipe_node_id = 'ns=3;s="OpenRecipe"."recipeId"'  # Replace with actual node ID for Recipe ID
+            recipe_node = client.get_node(recipe_node_id)
+           
 
+            recipe_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
+           
+
+        except Exception as recipe_error:
+            print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
+
+        # Disconnect from the client
+       
+        client.disconnect()
+      
     except Exception as e:
         print(f"Error updating PLC: {e}")
+
 
 # shreyash's new changes 
 @app.route('/addTag', methods=['POST'])
@@ -576,12 +620,13 @@ def read_opcua_values(tag_data):
     Connect to OPC UA server and read values for the given tag addresses.
     """
     client = Client(ENDPOINT_URL)
+    client.session_timeout = 30000  # Adjust timeout as needed
     updates = []
 
     try:
-        print("Connecting to OPC UA server...")
+        # print("Connecting to OPC UA server...")
         client.connect()
-        print("Connected to OPC UA server!")
+        # print("Connected to OPC UA server!")
 
         # Start the overall timing for the entire operation
         overall_start_time = time.time()
@@ -602,7 +647,7 @@ def read_opcua_values(tag_data):
                 # Calculate individual tag fetching time
                 tag_end_time = time.time()
                 tag_elapsed_time = (tag_end_time - tag_start_time) * 1000  # in milliseconds
-                print(f"Fetched value {value} for tagId {tag_id}. Time taken: {tag_elapsed_time:.2f} ms.")
+                # print(f"Fetched value {value} for tagId {tag_id}. Time taken: {tag_elapsed_time:.2f} ms.")
 
                 # Store the result
                 updates.append((value, live_tag_id))
@@ -612,7 +657,7 @@ def read_opcua_values(tag_data):
         # Calculate overall session duration
         overall_end_time = time.time()
         overall_elapsed_time = (overall_end_time - overall_start_time) * 1000  # in milliseconds
-        print(f"Disconnected from OPC UA server. Overall session duration: {overall_elapsed_time:.2f} ms.")
+        # print(f"Disconnected from OPC UA server. Overall session duration: {overall_elapsed_time:.2f} ms.")
 
     finally:
         client.disconnect()
@@ -631,7 +676,7 @@ def update_database(updates):
             WHERE id = ?
         ''', updates)
         conn.commit()
-        print(f"Updated {len(updates)} entries in the database.")
+        # print(f"Updated {len(updates)} entries in the database.")
 
 def update_all_live_tags():
     """
@@ -675,7 +720,7 @@ def write_value():
         if not data_type:
             raise Exception(f"Could not fetch DataType for NodeId: {node_id}")
 
-        print(f"Fetched DataType: {data_type}")
+        # print(f"Fetched DataType: {data_type}")
 
         # Wrap the value in a ua.Variant object with the correct DataType
          # Wrap the value in a ua.Variant object with the correct DataType
@@ -703,13 +748,14 @@ def read_values():
         # Fetch node IDs from the SQL table
         cursor.execute("SELECT DISTINCT tagAddress FROM Tag_Table")  # Update table/column names
         node_ids = [row[0] for row in cursor.fetchall()]
-        print("Node IDs: {}".format(node_ids));
+        # print("Node IDs: {}".format(node_ids));
         if not node_ids:
             return jsonify({"success": False, "error": "No node IDs found in the database"})
 
         # Connect to the PLC
         client = Client(ENDPOINT_URL)
         client.connect()
+        client.session_timeout = 30000  # Adjust timeout as needed
 
         results = []
         for node_id in node_ids:
@@ -737,19 +783,19 @@ def read_live_values(node_ids):
     """Connect to OPC UA server and emit live data to the frontend."""
     client = Client(ENDPOINT_URL)
     try:
-        print("Attempting to connect to OPC UA server...")
+        # print("Attempting to connect to OPC UA server...")
         client.connect()
-        print("Connected to OPC UA server!")
+        # print("Connected to OPC UA server!")
 
         while True:
             results = []
             print("Fetching data for node IDs:", node_ids)  # Debug node IDs
             for node_id in node_ids:
                 try:
-                    print(f"Reading value for node ID: {node_id}")  # Log node ID
+                    # print(f"Reading value for node ID: {node_id}")  # Log node ID
                     node = client.get_node(node_id)
                     value = node.get_value()
-                    print(f"Value for node {node_id}: {value}")  # Log fetched value
+                    # print(f"Value for node {node_id}: {value}")  # Log fetched value
                     results.append({"nodeId": node_id, "value": value})
                 except Exception as e:
                     print(f"Error reading node {node_id}: {e}")  # Log errors
