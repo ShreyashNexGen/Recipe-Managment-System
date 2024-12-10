@@ -254,7 +254,14 @@ function toggleMaterialForm() {
     }
 }
 
-
+function toggleTagForm() {
+    const addTagSection = document.getElementById('add-tag-section');
+    if (addTagSection.style.display === 'flex' || addTagSection.style.display === '') {
+        addTagSection.style.display = 'none'; // Show the form
+    } else {
+        addTagSection.style.display = 'flex'; // Hide the form
+    }
+}
 
 
 
@@ -385,3 +392,7 @@ function submitUpdate() {
         })
         .catch(error => console.error('Error:', error));
 }
+
+
+/*js code for show 10 enteries*/
+

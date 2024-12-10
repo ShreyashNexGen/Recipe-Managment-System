@@ -8,13 +8,23 @@
     <button onclick="toggleMaterialForm()" class="add-button">+ Add Material</button>    
 </div>
 <div class="search-section">
-    <h3>Search Material</h3>
+    
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search here..." onkeyup="searchTable()">
+        <input type="text" id="searchInput" placeholder="Search Material here..." onkeyup="searchTable()">
     </div>
 </div>
 
-
+<div class="entries-selector">
+    <label for="entriesSelect">Show</label>
+    <select id="entriesSelect" onchange="updateEntries()">
+        <option value="10" {% if limit == 10 %}selected{% endif %}>10</option>
+        <option value="25" {% if limit == 25 %}selected{% endif %}>25</option>
+        <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
+        <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
+    
+    </select>
+    <span>entries</span>
+</div>
 
 <div id="add-material-section">
     <div id="material-form">
@@ -49,6 +59,18 @@
         </form>
     </div>
 </div>
+<style>
+    /* Center align all table cells */
+    #rawMaterialTable th, #rawMaterialTable td {
+        text-align: center; /* Center-align text */
+        vertical-align: middle; /* Center-align content vertically */
+    }
+
+    /* Optional: Adjust padding for a cleaner look */
+    #rawMaterialTable th, #rawMaterialTable td {
+        padding: 8px;
+    }
+</style>
 
 
 <!-- Table Section -->
@@ -56,7 +78,7 @@
     <table id="rawMaterialTable">
         <thead>
             <tr>
-                
+                <th>Serial No.</th>
                 <th>Material ID</th>
                 <th>TypeCode</th>
                 <th>Lot No</th>
@@ -69,22 +91,32 @@
             </tr>
         </thead>
         <tbody>
+            {% set serial_number = (page - 1) * limit %}
             {% for material in raw_materials %}
             <tr id="row-{{ material.material_Id}}">
-                
+                <td>{{ serial_number + loop.index }}</td>
                 <td>{{ material.material_Id }}</td>
                 <td>{{ material.typecode }}</td>
                 <td>{{ material.lotNo }}</td>
                 <td>{{ material.make }}</td>
                 <td>{{ material.user }}</td>
                 <td>{{ material.materialType }}</td>
-                <td>{{ material.barcode }}</td>
                 <td>
-                    <button class="delete-button" onclick="confirmDeleteRawMaterial('{{ material.material_Id }}')">
-                        <i class="fa fa-trash"></i> Delete
+                    <!-- Download icon with the barcode value -->
+                    <button class="download-button" onclick="downloadBarcode('{{ material.barcode }}')">
+                        <i class="fa-solid fa-download"></i>
                     </button>
                 </td>
-                
+                <td>
+                    <button class="delete-button" onclick="confirmDeleteRawMaterial('{{ material.material_Id }}')">
+                        <i class="fa fa-trash"></i> 
+                    </button>
+                </td>
+                <td>
+                    <button class="delete-button" onclick="">
+                        <i class="fa-regular fa-pen-to-square"></i> 
+                    </button>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -95,22 +127,53 @@
 <div class="pagination-container">
     <!-- Previous Button -->
     {% if page > 1 %}
-      <a href="{{ url_for('raw_material', page=page - 1) }}" class="pagination-btn">Previous</a>
+      <a href="{{ url_for('raw_material', page=page - 1, limit=limit) }}" class="pagination-btn">Previous</a>
     {% else %}
       <span class="pagination-btn disabled">Previous</span>
     {% endif %}
 
     <!-- Page Numbers -->
     {% for p in range(1, total_pages + 1) %}
-      <a href="{{ url_for('raw_material', page=p) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+      <a href="{{ url_for('raw_material', page=p, limit=limit) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
     {% endfor %}
 
     <!-- Next Button -->
     {% if page < total_pages %}
-      <a href="{{ url_for('raw_material', page=page + 1) }}" class="pagination-btn">Next</a>
+      <a href="{{ url_for('raw_material', page=page + 1, limit=limit) }}" class="pagination-btn">Next</a>
     {% else %}
       <span class="pagination-btn disabled">Next</span>
     {% endif %}
 </div>
+<script>
+    // Function to update the entries per page based on user selection
+    function updateEntries() {
+        // Get the selected limit from the dropdown
+        var limit = document.getElementById('entriesSelect').value;
 
+        // Get the current page number from the URL query string or default to page 1
+        var urlParams = new URLSearchParams(window.location.search);
+        var currentPage = urlParams.get('page') || 1;
+
+        // Redirect to the same page with the new limit and current page
+        window.location.href = window.location.pathname + '?page=' + currentPage + '&limit=' + limit;
+    }
+
+
+
+
+
+
+    function downloadBarcode(barcode) {
+        // Create a Blob with the barcode value as text
+        const blob = new Blob([barcode], { type: 'text/plain' });
+        
+        // Create an anchor element to download the file
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'barcode.txt';  // You can name the file anything you want
+        
+        // Trigger a click event on the link to start the download
+        link.click();
+    }
+</script>
 {% endblock %}

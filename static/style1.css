@@ -148,7 +148,7 @@
 .add-button {
     background-color: #bfa3ff;
     color: #fff;
-    margin: 1rem 0 1rem 0;
+    margin: 1rem 0 0rem 0;
     padding: 10px 20px;
     border: none;
     border-radius: 8px;
@@ -520,7 +520,7 @@ select {
 label {
     display: block;
     margin-bottom: 6px;
-    margin-left: 26px;
+    margin-left: 2px;
     font-size: 14px;
     color: #555;
 }
@@ -576,6 +576,92 @@ input[type="text"]:focus {
 
 
 
+#add-tag-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+    display: none; /* Initially hidden */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#tag-form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    width: 50%;
+    max-width: 800px;
+    overflow-y: auto;
+    position: relative;
+    box-sizing: border-box;
+    max-height: 90vh;
+}
+
+#tag-form h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    padding: 5px;
+    border-radius: 2px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.close-button:hover {
+    background-color: #f37575;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+input[type="text"]:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.submit-button {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 35%;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.submit-button:hover {
+    background-color: #0056b3;
+}
 
 
 
@@ -746,6 +832,39 @@ select:focus {
 }
 
 
+/*css for show 10 entries*/
+.entries-selector {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    margin-bottom: 0px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+}
+
+.entries-selector label {
+    margin-right: 5px;
+    font-weight: bold;
+}
+
+.entries-selector select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 3px;
+    margin: 0 5px;
+    font-size: 14px;
+    color: #333;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.entries-selector span {
+    margin-left: 5px;
+}
 
 
 
