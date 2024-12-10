@@ -48,11 +48,23 @@
         </form>
     </div>
 </div>
+<style>
+    /* Center align all table cells */
+    #recipetable th, #recipetable td {
+        text-align: center; /* Center-align text */
+        vertical-align: middle; /* Center-align content vertically */
+    }
 
+    /* Optional: Adjust padding for a cleaner look */
+    #recipetable th, #recipetable td {
+        padding: 8px;
+    }
+</style>
 <div class="table-container">
-    <table>
+    <table id="recipetable">
         <thead>
             <tr>
+                <th>Serial No.</th>
                 <th>Recipe ID</th>
                 <th>Filter Size</th>
                 <th>Filter Code</th>
@@ -63,6 +75,7 @@
         <tbody>
             {% for recipe in recipes %}
             <tr id="row-{{ recipe.Recipe_ID }}">
+                <td>{{ loop.index }}</td>
                 <td><a href="{{ url_for('recipe_details', recipe_id=recipe.Recipe_ID) }}">{{ recipe.Recipe_ID }}</a></td>
                 <td>{{ recipe.Filter_Size }}</td>
                 <td>{{ recipe.Filter_Code }}</td>

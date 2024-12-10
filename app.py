@@ -156,29 +156,41 @@ def logout():
 
 @app.route('/tag-overview')
 def tag_overview():
-    # Connect to the database and fetch tag data
+    # Get the page and limit parameters from the query string
+    current_page = int(request.args.get('page', 1))  # Default to page 1 if not provided
+    limit = int(request.args.get('limit', 10))  # Default limit is 10 if not provided
+    
+    # Database connection
     conn = sqlite3.connect('a2z_database.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    # Fetch all data from the Tag_Table
-    cursor.execute('SELECT * FROM Tag_Table')
+    # Calculate offset for pagination
+    offset = (current_page - 1) * limit
+
+    # Fetch paginated data
+    cursor.execute('SELECT * FROM Tag_Table LIMIT ? OFFSET ?', (limit, offset))
     tags = cursor.fetchall()
+
+    # Fetch the total number of rows for pagination calculation
+    cursor.execute('SELECT COUNT(*) FROM Tag_Table')
+    total_rows = cursor.fetchone()[0]
+    total_pages = (total_rows + limit - 1) // limit  # Calculate total pages
 
     conn.close()
 
-    # Pagination example values (customize as needed)
-    total_pages = 5  # Total number of pages (you can calculate this dynamically)
-    current_page = 1  # Current page (adjust as per your logic)
-
+    # Render the template with tags and pagination details
     return render_template(
         'tag_overview.html',
-        tags=tags,                # Pass the fetched tag data
-        page=current_page,        # Pass the current page
-        total_pages=total_pages,  # Pass the total number of pages
-        active_menu='tags',       # Keep dropdown open
-        active_submenu='tag-overview'  # Highlight active submenu
+        tags=tags,
+        page=current_page,
+        total_pages=total_pages,
+        limit=limit,
+        active_menu='tags',
+        active_submenu='tag-overview'
     )
+
+
 
 @app.route('/delete-tag/<int:tag_id>', methods=['DELETE'])
 def delete_tag(tag_id):
@@ -265,7 +277,6 @@ def plc():
     
 
 
-
 @app.route('/raw-material', methods=['GET', 'POST'])
 def raw_material():
     # Handle POST request for adding a new material
@@ -283,7 +294,8 @@ def raw_material():
         cursor = conn.cursor()
 
         # Insert new raw material into the Raw_Materials table
-        cursor.execute("INSERT INTO Raw_Materials (material_Id,typeCode, lotNo,make,user,materialType,barcode) VALUES (?,?,?,?,?,?, ?)", ( material_id ,type_code,lot_no ,make ,user, material_type, barcode))
+        cursor.execute("INSERT INTO Raw_Materials (material_Id,typeCode, lotNo,make,user,materialType,barcode) VALUES (?,?,?,?,?,?, ?)", 
+                       (material_id, type_code, lot_no, make, user, material_type, barcode))
         conn.commit()
         conn.close()
 
@@ -291,23 +303,23 @@ def raw_material():
         return redirect(url_for('raw_material'))
 
     # Handle GET request to display the raw materials
-    current_page = int(request.args.get('page', 1))
+    current_page = int(request.args.get('page', 1))  # Default to page 1 if not provided
+    limit = int(request.args.get('limit', 10))  # Get limit from URL parameter (default 10)
     conn = sqlite3.connect('a2z_database.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     # Pagination setup
-    items_per_page = 10
-    offset = (current_page - 1) * items_per_page
+    offset = (current_page - 1) * limit
 
-    # Fetch data for the current page
-    cursor.execute('SELECT * FROM Raw_Materials LIMIT ? OFFSET ?', (items_per_page, offset))
+    # Fetch data for the current page based on the limit
+    cursor.execute('SELECT * FROM Raw_Materials LIMIT ? OFFSET ?', (limit, offset))
     raw_materials = cursor.fetchall()
 
     # Calculate total pages
     cursor.execute('SELECT COUNT(*) FROM Raw_Materials')
     total_rows = cursor.fetchone()[0]
-    total_pages = (total_rows + items_per_page - 1) // items_per_page
+    total_pages = (total_rows + limit - 1) // limit  # Calculate total pages based on limit
 
     conn.close()
 
@@ -316,8 +328,14 @@ def raw_material():
         'raw_material.html',
         raw_materials=raw_materials,
         page=current_page,
-        total_pages=total_pages
+        total_pages=total_pages,
+        limit=limit  # Pass the selected limit to the template
     )
+
+
+
+
+
 
 
 @app.route('/delete-raw-material/<int:raw_material_id>', methods=['DELETE'])
