@@ -243,16 +243,33 @@ function toggleSection(section) {
         rows[i].style.display = match ? '' : 'none';
     }
 }
+function searchTable() {
+    // Get the input value and convert it to lowercase for case-insensitive comparison
+    const input = document.getElementById("searchInput").value.toLowerCase();
+    const table = document.getElementById("tagoverviewtable");
+    const rows = table.getElementsByTagName("tr");
 
+    // Loop through all table rows (excluding the header row)
+    for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName("td");
+        let match = false;
 
-function toggleMaterialForm() {
-    const addMaterialSection = document.getElementById('add-material-section');
-    if (addMaterialSection.style.display === 'flex') {
-        addMaterialSection.style.display = 'none';
-    } else {
-        addMaterialSection.style.display = 'flex';
+        // Check each cell in the row
+        for (let j = 0; j < cells.length; j++) {
+            if (cells[j].innerText.toLowerCase().includes(input)) {
+                match = true;
+                break;
+            }
+        }
+
+        // Toggle the visibility of the row based on whether there's a match
+        rows[i].style.display = match ? "" : "none";
     }
 }
+
+
+
+
 
 function toggleTagForm() {
     const addTagSection = document.getElementById('add-tag-section');

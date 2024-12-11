@@ -5,7 +5,7 @@
 {% block content %}
 <div class="content-header">
     <h1>Raw Material</h1>
-    <button onclick="toggleMaterialForm()" class="add-button">+ Add Material</button>    
+    <button onclick="openAddMaterialForm()" class="add-button">+ Add Material</button>    
 </div>
 <div class="search-section">
     
@@ -26,39 +26,43 @@
     <span>entries</span>
 </div>
 
-<div id="add-material-section">
-    <div id="material-form">
-        <h3>Add New Material</h3>
-        <button type="button" class="close-button" onclick="toggleMaterialForm()">
-            <i class="fas fa-times"></i> <!-- Font Awesome close icon -->
-        </button>
-        
-        <form action="/raw-material" method="POST">
-            <label for="material_Id">Material ID:</label>
-            <input type="text" id="material_Id" name="material_Id" required>
+<div id="add-material-section" class="pop-up">
+    <div id="material-form" class="popup-content">
+        <!-- Close Button -->
+        <div class="popup-header">
+            <h3>Add New Raw Material</h3>
+            <button type="button" class="close-button" onclick="closeAddMaterialForm()">×</button>
+        </div>
 
-            <label for="typeCode">Type Code:</label>
-            <input type="text" id="typeCode" name="typeCode" required>
+        <!-- Form Content -->
+        <div class="popup-body">
+            <table class="details-mat-table">
+                <tr>
+                    <td>Type Code:</td>
+                    <td><input type="text" id="typeCode" name="typeCode" placeholder="Enter Type Code" required></td>
+                </tr>
+                <tr>
+                    <td>Lot Number:</td>
+                    <td><input type="text" id="lotNo" name="lotNo" placeholder="Enter Lot No." required></td>
+                </tr>
+                <tr>
+                    <td>Material Name:</td>
+                    <td><input type="text" id="materialType" name="materialType" placeholder="Enter Material Name" required></td>
+                </tr>
+            </table>
+        </div>
 
-            <label for="lotNo">Lot No:</label>
-            <input type="text" id="lotNo" name="lotNo" required>
-
-            <label for="make">Make:</label>
-            <input type="text" id="make" name="make" required>
-
-            <label for="user">User:</label>
-            <input type="text" id="user" name="user" required>
-
-            <label for="materialType">Material Type:</label>
-            <input type="text" id="materialType" name="materialType" required>
-
-            <label for="barcode">Barcode:</label>
-            <input type="text" id="barcode" name="barcode" required>
-
-            <button type="submit" class="submit-button">Submit Material</button>
-        </form>
+        <!-- Footer -->
+        <div class="popup-footer">
+            <button type="submit" class="start-button">Submit</button>
+        </div>
     </div>
 </div>
+
+
+
+
+
 <style>
     /* Center align all table cells */
     #rawMaterialTable th, #rawMaterialTable td {
@@ -161,7 +165,16 @@
 
 
 
-
+    function openAddMaterialForm() {
+        const section = document.getElementById("add-material-section");
+        section.style.display = "flex"; // Show the Add Material popup
+    }
+    
+    function closeAddMaterialForm() {
+        const section = document.getElementById("add-material-section");
+        section.style.display = "none"; // Hide the Add Material popup
+    }
+    
 
     function downloadBarcode(barcode) {
         // Create a Blob with the barcode value as text
