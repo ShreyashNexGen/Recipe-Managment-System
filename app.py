@@ -759,7 +759,7 @@ def write_value():
 def read_values():
     try:
         # Connect to SQL Database
-        conn = sqlite3.connect('a2z_database.db')  # Update with your DB details
+        conn = sqlite3.connect('a2z_database.db')  # Update with your DB 
         cursor = conn.cursor()
 
 
@@ -773,7 +773,6 @@ def read_values():
         # Connect to the PLC
         client = Client(ENDPOINT_URL)
         client.connect()
-        client.session_timeout = 30000  # Adjust timeout as needed
 
         results = []
         for node_id in node_ids:
