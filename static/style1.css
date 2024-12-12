@@ -740,8 +740,8 @@ select:focus {
     position: fixed; /* Fixed position for the popup */
     top: 0; /* Align at the top of the page */
     left: 0; /* Align at the left of the page */
-    width: 200%; /* Cover the full screen width */
-    height: 200%; /* Cover the full screen height */
+    width: 100%; /* Cover the full screen width */
+    height: 100%; /* Cover the full screen height */
     background-color: rgba(0, 0, 0, 0.6); /* Dim background */
     display: flex; /* Flexbox for centering content */
     justify-content: center; /* Center horizontally */
@@ -880,108 +880,3 @@ input {
     text-align: center; /* Center input text */
 }
 
-
-
-
-
-
-/*production Popup*/
-/* General Popup Styling */
-.popup {
-    display: block;
-    position: fixed;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    width: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 1000;
-}
-
-.popup-content {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
-    background: #e7e1e9;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    padding: 20px;
-    text-align: center;
-    z-index: 1001;
-}
-
-/* Header Styling */
-.popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.popup-header h3 {
-    font-size: 18px;
-    margin: 0;
-}
-
-.popup-header .close-button {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-/* Table Styling */
-.details-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
-    text-align: left;
-}
-
-.details-table td {
-    padding: 8px;
-    font-size: 14px;
-}
-
-.details-table td:first-child {
-    font-weight: bold;
-    width: 50%;
-}
-
-.details-table input {
-    width: 100%;
-    padding: 5px;
-    border: 1px solid #814196;
-    border-radius: 4px;
-}
-
-/* Footer Styling */
-.popup-footer {
-    margin-top: 20px;
-}
-
-.start-button {
-    padding: 10px 20px;
-    background-color: #28a745;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.start-button:hover {
-    background-color: #218838;
-}
