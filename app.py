@@ -332,12 +332,6 @@ def raw_material():
         limit=limit  # Pass the selected limit to the template
     )
 
-
-
-
-
-
-
 @app.route('/delete-raw-material/<int:raw_material_id>', methods=['DELETE'])
 def delete_raw_material(raw_material_id):
     try:
@@ -392,8 +386,6 @@ def delete_recipe(recipe_id):
     finally:
         conn.close()
 
-
-
 @app.route('/recipe/<int:recipe_id>')
 def recipe_details(recipe_id):
     if 'username' not in session:
@@ -407,6 +399,7 @@ def recipe_details(recipe_id):
    
     try:
         pos_values = extract_pos_values(recipe_details)
+        barcode_value = "S3"  # Replace this with actual logic to fetch the barcode value
         # print (dict(recipe_details));
         # print("Values from subtable: ",pos_values)
         update_plc_with_pos_values(pos_values)
@@ -420,8 +413,9 @@ def recipe_details(recipe_id):
     if not recipe_details:
         flash("Recipe not found!", "danger")
         return redirect(url_for('index'))
+      
 
-    return render_template('recipe_details.html', recipe_details=recipe_details, sub_menu=sub_menu)
+    return render_template('recipe_details.html', recipe_details=recipe_details, sub_menu=sub_menu,pos_values=pos_values[:-1] ,barcode_value=barcode_value)
 
 def extract_pos_values(recipe_details):
     # Extract the required POS values from the recipe_details
@@ -437,10 +431,23 @@ def extract_pos_values(recipe_details):
         recipe_details['pos9'],
         recipe_details['recipe_id'],
         # Add other POS fields as needed
-                # Add other POS fields as needed
+        #         Add other POS fields as needed
     ]
    
     return pos_values
+@app.route('/compare-pos', methods=['POST'])
+def compare_pos():
+    data = request.json  # Receive data from frontend
+    pos_value = data.get('posValue')
+    barcode_value = data.get('barcodeValue')
+
+    if pos_value is None or barcode_value is None:
+        return jsonify({"error": "Invalid data"}), 400
+
+    # Comparison logic
+    match = pos_value == barcode_value
+
+    return jsonify({"match": match})
 
 @app.route('/add_recipe', methods=['POST'])
 def add_recipe():
@@ -497,8 +504,8 @@ def update_plc_with_pos_values(pos_values):
     try:
         client.connect()
         # Ensure pos_values is a list with at least 10 elements (9 POS values + 1 Recipe ID)
-        if not isinstance(pos_values, list) or len(pos_values) < 10:
-            raise ValueError("pos_values must be a list with at least 10 elements (including Recipe ID).")
+        # if not isinstance(pos_values, list) or len(pos_values) < 10:
+        #     raise ValueError("pos_values must be a list with at least 10 elements (including Recipe ID).")
 
         # Extract Recipe ID (last element)
         recipe_id = pos_values[-1]
@@ -538,7 +545,7 @@ def update_plc_with_pos_values(pos_values):
         except Exception as recipe_error:
             print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
 
-        # Disconnect from the client
+    
        
         client.disconnect()
       
