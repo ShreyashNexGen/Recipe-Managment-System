@@ -3,12 +3,12 @@
 {% block title %}Recipe Details{% endblock %}
 
 {% block content %}
+
 <div class="content-header">
     <h1>Recipe Details for Recipe ID: {{ recipe_details['Recipe_ID'] }}</h1>
-    <button onclick="startRecipe()" class="add-button">
+    <button onclick="startRecipe()" id="start-recipe-btn" class="add-button">
         <i class="fas fa-play"></i> Start Recipe </button>
 </div>
-
 
 <div id="details-section" class="details-section">
     <h2>Recipe Details</h2>
@@ -60,31 +60,353 @@
         </tbody>
     </table>
 </div>
-<script>
- function startRecipe() {
-    //this is my machinestate tad address
-        const nodeId = 'ns=3;s="OpenRecipe"."machineState"'; // Replace with actual node ID
-        const value = 1; // Value to write to the PLC node (e.g., `true` to start)
 
+<div class="modal fade" id="comparisonModal" tabindex="-1" aria-labelledby="comparisonModalLabel" aria-hidden="true">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="comparisonModalLabel">POS Value Comparison</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ul id="comparisonResults" class="list-group">
+            <!-- Comparison results will be dynamically populated here -->
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button id="next" type="button" class="btn btn-primary" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+</div>
+<!-- Submenu Popup for Recipe Settings -->
+<div id="recipe-popup" class="popup" style="display: none;">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3>Recipe ID: <span id="recipe-id">12345</span></h3>
+            <button type="button" class="close-button" onclick="toggleRecipePopup()">X</button>
+        </div>
+
+        <div class="popup-body">
+            <h2>Production Details</h2>
+            <table class="details-table1">
+                <tr>
+                    <td>Quantity:</td>
+                    <td><input type="text" id="quantity" placeholder="Enter Quantity" value=""></td>
+                </tr>
+                <tr>
+                    <td>Motor Speed:</td>
+                    <td><input type="text" id="motor-speed" value="1200"></td>
+                </tr>
+                <tr>
+                    <td>Motor Stroke:</td>
+                    <td><input type="text" id="motor-stroke" value="50"></td>
+                </tr>
+                <tr>
+                    <td>Other Speed Force:</td>
+                    <td><input type="text" id="speed-force" value="600"></td>
+                </tr>
+                <tr>
+                    <td>Alu Coil Width:</td>
+                    <td><input type="text" id="coil-width" value="2.5"></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="popup-footer">
+            <button id="final_submit" type="button"  class="start-button">Start</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const barcodeValue = "{{ barcode_value }}"; // Pass barcode value from Flask
+        const posValues = JSON.parse('{{ pos_values | tojson | safe }}');
+        const comparisonResults = document.getElementById('comparisonResults');
+        const next = document.getElementById('next');
+
+        let matchedPosCount = 0;
+
+        function openComparisonModal() {
+            // Clear previous results
+            comparisonResults.innerHTML = '';
+            matchedPosCount = 0; // Reset the matched count
+
+            // Create comparison option for each POS value
+            posValues.forEach((posValue, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+                // Add index (POS1, POS2, ...) and value to each POS
+                const posText = `POS${index + 1} : ${posValue !== null ? posValue : "Unavailable"} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Received Value: ${barcodeValue}`;
+
+                // Add text content
+                const textSpan = document.createElement('span');
+                textSpan.innerHTML = posText;
+                li.appendChild(textSpan);
+
+                // Only add compare button for non-null values
+                if (posValue !== null) {
+                    const compareButton = document.createElement('button');
+                    compareButton.className = 'btn btn-primary btn-sm';
+                    compareButton.textContent = 'Compare';
+                    compareButton.addEventListener('click', () => comparePosValue(posValue, index));
+
+                    li.appendChild(compareButton);
+                }
+
+                comparisonResults.appendChild(li);
+            });
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('comparisonModal'));
+            modal.show();
+        }
+
+        function comparePosValue(posValue, index) {
+            // Compare the POS value with the barcode
+            fetch('/compare-pos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ posValue, barcodeValue })
+            })
+            .then(response => response.json())
+            .then(result => {
+                const li = comparisonResults.children[index];
+                const compareButton = li.querySelector('button');
+                const isMatch = result.match;
+
+                if (isMatch) {
+                    li.classList.add('list-group-item-success');
+                    li.classList.remove('list-group-item-danger');
+                    li.querySelector('span').innerHTML = `POS${index + 1} : ${posValue} ✔ Match &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Received Value: ${barcodeValue}`;
+                    matchedPosCount++;
+                } else {
+                    li.classList.add('list-group-item-danger');
+                    li.classList.remove('list-group-item-success');
+                    li.querySelector('span').innerHTML = `POS${index + 1} : ${posValue} ✘ Mismatch &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Received Value: ${barcodeValue}`;
+                }
+
+                // Disable the button after comparison
+                compareButton.disabled = true;
+
+                // Enable the "Start Recipe" button only if all available POS values are matched
+                if (matchedPosCount === posValues.filter(posValue => posValue !== null).length) {
+                    next.disabled = false;
+                } else {
+                    next.disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error comparing POS value:', error);
+                alert('An error occurred during the comparison.');
+            });
+        }
+
+        // Attach openComparisonModal to the start recipe button
+        document.getElementById('start-recipe-btn').addEventListener('click', openComparisonModal);
+        document.getElementById('comparisonModal').addEventListener('hidden.bs.modal', function () {
+            matchedPosCount = 0; // Reset the matched count
+            next.disabled = true; // Disable the Start Recipe button
+        });
+       next.addEventListener("click", function () {
+        // Check if all conditions are matched
+        const allMatched = matchedPosCount === posValues.filter(posValue => posValue !== null).length;
+        if (allMatched) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('comparisonModal'));
+            modal.hide(); // Close the modal
+            proceedToRecipeSettings(); // Open submenu for recipe settings
+        } else {
+            alert("Please match all POS values first.");
+        }
+    });
+
+    function toggleRecipePopup() {
+        const popup = document.getElementById("recipe-popup");
+        popup.style.display = popup.style.display === "block" ? "none" : "block";
+    }
+    // Function to close the popup when clicking outside or on the close button
+function closePopup(event) {
+    const popup = document.getElementById("recipe-popup");
+    const popupContent = document.querySelector(".popup-content");
+
+    // If the clicked target is the popup background (not the content), close the popup
+    if (event.target === popup) {
+        popup.style.display = "none";
+    }
+}
+// Attach event listener to the document to detect clicks outside the popup content
+document.addEventListener('click', closePopup);
+
+// Close popup when the close button is clicked
+document.querySelector('.close-button').addEventListener('click', function() {
+    toggleRecipePopup();
+});
+    function proceedToRecipeSettings() {
+        toggleRecipePopup();
+    }
+  
+   document.getElementById("final_submit").addEventListener('click', function () {
+    // Node ID and value for starting the recipe
+    const recipeNodeId = 'ns=3;s="OpenRecipe"."machineState"'; // Replace with actual node ID
+    const recipeValue = 1; // Value to write to the recipe start node
+
+    // Node ID and value for quantity
+    const quantityNodeId = 'ns=3;s="OpenRecipe"."BatchQty"'; // Replace with actual quantity node ID
+    let quantityValue = document.getElementById("quantity").value; // Get user input for quantity
+    quantityValue = parseInt(quantityValue, 10); // Convert to integer
+    if (!quantityValue || isNaN(quantityValue) || quantityValue <= 0) {
+        alert('Please enter a valid quantity.');
+        return;
+    }
+   
+    // Send both write requests to the server
+    const requests = [
         fetch('/writeValue', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ nodeId, value }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Recipe started successfully!');
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nodeId: recipeNodeId, value: recipeValue }),
+        }),
+        fetch('/writeValue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nodeId: quantityNodeId, value: quantityValue }),
+        }),
+    ];
+
+    // Handle the responses
+    Promise.all(requests)
+        .then(responses => Promise.all(responses.map(res => res.json())))
+        .then(dataArray => {
+            const recipeResponse = dataArray[0];
+            const quantityResponse = dataArray[1];
+
+            if (recipeResponse.success && quantityResponse.success) {
+                alert('Recipe started successfully and quantity set!');
+                // Close the popup if everything is set properly
+                toggleRecipePopup();
             } else {
-                alert('Error: ' + data.error);
+                let errorMessage = 'Errors occurred:\n';
+                if (!recipeResponse.success) {
+                    errorMessage += `- Starting recipe: ${recipeResponse.error}\n`;
+                }
+                if (!quantityResponse.success) {
+                    errorMessage += `- Setting quantity: ${quantityResponse.error}\n`;
+                }
+                alert(errorMessage);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while starting the recipe.');
+            alert('An error occurred while starting the recipe or setting the quantity.');
         });
-    }
+});
+
+    });
 </script>
+<style>
+
+.popup {
+    display: block;
+    position: fixed;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.popup-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: #e7e1e9;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    text-align: center;
+    z-index: 1001;
+}
+
+/* Header Styling */
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.popup-header h3 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.popup-header .close-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Table Styling */
+.details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    text-align: left;
+}
+
+.details-table1 td {
+    padding: 8px;
+    font-size: 14px;
+}
+
+.details-table1 td:first-child {
+    font-weight: bold;
+    width: 50%;
+}
+
+.details-table1 input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #814196;
+    border-radius: 4px;
+}
+
+/* Footer Styling */
+.popup-footer {
+    margin-top: 20px;
+}
+
+.start-button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.start-button:hover {
+    background-color: #218838;
+}
+</style>
 {% endblock %}
