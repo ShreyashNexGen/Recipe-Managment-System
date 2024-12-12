@@ -459,211 +459,58 @@ select {
 
 
 
-#add-material-section {
-    position: fixed;
-    top: 0;
-    left: 0;
+
+
+table {
     width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
-    display: none; /* Initially hidden */
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
+    border-spacing: 10px;
 }
 
-#material-form {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    width: 50%; /* Increased width for a wider form */
-    max-width: 800px;
-    overflow-y: auto;
-    position: relative;
-    box-sizing: border-box;
-    max-height: 90vh;
+table td {
+    padding: 8px;
+    vertical-align: middle;
 }
-
-#material-form h3 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 24px;
-    font-weight: bold;
-}
-
-
-
-.close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: transparent;
-    border: none;
-    font-size: 24px; /* Slightly larger for better visibility */
-    cursor: pointer;
-    color: #999;
-    padding: 5px;
-    border-radius: 2px; /* Make it circular */
-    transition: background-color 0.3s, color 0.3s; /* Smooth transitions */
-}
-
-.close-button:hover {
-    background-color: #f37575; /* Red background on hover */
-    color: white; /* White icon color on hover */
-    transform: scale(1.1); /* Slightly enlarge on hover */
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2); /* Add subtle shadow */
-}
-
 
 label {
-    display: block;
-    margin-bottom: 6px;
-    margin-left: 2px;
-    font-size: 14px;
+    font-weight: bold;
     color: #555;
 }
 
 input[type="text"] {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 12px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 14px;
 }
 
-input[type="text"]:focus {
-    border-color: #007bff;
-    outline: none;
+.form-actions {
+    text-align: center;
 }
 
 .submit-button {
-    background-color: #007bff;
-    color: white;
-    padding: 12px 20px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
+    background-color: #28a745;
+    color: #fff;
     font-size: 16px;
     cursor: pointer;
-    display: block;
-    width: 30%;
-    text-align: center;
-    margin-top: 20px;
-    margin-left: 230px;
-    align-content: center;
-    justify-content: center;
+    transition: background-color 0.3s;
 }
 
 .submit-button:hover {
-    background-color: #0056b3;
-}
-
-@media screen and (max-width: 768px) {
-    #material-form {
-        width: 85%;
-        padding: 15px;
-    }
-}
-
-@media screen and (max-width: 600px) {
-    #material-form {
-        width: 95%;
-    }
-}
-
-
-
-#add-tag-section {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
-    display: none; /* Initially hidden */
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-#tag-form {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    width: 50%;
-    max-width: 800px;
-    overflow-y: auto;
-    position: relative;
-    box-sizing: border-box;
-    max-height: 90vh;
-}
-
-#tag-form h3 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 24px;
-    font-weight: bold;
+    background-color: #218838;
 }
 
 .close-button {
     position: absolute;
     top: 10px;
     right: 10px;
-    background-color: transparent;
     border: none;
-    font-size: 24px;
+    background: none;
+    font-size: 18px;
     cursor: pointer;
-    color: #999;
-    padding: 5px;
-    border-radius: 2px;
-    transition: background-color 0.3s, color 0.3s;
 }
-
-.close-button:hover {
-    background-color: #f37575;
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-input[type="text"] {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 14px;
-}
-
-input[type="text"]:focus {
-    border-color: #007bff;
-    outline: none;
-}
-
-.submit-button {
-    background-color: #007bff;
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    width: 35%;
-    margin-top: 20px;
-    text-align: center;
-}
-
-.submit-button:hover {
-    background-color: #0056b3;
-}
-
-
 
 
 
@@ -689,7 +536,7 @@ input[type="text"]:focus {
 /* Form Styling with Grid */
 form {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 columns for compact layout */
+    grid-template-columns: repeat(3, 1fr); /* 4 columns for compact layout */
     gap: 10px; /* Space between fields */
 }
 
@@ -887,8 +734,254 @@ select:focus {
 
 
 
+/* Main popup container */
+#add-material-section {
+    display: none; /* Initially hidden */
+    position: fixed; /* Fixed position for the popup */
+    top: 0; /* Align at the top of the page */
+    left: 0; /* Align at the left of the page */
+    width: 200%; /* Cover the full screen width */
+    height: 200%; /* Cover the full screen height */
+    background-color: rgba(0, 0, 0, 0.6); /* Dim background */
+    display: flex; /* Flexbox for centering content */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    z-index: 1000; /* Ensure it is on top of other elements */
+}
+
+/* Popup form styling */
+#material-form {
+    background: linear-gradient(135deg, #dfd1f1, #dfd1f1); /* Gradient background */
+    border-radius: 10px;
+    width: 370px; /* Fixed width for the popup */
+    padding: 20px; /* Padding for spacing within the form */
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3); /* Shadow effect for the popup */
+    text-align: center; /* Centered text within the popup */
+    animation: fadeIn 0.3s ease-in-out; /* Fade-in effect */
+}
+.details-mat-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    text-align: left;
+}
+
+.details-mat-table td {
+    padding: 8px,12px,8px,12px;
+    font-size: 14px;
+}
+
+.details-mat-table td:first-child {
+    font-weight: bold;
+    width: 50%;
+}
+
+.details-mat-table input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #c998da;
+    border-radius: 4px;
+}
+/* Close button */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #555;
+    cursor: pointer;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.close-button:hover {
+    color: #000;
+}
+
+/* Header styling */
+
+
+/* Submit button */
+.submit-button {
+    background: #007BFF;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    width: 30%;
+    margin-left: 150px;
+}
+
+.submit-button:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+}
+
+.submit-button:active {
+    transform: translateY(0);
+}
+
+/* Fade-in animation for the popup */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+.pop-up {
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+   
+}
+
+/* .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; 
+} */
+
+
+label {
+    font-size: 16px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    text-align: center; /* Align the label text in the center */
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center; /* Center input text */
+}
 
 
 
 
 
+
+/*production Popup*/
+/* General Popup Styling */
+.popup {
+    display: block;
+    position: fixed;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+}
+
+.popup-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: #e7e1e9;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    text-align: center;
+    z-index: 1001;
+}
+
+/* Header Styling */
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.popup-header h3 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.popup-header .close-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Table Styling */
+.details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    text-align: left;
+}
+
+.details-table td {
+    padding: 8px;
+    font-size: 14px;
+}
+
+.details-table td:first-child {
+    font-weight: bold;
+    width: 50%;
+}
+
+.details-table input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #814196;
+    border-radius: 4px;
+}
+
+/* Footer Styling */
+.popup-footer {
+    margin-top: 20px;
+}
+
+.start-button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.start-button:hover {
+    background-color: #218838;
+}

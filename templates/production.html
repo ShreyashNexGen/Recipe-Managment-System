@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="recipe-popup" class="popup">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3>Recipe ID: <span id="recipe-id">12345</span></h3>
+            <button type="button" class="close-button" onclick="toggleRecipePopup()">×</button>
+        </div>
+
+        <div class="popup-body">
+            <h2>Production Details</h2>
+            <table class="details-table">
+                <tr>
+                    <td>Quantity:</td>
+                    <td><input type="text" id="quantity" placeholder="Enter Quantity" value=""></td>
+                </tr>
+                <tr>
+                    <td>Motor Speed:</td>
+                    <td><input type="text" id="motor-speed" value="1200"></td>
+                </tr>
+                <tr>
+                    <td>Motor Stroke:</td>
+                    <td><input type="text" id="motor-stroke" value="50"></td>
+                </tr>
+                <tr>
+                    <td>Other Speed Force:</td>
+                    <td><input type="text" id="speed-force" value="600"></td>
+                </tr>
+                <tr>
+                    <td>Alu Coil Width:</td>
+                    <td><input type="text" id="coil-width" value="2.5"></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="popup-footer">
+            <button type="button" class="start-button" onclick="startProduction()">Start</button>
+        </div>
+    </div>
+</div>
+<script>
+    function toggleRecipePopup() {
+        const popup = document.getElementById("recipe-popup");
+        if (popup.style.display === "block") {
+            popup.style.display = "none";
+        } else {
+            popup.style.display = "block";
+        }
+        console.log("Popup visibility toggled:", popup.style.display);
+    }
+    
+    function startProduction() {
+        // Collect values from inputs
+        const motorSpeed = document.getElementById("motor-speed").value;
+        const motorStroke = document.getElementById("motor-stroke").value;
+        const speedForce = document.getElementById("speed-force").value;
+        const coilWidth = document.getElementById("coil-width").value;
+        const quantity = document.getElementById("quantity").value;
+    
+        // Send data to the server
+        fetch("/update-recipe", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                motorSpeed,
+                motorStroke,
+                speedForce,
+                coilWidth,
+                quantity,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Recipe updated successfully!");
+                    toggleRecipePopup();
+                } else {
+                    alert("Failed to update recipe: " + data.error);
+                }
+            })
+            .catch((error) => console.error("Error:", error));
+    }
+    
+</script>
+{% endblock %}
