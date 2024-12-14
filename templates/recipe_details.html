@@ -6,7 +6,7 @@
 
 <div class="content-header">
     <h1>Recipe Details for Recipe ID: {{ recipe_details['Recipe_ID'] }}</h1>
-    <button onclick="startRecipe()" id="start-recipe-btn" class="add-button">
+    <button  id="start-recipe-btn" class="add-button">
         <i class="fas fa-play"></i> Start Recipe </button>
 </div>
 
@@ -86,7 +86,7 @@
 <div id="recipe-popup" class="popup" style="display: none;">
     <div class="popup-content">
         <div class="popup-header">
-            <h3>Recipe ID: <span id="recipe-id">12345</span></h3>
+            <h3>Recipe ID: <span id="recipe-Id">{{sub_menu.Recipe_ID}}</span></h3>
             <button type="button" class="close-button" onclick="toggleRecipePopup()">X</button>
         </div>
 
@@ -99,26 +99,26 @@
                 </tr>
                 <tr>
                     <td>Motor Speed:</td>
-                    <td><input type="text" id="motor-speed" value="1200"></td>
+                    <td><input type="text" id="motor-speed" value="{{ sub_menu.motor_speed }}" readonly></td>
                 </tr>
-                <tr>
-                    <td>Motor Stroke:</td>
-                    <td><input type="text" id="motor-stroke" value="50"></td>
+                <td>Motor Stroke:</td>
+                    <td><input type="text" id="motor-stroke" value="{{ sub_menu.motor_stroke }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Other Speed Force:</td>
-                    <td><input type="text" id="speed-force" value="600"></td>
+                    <td><input type="text" id="speed-force" value="{{ sub_menu.other_speed_force }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Alu Coil Width:</td>
-                    <td><input type="text" id="coil-width" value="2.5"></td>
+                    <td><input type="text" id="coil-width" value="{{ sub_menu.alu_coil_width }}" readonly></td>
                 </tr>
             </table>
+            <div class="popup-footer">
+                <button id="final_submit" type="button"  class="start-button" onclick="startRecipe('{{ sub_menu.Recipe_ID }}')" >Start</button>
+            </div>
         </div>
 
-        <div class="popup-footer">
-            <button id="final_submit" type="button"  class="start-button">Start</button>
-        </div>
+       
     </div>
 </div>
 
@@ -307,6 +307,55 @@ document.querySelector('.close-button').addEventListener('click', function() {
 });
 
     });
+    function loadRecipeSettings(recipeId) {
+    fetch(`/api/sub_menu/${recipeId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById("recipeId").value = data.Recipe_ID || "";
+                document.getElementById("motor-speed").value = data.motor_speed || "";
+                document.getElementById("motor-stroke").value = data.motor_stroke || "";
+                document.getElementById("speed-force").value = data.other_speed_force || "";
+                document.getElementById("coil-width").value = data.alu_coil_width || "";
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching submenu data:", error);
+            alert("Failed to load submenu data.");
+        });
+}
+function startRecipe(recipeId) {
+    const quantity = document.getElementById("quantity").value; // Get the entered quantity
+    if (!quantity || isNaN(quantity)) {
+        alert("Please enter a valid quantity.");
+        return;
+    }
+
+    // Send data to the backend using a POST request (example with Fetch API)
+    fetch(`/start_recipe/${recipeId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quantity: quantity }),
+    })
+    .then((response) => {
+        if (response.ok) {
+            alert("Recipe started successfully!");
+            // Optionally, close the popup or refresh the page
+        } else {
+            alert("Error starting recipe.");
+        }
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+        alert("An unexpected error occurred.");
+    });
+}
+
+
 </script>
 <style>
 

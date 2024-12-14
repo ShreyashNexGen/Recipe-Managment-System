@@ -47,6 +47,7 @@ def init_db():
                 FOREIGN KEY (tagId) REFERENCES Tag_Table(tagId)
             )
         ''')
+        
         conn.commit()
 
 
@@ -414,7 +415,7 @@ def recipe_details(recipe_id):
         flash("Recipe not found!", "danger")
         return redirect(url_for('index'))
       
-
+    
     return render_template('recipe_details.html', recipe_details=recipe_details, sub_menu=sub_menu,pos_values=pos_values[:-1] ,barcode_value=barcode_value)
 
 def extract_pos_values(recipe_details):
@@ -455,6 +456,7 @@ def add_recipe():
         return redirect(url_for('login'))
 
     recipe_id = request.form.get('recipe_id')
+    recipe_name = request.form.get('recipe_name')
     filter_size = request.form.get('filter_size')
     filter_code = request.form.get('filter_code')
     art_no = request.form.get('art_no')
@@ -462,9 +464,13 @@ def add_recipe():
     alu_coil_width = request.form.get('Alu_coil_width')
     alu_roller_type = request.form.get('Alu_roller_type')
     spacer = request.form.get('Spacer')
+    motor_speed = request.form.get('Motor_speed')
+    motor_stroke = request.form.get('Motor_stroke')
+    motor_force =  request.form.get('Motor_force')
+    
     # print("Pos values from form: ",pos_values);
     # update_plc_with_pos_values(pos_values)
-    if not (recipe_id and filter_size and filter_code and art_no):
+    if not (recipe_id and filter_size and filter_code and art_no and recipe_name):
         flash("All required fields must be filled!", "danger")
         return redirect(url_for('recipe_list'))
 
@@ -475,9 +481,9 @@ def add_recipe():
     try:
         cursor = conn.cursor()
         cursor.execute(
-            '''INSERT INTO Recipe (Recipe_ID, Filter_Size, Filter_Code, Art_No) 
-            VALUES (?, ?, ?, ?)''',
-            (recipe_id, filter_size, filter_code, art_no)
+            '''INSERT INTO Recipe (Recipe_ID,Recipe_Name,Filter_Size, Filter_Code, Art_No) 
+            VALUES (?, ?, ?, ?,?)''',
+            (recipe_id,recipe_name,filter_size, filter_code, art_no)
         )
         cursor.execute(
             '''INSERT INTO Recipe_Details1 
@@ -485,6 +491,13 @@ def add_recipe():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             (recipe_id, *pos_values, alu_coil_width, alu_roller_type, spacer, recipe_id)
         )
+        cursor.execute(
+            '''INSERT INTO Sub_Menu
+            (Recipe_ID, motor_speed,motor_stroke,other_speed_force,alu_coil_width) 
+            VALUES (?, ?, ?, ?, ?)''',
+            (recipe_id,motor_speed,motor_stroke,motor_force,alu_coil_width)
+        )
+
         conn.commit()
         flash("Recipe added successfully!", "success")
     except sqlite3.Error as e:
@@ -552,6 +565,61 @@ def update_plc_with_pos_values(pos_values):
     except Exception as e:
         print(f"Error updating PLC: {e}")
 
+@app.route('/start_recipe/<int:recipe_id>', methods=['POST'])
+def start_recipe(recipe_id):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    recipe_details = conn.execute('SELECT * FROM Recipe_Details1 WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
+    sub_menu = conn.execute('SELECT * FROM Sub_Menu WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
+    
+    if not recipe_details or not sub_menu:
+        flash("Recipe details not found!", "danger")
+        return redirect(url_for('recipe_details', recipe_id=recipe_id))
+
+    # Get Quantity from Request
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+    quantity = data.get('quantity')
+    if not quantity:
+        return jsonify({"error": "Quantity is required"}), 400
+
+    # Generate Batch Code and Timestamp
+    batch_code = f"BATCH-{recipe_id}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Insert into Recipe_Log Table
+    try:
+        conn.execute(
+            '''
+            INSERT INTO Recipe_Log 
+            (Batch_Code, Timestamp, Recipe_ID, motor_speed, motor_stroke, 
+            other_speed_force, alu_coil_width, Quantity, Batch_Running_Status, Batch_Completion_Status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''',
+            (
+                batch_code,
+                timestamp,
+                recipe_id,
+                sub_menu['motor_speed'],
+                sub_menu['motor_stroke'],
+                sub_menu['other_speed_force'],
+                sub_menu['alu_coil_width'],
+                quantity,
+                'Running',
+                'Pending'
+            )
+        )
+        conn.commit()
+        flash(f"Recipe batch started successfully with Batch Code: {batch_code}", "success")
+    except Exception as e:
+        flash(f"Error logging recipe batch: {e}", "danger")
+    finally:
+        conn.close()
+
+    return jsonify({"message": "Recipe batch started successfully"})
 
 # shreyash's new changes 
 @app.route('/addTag', methods=['POST'])

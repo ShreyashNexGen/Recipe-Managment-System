@@ -15,7 +15,8 @@
         <form action="/add_recipe" method="POST">
             <label for="recipe_id">Recipe ID:</label>
             <input type="text" id="recipe_id" name="recipe_id" required>
-
+            <label for="recipe_name">Recipe Name:</label>
+            <input type="text" id="recipe_name" name="recipe_name" required>
             <label for="filter_size">Filter Size:</label>
             <input type="text" id="filter_size" name="filter_size" required>
 
@@ -43,6 +44,13 @@
 
             <label for="Spacer">Spacer:</label>
             <input type="text" id="Spacer" name="Spacer">
+            <label for="Motor_speed">Motor_speed:</label>
+            <input type="text" id="Motor_speed" name="Motor_speed">
+            <label for="Motor_stroke">Motor_stroke:</label>
+            <input type="text" id="Motor_stroke" name="Motor_stroke">
+            <label for="Motor_force">Motor_force:</label>
+            <input type="text" id="Motor_force" name="Motor_force">
+
 
             <button type="submit" class="submit-button">Submit Recipe</button>
         </form>
@@ -66,6 +74,7 @@
             <tr>
                 <th>Serial No.</th>
                 <th>Recipe ID</th>
+                <th>Recipe Name</th>
                 <th>Filter Size</th>
                 <th>Filter Code</th>
                 <th>Art No</th>
@@ -77,6 +86,7 @@
             <tr id="row-{{ recipe.Recipe_ID }}">
                 <td>{{ loop.index }}</td>
                 <td><a href="{{ url_for('recipe_details', recipe_id=recipe.Recipe_ID) }}">{{ recipe.Recipe_ID }}</a></td>
+                <td>{{recipe.Recipe_Name}}</td>
                 <td>{{ recipe.Filter_Size }}</td>
                 <td>{{ recipe.Filter_Code }}</td>
                 <td>{{ recipe.Art_No }}</td>
