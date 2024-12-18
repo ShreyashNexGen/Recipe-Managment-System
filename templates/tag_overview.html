@@ -36,34 +36,77 @@
         </select>
         <span>entries</span>
     </div>
-    <div id="add-tag-section">
-        <div id="tag-form">
-            <h3>Add New Tag</h3>
-            <button type="button" class="close-button" onclick="toggleTagForm()">
-                <i class="fas fa-times"></i> <!-- Font Awesome close icon -->
-            </button>
-    
-            <!-- Add the form for submitting a new tag -->
-            <form id="addTagForm" method="POST">
-                <label for="tagId">Tag ID:</label>
-                <input type="text" id="tagId" name="tagId" required>
-    
-                <label for="tagName">Tag Name:</label>
-                <input type="text" id="tagName" name="tagName" required>
-    
-                <label for="tagAddress">Tag Address:</label>
-                <input type="text" id="tagAddress" name="tagAddress" required>
-    
-                <label for="plcId">PLC ID:</label>
-                <input type="text" id="plcId" name="plcId" required>
-    
-                <button type="submit" class="submit-button">Submit Tag</button>
-            </form>
-    
-            <!-- Add a message div to display success or error messages -->
-            <div id="message" style="margin-top: 10px;"></div>
+    <div id="add-tag-section" class="pop-tag-up" style="display: none;">
+        <div id="tag-form" class="popup-tag-content">
+            <!-- Close Button -->
+            <div class="popup-tag-header">
+                <h3>Add New Tag</h3>
+                <button type="button" class="close-tag-button" onclick="toggleTagForm()"><i class="fas fa-times"></i></button>
+            </div>
+            <!-- Form Content -->
+            <form id="addTagForm"  method="POST">
+            <div class="popup-tag-body">
+                <div class="form-tag-group">
+                    <label for="tagId">Tag ID:</label>
+                    <input type="text" id="tagId" name="tagId" placeholder="Enter Tag ID" required>
+                </div>
+                <div class="form-tag-group">
+                    <label for="tagName">Tag Name:</label>
+                    <input type="text" id="tagName" name="tagName" placeholder="Enter Tag Name" required>
+                </div>
+                <div class="form-tag-group">
+                    <label for="tagAddress">Tag Address:</label>
+                    <input type="text" id="tagAddress" name="tagAddress" placeholder="Enter Tag Address" required>
+                </div>
+                <div class="form-tag-group">
+                    <label for="plcId">PLC ID:</label>
+                    <input type="text" id="plcId" name="plcId" placeholder="Enter PLC ID" required>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="popup-tag-footer">
+                <button type="submit" class="start-tag-button">Submit</button>
+            </div>
+        </form>
         </div>
     </div>
+    <div id="message"></div>
+
+    <div id="update-tag-section" class="pop-update-tag-up" style="display: none;">
+        <div id="update-tag-form" class="popup-update-tag-content">
+            <!-- Close Button -->
+            <div class="popup-update-tag-header">
+                <h3>Update Tag</h3>
+                <button type="button" class="close-update-tag-button" onclick="toggleUpdateTagForm()"><i class="fas fa-times"></i></button>
+            </div>
+            <!-- Form Content -->
+            <form id="updateTagForm" method="POST">
+                <div class="popup-update-tag-body">
+                    <div class="form-update-tag-group">
+                        <label for="updateTagId">Tag ID:</label>
+                        <input type="text" id="updateTagId" name="updateTagId" readonly>
+                    </div>
+                    <div class="form-update-tag-group">
+                        <label for="updateTagName">Tag Name:</label>
+                        <input type="text" id="updateTagName" name="updateTagName" required>
+                    </div>
+                    <div class="form-update-tag-group">
+                        <label for="updateTagAddress">Tag Address:</label>
+                        <input type="text" id="updateTagAddress" name="updateTagAddress" required>
+                    </div>
+                    <div class="form-update-tag-group">
+                        <label for="updatePlcId">PLC ID:</label>
+                        <input type="text" id="updatePlcId" name="updatePlcId" required>
+                    </div>
+                </div>
+                <!-- Footer -->
+                <div class="popup-update-tag-footer">
+                    <button type="submit" class="start-update-tag-button">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
 
     
     <table class="table table-bordered" id="tagoverviewtable">
@@ -93,8 +136,8 @@
                    </button>
                 </td>
                 <td>
-                    <button class="delete-button" onclick="">
-                        <i class="fa-regular fa-pen-to-square"></i> 
+                    <button class="update-button" onclick="openUpdateTagForm('{{ tag.tagId }}', '{{ tag.tagName }}', '{{ tag.tagAddress }}', '{{ tag.plcId }}')">
+                        <i class="fa-regular fa-pen-to-square"></i>
                     </button>
                 </td>
             </tr>
@@ -124,41 +167,42 @@
     {% endif %}
 </div>
 <script>
-    // Function to update the entries per page based on user selection
-    function updateEntries() {
-        // Get the selected limit from the dropdown
-        var limit = document.getElementById('entriesSelect').value;
-
-        // Get the current page number from the URL query string or default to page 1
-        var urlParams = new URLSearchParams(window.location.search);
-        var currentPage = urlParams.get('page') || 1;
-
-        // Redirect to the same page with the new limit and current page
-        window.location.href = window.location.pathname + '?page=' + currentPage + '&limit=' + limit;
-    }
-    window.addEventListener('click', function (event) {
-        const modal = document.getElementById('add-tag-section');
-        if (event.target === modal) {
-            modal.style.display = 'none';
+    // Toggle popup visibility
+  
+        // Function to toggle the popup visibility
+        function toggleTagForm() {
+            const addTagSection = document.getElementById("add-tag-section");
+            if (!addTagSection) {
+                console.error("Popup element with ID 'add-tag-section' not found.");
+                return;
+            }
+            addTagSection.style.display = (addTagSection.style.display === "none" || !addTagSection.style.display)
+                ? "block"
+                : "none";
         }
-    });
-</script>
-<script>
+    
+        // Add event listeners once the DOM is loaded
+        function toggleTagForm() {
+        const addTagSection = document.getElementById("add-tag-section");
+        addTagSection.style.display = (addTagSection.style.display === "none" || !addTagSection.style.display) ? "block" : "none";
+    }
+
+    // Add event listeners once the DOM is loaded
     document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("addTagForm").addEventListener("submit", async function (event) {
             event.preventDefault(); // Prevent default form submission
-    
+
             // Gather form data
             const tagId = document.getElementById("tagId").value.trim();
             const tagName = document.getElementById("tagName").value.trim();
             const tagAddress = document.getElementById("tagAddress").value.trim();
             const plcId = document.getElementById("plcId").value.trim();
-    
+
             // Get the message div
             const messageDiv = document.getElementById("message");
             messageDiv.textContent = ""; // Clear previous messages
             messageDiv.className = "";
-    
+
             try {
                 // Send POST request to the Flask backend
                 const response = await fetch("/addTag", {
@@ -168,17 +212,41 @@
                     },
                     body: JSON.stringify({ tagId, tagName, tagAddress, plcId }),
                 });
-    
+
                 const result = await response.json();
-    
+
                 if (response.ok && result.success) {
                     messageDiv.textContent = result.message;
                     messageDiv.className = "alert alert-success";
-    
+
                     // Clear the form
                     document.getElementById("addTagForm").reset();
-    
-                    // Optionally, update the tag table dynamically
+                    toggleTagForm();
+
+                    // Dynamically add the new tag to the table
+                    const tableBody = document.querySelector("#tagoverviewtable tbody");
+                    const newRow = document.createElement("tr");
+                    const rowCount = tableBody.rows.length + 1; // Serial number based on current row count
+                    
+                    newRow.id = `row-${tagId}`;
+                    newRow.innerHTML = `
+                        <td>${rowCount}</td>
+                        <td>${tagId}</td>
+                        <td>${tagName}</td>
+                        <td>${tagAddress}</td>
+                        <td>${plcId}</td>
+                        <td>
+                            <button class="delete-button" onclick="confirmDelete('${tagId}')">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="update-button" onclick="">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(newRow); // Append the new row to the table
                 } else {
                     messageDiv.textContent = `Error: ${result.error || "Unknown error"}`;
                     messageDiv.className = "alert alert-danger";
@@ -189,6 +257,111 @@
             }
         });
     });
+        
+    
+            // Close popup if user clicks outside it
+            window.addEventListener("click", function (event) {
+                const modal = document.getElementById("add-tag-section");
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            });
+       
+    
+        // Function to delete a tag dynamically
+        async function confirmDelete(tagId) {
+            if (confirm("Are you sure you want to delete this tag?")) {
+                try {
+                    const response = await fetch(`/delete-tag/${tagId}`, { method: "DELETE" });
+    
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        // Remove the row dynamically
+                        const row = document.getElementById(`row-${tagId}`);
+                        if (row) row.remove();
+    
+                        alert("Tag deleted successfully!");
+                    } else {
+                        alert(`Error: ${result.error || "Failed to delete the tag."}`);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("An unexpected error occurred. Please try again.");
+                }
+            }
+        }
+    
+        // Function to update the number of entries shown per page
+        function updateEntries() {
+            const limit = document.getElementById('entriesSelect').value;
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPage = urlParams.get('page') || 1;
+    
+            // Redirect to the same page with updated limit and current page
+            window.location.href = window.location.pathname + '?page=' + currentPage + '&limit=' + limit;
+        }
+    /*Update script code*/
+    function toggleUpdateTagForm() {
+        const updateTagSection = document.getElementById("update-tag-section");
+        updateTagSection.style.display = (updateTagSection.style.display === "none" || !updateTagSection.style.display) ? "block" : "none";
+    }
+    function openUpdateTagForm(tagId, tagName, tagAddress, plcId) {
+        // Populate the form fields with existing data
+        document.getElementById("updateTagId").value = tagId;
+        document.getElementById("updateTagName").value = tagName;
+        document.getElementById("updateTagAddress").value = tagAddress;
+        document.getElementById("updatePlcId").value = plcId;
+    
+        // Show the update form popup
+        toggleUpdateTagForm();
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("updateTagForm").addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent default form submission
+    
+            // Get updated values from the form
+            const tagId = document.getElementById("updateTagId").value;
+            const tagName = document.getElementById("updateTagName").value.trim();
+            const tagAddress = document.getElementById("updateTagAddress").value.trim();
+            const plcId = document.getElementById("updatePlcId").value.trim();
+    
+            try {
+                // Send a PUT request to the backend
+                const response = await fetch(`/update-tag/${tagId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ tagName, tagAddress, plcId }),
+                });
+    
+                const result = await response.json();
+    
+                if (response.ok && result.success) {
+                    alert("Tag updated successfully!");
+    
+                    // Update the corresponding table row
+                    const row = document.getElementById(`row-${tagId}`);
+                    if (row) {
+                        row.cells[2].textContent = tagName;
+                        row.cells[3].textContent = tagAddress;
+                        row.cells[4].textContent = plcId;
+                    }
+    
+                    // Close the popup
+                    toggleUpdateTagForm();
+                } else {
+                    alert(`Error: ${result.error || "Failed to update the tag."}`);
+                }
+            } catch (error) {
+                console.error("Error updating tag:", error);
+                alert("An unexpected error occurred. Please try again.");
+            }
+        });
+    });
+    
+
     
 </script>
+
 {% endblock %}

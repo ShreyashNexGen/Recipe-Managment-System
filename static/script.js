@@ -320,28 +320,7 @@ function toggleTagForm() {
                 });
         }
     }
-    function confirmDeleteRawMaterial(material_Id) {
-        if (confirm("Do you want to delete this raw material?")) {
-            fetch(`/delete-raw-material/${material_Id}`, {
-                method: "DELETE",
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.success) {
-                        // Remove the row from the table
-                        const row = document.getElementById(`row-${material_Id}`);
-                        if (row) row.remove();
-                        alert('Raw material deleted successfully!');
-                    } else {
-                        alert(`Failed to delete Raw Material: ${data.error || "Unknown error"}`);
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error:", error);
-                    alert("An error occurred while deleting the raw material.");
-                });
-        }
-    }
+    
 
     function confirmDeleteRecipe(recipe_Id) {
         if (confirm("Do you want to delete this Recipe?")) {
@@ -365,6 +344,10 @@ function toggleTagForm() {
                 });
         }
     }
+    
+    
+    
+    
 
 
    function toggleUpdateMaterialForm(materialId = null) {
