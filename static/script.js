@@ -91,6 +91,7 @@ function closePopup() {
 function submitRecipeForm(event) {
     event.preventDefault();  // Prevents the default form submission behavior
     const recipeData = new FormData(document.getElementById("recipe-form"));
+    console.log("Recipe Data:", recipeData);  // For debugging purposes
 
     fetch(`/add_recipe_details/${document.getElementById("recipe-id").textContent}`, {
         method: "POST",
