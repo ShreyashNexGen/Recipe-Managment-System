@@ -37,7 +37,7 @@
     </div>
     <h2 class="highlighted-box">List of 10 Products</h2>
 
-    <table class="table table-bordered">
+    <!-- <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Product ID</th>
@@ -45,7 +45,29 @@
                 <th>Timestamp</th>
             </tr>
         </thead>
-    </table>
+    </table> -->
+    <div class="container mt-5">
+        <h1 class="text-center">Recipe Log</h1>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Batch Code</th>
+                    <th>Timestamp</th>
+                    <th>Recipe ID</th>
+                    <th>Motor Speed</th>
+                    <th>Motor Stroke</th>
+                    <th>Other Speed Force</th>
+                    <th>Alu Coil Width</th>
+                    <th>Quantity</th>
+                    <th>Batch Running Status</th>
+                    <th>Batch Completion Status</th>
+                </tr>
+            </thead>
+            <tbody id="recipe-log-table">
+                <!-- Data will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Include Chart.js -->
@@ -96,5 +118,35 @@
         document.getElementById('pieChart2'),
         config2
     );
+    // Fetch and display the recipe log
+    function fetchRecipeLog() {
+            fetch('/api/recipe_log')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('recipe-log-table');
+                    tableBody.innerHTML = ''; // Clear existing rows
+                    data.forEach(row => {
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td>${row.Batch_Code}</td>
+                                <td>${row.Timestamp}</td>
+                                <td>${row.Recipe_ID}</td>
+                                <td>${row.motor_speed}</td>
+                                <td>${row.motor_stroke}</td>
+                                <td>${row.other_speed_force}</td>
+                                <td>${row.alu_coil_width}</td>
+                                <td>${row.Quantity}</td>
+                                <td>${row.Batch_Running_Status}</td>
+                                <td>${row.Batch_Completion_Status}</td>
+                            </tr>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error fetching recipe log:', error));
+        }
+
+        // Refresh the table every 5 seconds
+        setInterval(fetchRecipeLog, 1000);
+        fetchRecipeLog(); // Initial fetch
 </script>
 {% endblock %}

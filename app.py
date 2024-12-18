@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
+import json
 import datetime
 from datetime import timedelta
 from flask_socketio import SocketIO, emit
@@ -9,6 +10,7 @@ from flask import send_from_directory
 import threading
 from threading import Thread
 import time
+from pymongo import MongoClient
 from flask_cors import CORS
 app = Flask(__name__)
 app = Flask(__name__)
@@ -23,10 +25,14 @@ app.secret_key = 'your_secret_key'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.permanent_session_lifetime = timedelta(minutes=30)  # Session timeout
 DB_PATH = 'a2z_database.db'
+DB_PATH1 = 'suvi_database.db'
+MONGO_URI = "mongodb://localhost:27017"  # MongoDB URI
+MONGO_DB_NAME = "suvi_flask_db"          # MongoDB Database Name
+MONGO_COLLECTION_NAME = "suvi_flask"       # MongoDB Collection Name      # MongoDB Collection Name
 # Function to browser
 def init_db():
     """Initialize the SQLite database."""
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(DB_PATH1) as conn:
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS Tag_Table (
@@ -42,11 +48,24 @@ def init_db():
             CREATE TABLE IF NOT EXISTS Live_Tags (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tagId TEXT NOT NULL,
-                value REAL NOT NULL,
+                value TEXT NOT NULL,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (tagId) REFERENCES Tag_Table(tagId)
             )
         ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS Live_Log (
+             id INTEGER PRIMARY KEY AUTOINCREMENT,
+              tagId TEXT NOT NULL,
+              value TEXT NOT NULL,
+              timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+            )
+        ''')
+        
+
+
+        
         
         conn.commit()
 
@@ -127,6 +146,62 @@ def recipe_list():
         page=page,
         total_pages=total_pages
     )
+@app.route('/api/recipe_log', methods=['GET'])
+def get_recipe_log():
+    conn = get_db_connection()
+    recipe_log = conn.execute('SELECT * FROM Recipe_Log').fetchall()
+    conn.close()
+
+    # Convert to list of dictionaries
+    recipe_log_list = [dict(row) for row in recipe_log]
+    return jsonify(recipe_log_list)
+def update_batch_status():
+    while True:
+        conn = get_db_connection()
+        recipe_logs = conn.execute('SELECT * FROM Recipe_Log WHERE Batch_Completion_Status = "Pending" OR Batch_Completion_Status ="Partially Completed"').fetchall()
+        
+        client = Client(ENDPOINT_URL)
+        client.session_timeout = 30000  # Adjust timeout as needed
+        try:
+            client.connect()
+            for log in recipe_logs:
+                batch_code = log['Batch_Code']
+                quantity_field_path = 'ns=3;s="OpenRecipe"."actBatchQty"'  # Replace with PLC field path
+                machine_state_field_path = 'ns=3;s="OpenRecipe"."machineState"'  # Replace with PLC field path
+
+                current_quantity = client.get_node(quantity_field_path).get_value()
+                machine_state = client.get_node(machine_state_field_path).get_value()
+
+               # Calculate completion percentage
+                completion_percentage = (current_quantity / log['Quantity']) * 100
+
+                # Determine running status
+                running_status = "Pending" if machine_state == 0 else "Running"
+
+                # Determine completion status
+                if completion_percentage < 60:
+                    completion_status = "Pending"
+                elif 60 <= completion_percentage < 100:
+                    completion_status = "Partially Completed"
+                elif completion_percentage >= 100:
+                    completion_status = "Completed"
+                    running_status = "Completed"  # Both statuses set to completed
+                conn.execute(
+                    '''
+                    UPDATE Recipe_Log
+                    SET Batch_Running_Status = ?, Batch_Completion_Status = ?
+                    WHERE Batch_Code = ?
+                    ''',
+                    (running_status, completion_status, batch_code)
+                )
+                conn.commit()
+        except Exception as e:
+            print(f"Error updating batch status: {e}")
+        finally:
+            client.disconnect()
+            conn.close()
+
+        
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -162,7 +237,7 @@ def tag_overview():
     limit = int(request.args.get('limit', 10))  # Default limit is 10 if not provided
     
     # Database connection
-    conn = sqlite3.connect('a2z_database.db')
+    conn = sqlite3.connect(DB_PATH1)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -190,7 +265,43 @@ def tag_overview():
         active_menu='tags',
         active_submenu='tag-overview'
     )
+@app.route('/update-tag/<string:tagId>', methods=['PUT'])
+def update_tag(tagId):
+    try:
+        # Parse JSON data from the request
+        data = request.get_json()
+        tagName = data.get('tagName')
+        tagAddress = data.get('tagAddress')
+        plcId = data.get('plcId')
 
+        if not tagName or not tagAddress or not plcId:
+            return jsonify({"success": False, "error": "Missing required fields"}), 400
+
+        # Connect to the database and update the tag
+        conn = sqlite3.connect('a2z_database.db')
+        cursor = conn.cursor()
+
+        # Check if the tag exists
+        cursor.execute("SELECT * FROM Tag_Table WHERE tagId = ?", (tagId,))
+        tag = cursor.fetchone()
+        if not tag:
+            conn.close()
+            return jsonify({"success": False, "error": "Tag not found"}), 404
+
+        # Update the tag details in the database
+        cursor.execute("""
+            UPDATE Tag_Table
+            SET tagName = ?, tagAddress = ?, plcId = ?
+            WHERE tagId = ?
+        """, (tagName, tagAddress, plcId, tagId))
+        conn.commit()
+        conn.close()
+
+        # Respond with success message
+        return jsonify({"success": True, "message": "Tag updated successfully"})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route('/delete-tag/<int:tag_id>', methods=['DELETE'])
@@ -282,26 +393,34 @@ def plc():
 def raw_material():
     # Handle POST request for adding a new material
     if request.method == 'POST':
-        material_id = request.form['material_Id']
-        type_code = request.form['typeCode']
-        lot_no = request.form['lotNo']
-        make = request.form['make']
-        user = request.form['user']
-        material_type = request.form['materialType']
-        barcode = request.form['barcode']
+        try:
+            material_id = request.form['material_Id']
+            type_code = request.form['typeCode']
+            lot_no = request.form['lotNo']
+            material_type = request.form['materialType']
+            make = request.form.get('make', '')  # Optional
+            user = request.form.get('user', '')  # Optional
+            barcode = request.form.get('barcode', '')  # Optional
 
-        # Connect to the database
-        conn = sqlite3.connect('a2z_database.db')
-        cursor = conn.cursor()
+            # Connect to the database
+            conn = sqlite3.connect('a2z_database.db')
+            cursor = conn.cursor()
 
-        # Insert new raw material into the Raw_Materials table
-        cursor.execute("INSERT INTO Raw_Materials (material_Id,typeCode, lotNo,make,user,materialType,barcode) VALUES (?,?,?,?,?,?, ?)", 
-                       (material_id, type_code, lot_no, make, user, material_type, barcode))
-        conn.commit()
-        conn.close()
+            # Insert into the database
+            cursor.execute("""
+                INSERT INTO Raw_Materials (material_Id, typeCode, lotNo, make, user, materialType, barcode) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)""", 
+                (material_id, type_code, lot_no, make, user, material_type, barcode))
+            conn.commit()
+            conn.close()
 
-        # Redirect to the same page to refresh the list after inserting new data
-        return redirect(url_for('raw_material'))
+            # Return a proper success response
+            return jsonify({"success": True, "message": "Material added successfully!"})
+
+        except Exception as e:
+            # Print the error for debugging
+            print(f"Error: {e}")
+            return jsonify({"success": False, "message": f"An error occurred: {str(e)}"})
 
     # Handle GET request to display the raw materials
     current_page = int(request.args.get('page', 1))  # Default to page 1 if not provided
@@ -336,31 +455,74 @@ def raw_material():
 @app.route('/delete-raw-material/<int:raw_material_id>', methods=['DELETE'])
 def delete_raw_material(raw_material_id):
     try:
+        print(f"Attempting to delete raw material with ID: {raw_material_id}")
+
         # Check if user is logged in
         if 'username' not in session:
+            print("Unauthorized access attempt.")
             return jsonify({"success": False, "error": "Unauthorized"}), 401
 
-        # Connect to the specific database (a2z_database.db)
+        # Connect to the SQLite database
         conn = sqlite3.connect('a2z_database.db')
-        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        # Execute deletion query
+        # Check if the material exists
+        cursor.execute('SELECT * FROM Raw_Materials WHERE material_Id = ?', (raw_material_id,))
+        row = cursor.fetchone()
+
+        if row is None:
+            print(f"Material with ID {raw_material_id} not found.")
+            return jsonify({"success": False, "error": "Raw material not found"}), 404
+
+        # Delete the raw material from the database
         cursor.execute('DELETE FROM Raw_Materials WHERE material_Id = ?', (raw_material_id,))
         conn.commit()
 
-        # Check if the deletion actually occurred
         if cursor.rowcount == 0:
-            return jsonify({"success": False, "error": "Raw material not found"}), 404
+            print(f"Failed to delete material with ID {raw_material_id}.")
+            return jsonify({"success": False, "error": "Failed to delete material"}), 500
 
+        print(f"Successfully deleted material with ID {raw_material_id}.")
         return jsonify({"success": True})
-    
+
     except Exception as e:
-        print(f"Error while deleting raw material: {e}")
+        print(f"Error during deletion: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
-    
+
     finally:
-        conn.close()
+        if conn:
+            conn.close()
+
+@app.route('/update-raw-material/<int:material_Id>', methods=['POST'])
+def update_raw_material(material_Id):
+    data = request.json
+    typecode = data.get("typeCode")
+    lotNo = data.get("lotNo")
+    make = data.get("make")
+    user = data.get("user")
+    materialType = data.get("materialType")
+    barcode = data.get("barcode")
+
+    if not typecode or not lotNo or not make or not user or not materialType or not barcode:
+        return jsonify({"success": False, "error": "Missing fields in the request."})
+
+    try:
+        # Connect to the database and update the record
+        with sqlite3.connect('a2z_database.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE Raw_Materials
+                SET typeCode = ?, lotNo = ?, make = ?, user = ?, materialType = ?, barcode = ?
+                WHERE material_Id = ?
+            ''', (typecode, lotNo, make, user, materialType, material_Id,barcode))
+            conn.commit()
+
+            return jsonify({"success": True, "message": "Raw material updated successfully."})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+
 @app.route('/delete-recipe/<recipe_id>', methods=['DELETE'])
 def delete_recipe(recipe_id):
     try:
@@ -514,6 +676,8 @@ def update_plc_with_pos_values(pos_values):
     Update PLC with POS values and Recipe ID (assumed as the last element in pos_values).
     """
     client = Client(ENDPOINT_URL)
+    client.session_timeout = 30000  # Adjust timeout as needed
+    
     try:
         client.connect()
         # Ensure pos_values is a list with at least 10 elements (9 POS values + 1 Recipe ID)
@@ -634,7 +798,7 @@ def add_tag():
         return jsonify({"success": False, "error": "Missing fields in the request."})
 
     try:
-        with sqlite3.connect(DB_PATH) as conn:
+        with sqlite3.connect(DB_PATH1) as conn:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO Tag_Table (tagId, tagName, tagAddress, plcId)
@@ -655,15 +819,20 @@ def add_tag():
 def fetch_and_update_live_value(tag_address):
     """Fetch live value for a tag and update the Live_Tags table."""
     client = Client(ENDPOINT_URL)
+    client.session_timeout = 30000  # Adjust timeout as needed
     try:
         client.connect()
 
         # Fetch the value from the OPC UA server for the given tagAddress
         node = client.get_node(tag_address)
         value = node.get_value()
-
+  # Convert the value into a JSON string if it's not a single number
+        if isinstance(value, (list, dict)):  # If the value is an array or object
+            value = json.dumps(value)  # Convert to JSON string
+        else:
+            value = str(value)  # Convert single number or other value to string
         # Fetch the tagId from the Tag_Table for this tagAddress
-        with sqlite3.connect(DB_PATH) as conn:
+        with sqlite3.connect(DB_PATH1) as conn:
             cursor = conn.cursor()
             cursor.execute('''SELECT Tagid FROM Tag_Table WHERE tagAddress = ?''', (tag_address,))
             tag_id = cursor.fetchone()
@@ -699,7 +868,7 @@ def fetch_live_tag_data():
     """
     Fetch live tags and their corresponding tag addresses from the database.
     """
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(DB_PATH1) as conn:
         cursor = conn.cursor()
         cursor.execute('''
             SELECT lt.id, lt.tagId, tt.tagAddress 
@@ -757,19 +926,166 @@ def read_opcua_values(tag_data):
 
     return updates
 
+import json
+
 def update_database(updates):
     """
-    Update the database with the new live values.
+    Update the Live_Tags table with the new live values.
+    Insert the updated values into the Live_Log table as a historical record.
+    Convert lists or dictionaries in 'value' to JSON strings.
     """
-    with sqlite3.connect(DB_PATH) as conn:
+    updates_serialized = []  # To store serialized updates for Live_Tags
+    live_log_entries = []    # To store entries for the Live_Log table
+
+    for value, record_id in updates:
+        if isinstance(value, (list, dict)):
+            value = json.dumps(value)  # Convert list/dict to JSON string
+        else:
+            value = str(value)  # Convert other types to string
+        
+        # Prepare for Live_Tags update
+        updates_serialized.append((value, record_id))
+
+        # Prepare for Live_Log insert (fetch tagId dynamically)
+        live_log_entries.append((record_id, value))
+
+    # Database operations
+    with sqlite3.connect(DB_PATH1) as conn:
         cursor = conn.cursor()
+
+        # 1. Update the Live_Tags table
         cursor.executemany('''
             UPDATE Live_Tags
             SET value = ?, timestamp = CURRENT_TIMESTAMP
             WHERE id = ?
-        ''', updates)
+        ''', updates_serialized)
+
+        # 2. Insert into Live_Log table (fetch tagId using record_id)
+        for record_id, value in live_log_entries:
+            cursor.execute('''
+                INSERT INTO Live_Log (tagId, value, timestamp)
+                SELECT tagId, ?, CURRENT_TIMESTAMP
+                FROM Live_Tags
+                WHERE id = ?
+            ''', (value, record_id))
+
+        
         conn.commit()
-        # print(f"Updated {len(updates)} entries in the database.")
+        # clean_live_log()
+       
+def clean_live_log():
+    """
+    Fetch the latest 100 records from the Live_Log table and delete older records.
+    """
+    try:
+        with sqlite3.connect(DB_PATH1) as conn:
+            cursor = conn.cursor()
+
+            # Fetch the latest 100 records (optional step for confirmation or display)
+            cursor.execute('''
+                SELECT * 
+                FROM Live_Log 
+                ORDER BY timestamp DESC 
+                LIMIT 100
+            ''')
+            latest_records = cursor.fetchall()
+            
+
+            # Delete older records, keeping only the latest 100
+            cursor.execute('''
+                DELETE FROM Live_Log
+                WHERE id NOT IN (
+                    SELECT id 
+                    FROM Live_Log 
+                    ORDER BY timestamp DESC 
+                    LIMIT 100
+                )
+            ''')
+
+            # Commit the transaction
+            conn.commit()
+            print("Cleaned up older records, keeping only the latest 100 entries.")
+
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
+from pymongo import MongoClient
+import sqlite3
+import json
+
+# Database configuration
+
+
+def upload_live_log_to_mongodb():
+    """
+    Fetch the latest 100 records for each tagId from SQLite 
+    and upload them to MongoDB.
+    """
+    try:
+        # Connect to MongoDB
+        mongo_client = MongoClient(MONGO_URI)
+        mongo_db = mongo_client[MONGO_DB_NAME]
+        mongo_collection = mongo_db[MONGO_COLLECTION_NAME]
+        print("Connected to MongoDB!")
+
+        # Connect to SQLite
+        with sqlite3.connect(DB_PATH1) as conn:
+            cursor = conn.cursor()
+
+            # Fetch distinct tagIds from SQLite
+            cursor.execute("SELECT DISTINCT tagId FROM Live_Log")
+            tag_ids = cursor.fetchall()
+
+            # Process each tagId
+            for tag_id_tuple in tag_ids:
+                tag_id = tag_id_tuple[0]  # Extract tagId
+
+                # Fetch the latest 100 records for the current tagId
+                cursor.execute('''
+                    SELECT id, tagId, value, timestamp 
+                    FROM Live_Log 
+                    WHERE tagId = ?
+                    ORDER BY timestamp DESC 
+                    LIMIT 100
+                ''', (tag_id,))
+                records = cursor.fetchall()
+
+                # Convert the records into MongoDB-friendly JSON format
+                documents = [
+                    {
+                        "id": record[0],
+                        "tagId": record[1],
+                        "value": json.loads(record[2]) if is_json(record[2]) else record[2],
+                        "timestamp": record[3]
+                    }
+                    for record in records
+                ]
+
+                # Upload records to MongoDB (replace data for the tagId)
+                mongo_collection.delete_many({"tagId": tag_id})  # Clear old records for this tagId
+                if documents:
+                    mongo_collection.insert_many(documents)  # Insert latest records
+                print(f"Uploaded latest 100 records for tagId: {tag_id}")
+
+        print("Data successfully uploaded to MongoDB!")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+    finally:
+        mongo_client.close()
+
+def is_json(my_string):
+    """Helper function to check if a string is JSON."""
+    try:
+        json.loads(my_string)
+        return True
+    except ValueError:
+        return False
+
+# Call the function
+upload_live_log_to_mongodb()
 
 def update_all_live_tags():
     """
@@ -801,6 +1117,7 @@ def write_value():
     try:
         # Connect to the OPC UA server
         client = Client(ENDPOINT_URL)
+        client.session_timeout = 30000  # Adjust timeout as needed
         client.connect()
 
         # Get the node object
@@ -834,7 +1151,7 @@ def write_value():
 def read_values():
     try:
         # Connect to SQL Database
-        conn = sqlite3.connect('a2z_database.db')  # Update with your DB 
+        conn = sqlite3.connect('suvi_database.db')  # Update with your DB 
         cursor = conn.cursor()
 
 
@@ -847,6 +1164,7 @@ def read_values():
 
         # Connect to the PLC
         client = Client(ENDPOINT_URL)
+        client.session_timeout = 30000  # Adjust timeout as needed
         client.connect()
 
         results = []
@@ -874,6 +1192,7 @@ def read_values():
 def read_live_values(node_ids):
     """Connect to OPC UA server and emit live data to the frontend."""
     client = Client(ENDPOINT_URL)
+    client.session_timeout = 30000  # Adjust timeout as needed
     try:
         # print("Attempting to connect to OPC UA server...")
         client.connect()
@@ -905,7 +1224,7 @@ def read_live_values(node_ids):
 @app.route('/getLiveValues', methods=['GET'])
 def get_live_values():
     try:
-        with sqlite3.connect(DB_PATH) as conn:
+        with sqlite3.connect(DB_PATH1) as conn:
             cursor = conn.cursor()
             cursor.execute('''
                 SELECT Id,value, timestamp,tagId
@@ -937,13 +1256,140 @@ def start_live_read():
     thread.start()
 
     return jsonify({"success": True, "message": "Live data reading started"})
+
+@app.route('/get_recipe', methods=['GET'])
+def get_recipe():
+    conn = get_db_connection()
+    recipe_id = request.args.get('recipe_id')
+
+    print("Recipe ID received:", recipe_id)  # Debug log
+
+    if not recipe_id:
+        return jsonify({"success": False, "message": "Recipe ID is required"})
+
+    try:
+        # Fetch data from the Recipe table
+        recipe_main = conn.execute("SELECT * FROM Recipe WHERE recipe_id = ?", (recipe_id,)).fetchone()
+        if not recipe_main:
+            return jsonify({"success": False, "message": "Recipe not found"})
+
+        # Convert `recipe_main` to a dictionary
+        recipe_main = dict(recipe_main)
+
+        # Fetch data from Recipe_Details1 (which should contain Spacer and Alu_roller_type)
+        recipe_pos = conn.execute("SELECT * FROM Recipe_Details1 WHERE recipe_id = ?", (recipe_id,)).fetchall()
+        recipe_pos = [dict(pos) for pos in recipe_pos]  # Convert each row to a dictionary
+        print("Fetched recipe_pos:", recipe_pos)  # Debugging the fetched data
+
+        # Fetch data from Sub_Menu (which contains motor-related details)
+        recipe_motor = conn.execute("SELECT * FROM Sub_Menu WHERE recipe_id = ?", (recipe_id,)).fetchone()
+        recipe_motor = dict(recipe_motor) if recipe_motor else {}
+
+        # Build the response data
+        data = {
+            "recipe_id": recipe_main.get("Recipe_ID"),
+            "recipe_name": recipe_main.get("Recipe_Name"),
+            "filter_size": recipe_main.get("Filter_Size"),
+            "filter_code": recipe_main.get("Filter_Code"),
+            "art_no": recipe_main.get("Art_No"),
+            "Alu_coil_width": recipe_motor.get("alu_coil_width", ""),
+            "Alu_roller_type": "",  # Default, will be overwritten with values from `recipe_pos`
+            "Spacer": "",  # Default, will be overwritten with values from `recipe_pos`
+            "Motor_speed": recipe_motor.get("motor_speed", ""),
+            "Motor_stroke": recipe_motor.get("motor_stroke", ""),
+            "Motor_force": recipe_motor.get("other_speed_force", ""),
+        }
+        
+
+        # Add positions to the data and map the fields like Alu_roller_type and Spacer from `recipe_pos`
+        for i, Pos in enumerate(recipe_pos, start=1):
+    # For each position, check if it's in the Pos dictionary and assign it
+        #  pos_key = f"Pos{i}"
+        #  if pos_key in Pos:
+        #    data[pos_key] = Pos[pos_key] if Pos[pos_key] is not None else ""
+    
+    # Overwrite Alu_roller_type and Spacer from `recipe_pos` table if present
+         if "Alu_roller_type" in Pos:
+           data["Alu_roller_type"] = Pos["Alu_roller_type"]
+        if "Pos1" in Pos:
+           data["Pos1"] = Pos["Pos1"]
+        if "Pos2" in Pos:
+           data["Pos2"] = Pos["Pos2"]
+        if "Pos3" in Pos:
+           data["Pos3"] = Pos["Pos3"]
+        if "Pos4" in Pos:
+           data["Pos4"] = Pos["Pos4"]
+        if "Pos5" in Pos:
+           data["Pos5"] = Pos["Pos5"]
+        if "Pos6" in Pos:
+           data["Pos6"] = Pos["Pos6"]
+        if "Pos7" in Pos:
+            data["Pos7"] = Pos["Pos7"]
+        if "Pos8" in Pos:
+            data["Pos8"] = Pos["Pos8"]
+        if "Pos9" in Pos:
+            data["Pos9"] = Pos["Pos9"]
+        if "Spacer" in Pos:
+          data["Spacer"] = Pos["Spacer"]
+
+
+        print("Final response data:", data)  # Debug log
+        return jsonify({"success": True, **data})
+
+    except Exception as e:
+        print("Error:", str(e))  # Log the error for debugging
+        return jsonify({"success": False, "message": str(e)})
+# NODE_IDS = {
+#     "Motor_speed": "ns=2;i=2",  # Replace with actual Node ID for Motor_speed
+#     "Motor_stroke": "ns=2;i=3", # Replace with actual Node ID for Motor_stroke
+#     "Motor_force": "ns=2;i=4"   # Replace with actual Node ID for Motor_force
+# }
+
+@app.route('/get_last_plc_values', methods=['GET'])
+def get_last_plc_values():
+    client = Client(ENDPOINT_URL)  # OPC UA client
+    try:
+        # Connect to OPC UA server
+        client.connect()
+        # Fetch values for the given Node IDs
+        coil_Width = client.get_node('ns=3;s="OpenRecipe"."coilWidth"').get_value()
+        motor_force = client.get_node('ns=3;s="OpenRecipe"."servoMotorForce"').get_value()
+        motor_stroke = client.get_node('ns=3;s="OpenRecipe"."servoMotorStroke"').get_value()
+        motor_speed = client.get_node('ns=3;s="OpenRecipe"."servoMotorSpeed"').get_value()
+
+        # Build response
+        last_plc_values = {
+            "Motor_speed": str(motor_speed),
+            "Motor_stroke": str(motor_stroke),
+            "Motor_force": str(motor_force),
+            "coil_Width":  str(coil_Width)
+        }
+        return jsonify(last_plc_values)
+
+    except Exception as e:
+        print("Error fetching PLC values:", e)
+        return jsonify({"error": "Failed to fetch PLC values"}), 500
+    finally:
+        client.disconnect()
+        print("Disconnected from OPC UA Server")
 # if __name__ == '__main__':
 #     app.run(debug=False)
-def run_periodic_update():
+def run_periodic_update1():
     while True:
+        
         update_all_live_tags()
-        time.sleep(1)  # Update every 10 seconds
+        
+        time.sleep(1)  # Update every 1 seconds
+
+def run_periodic_update2():
+    while True:
+        
+        update_batch_status()
+        
+        time.sleep(1)  # Update every 1 seconds
+        
 if __name__ == '__main__':
     print("Starting Flask app...")
-    threading.Thread(target=run_periodic_update, daemon=True).start()
+    threading.Thread(target=run_periodic_update1, daemon=True).start()
+    threading.Thread(target=run_periodic_update2, daemon=True).start()
     socketio.run(app, host='0.0.0.0', port=5000)
