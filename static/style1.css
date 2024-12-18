@@ -731,10 +731,7 @@ select:focus {
 
 
 
-
-
-
-/* Main popup container */
+/* Raw Material CSS for add new material */
 #add-material-section {
     display: none; /* Initially hidden */
     position: fixed; /* Fixed position for the popup */
@@ -751,82 +748,126 @@ select:focus {
 
 /* Popup form styling */
 #material-form {
-    background: linear-gradient(135deg, #dfd1f1, #dfd1f1); /* Gradient background */
-    border-radius: 10px;
-    width: 370px; /* Fixed width for the popup */
-    padding: 20px; /* Padding for spacing within the form */
-    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3); /* Shadow effect for the popup */
-    text-align: center; /* Centered text within the popup */
-    animation: fadeIn 0.3s ease-in-out; /* Fade-in effect */
+    background: #e7e1e9;
+    border-radius: 12px; /* Rounded corners */
+    width: 400px; /* Adjusted width to match production popup */
+    padding: 20px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3); /* Softer shadow */
+    animation: fadeIn 0.3s ease-in-out; /* Smooth animation */
 }
-.details-mat-table {
+.popup-raw-header {
+    display: flex;
+    font-size: 18px;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e7e1e9; /* Light gray header background */
+    
+    padding: 3px 10px 15px 69px;
+    border-radius: 10px 10px 0 0; /* Rounded corners for the top */
+}
+
+
+.popup-raw-body{
+    background-color: white;
+    border-radius: 12px;
+    padding-top: 10px;
+    padding-right: 30px;
+    padding-left: 10px;
+}
+#addRawMaterialForm {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
+    padding: 0px;
+    background-color: #e7e1e9; /* Ensures background color remains consistent */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+/* Form group styling */
+.form-raw-group {
+    display: flex; /* Use flexbox for horizontal alignment */
+    margin-bottom: 15px; /* Space between rows */
+    align-items: left; 
+    border-bottom: 2px solid #e7e1e9; /* Subtle bottom border */
+}
+
+.form-raw-group label {
+    width: 150px; /* Set a fixed width for the labels */
+    margin: 10px; /* Space between label and input */
+    font-weight: bold; /* Bold for emphasis */
     text-align: left;
 }
 
-.details-mat-table td {
-    padding: 8px,12px,8px,12px;
-    font-size: 14px;
-}
-
-.details-mat-table td:first-child {
-    font-weight: bold;
-    width: 50%;
-}
-
-.details-mat-table input {
-    width: 100%;
-    padding: 5px;
-    border: 1px solid #c998da;
+.form-raw-group input {
+    flex: 1; /* Allow input field to expand to fill available space */
+    
+    padding: 8px; /* Add padding inside input field */
+    font-size: 14px; /* Font size for better readability */
+    border: 1px solid #ca96e5; /* Add a light border */
     border-radius: 4px;
 }
+
+.form-raw-group input:focus {
+    border-color: #007BFF; /* Blue highlight on focus */
+    outline: none;
+}
+.popup-raw-footer {
+    text-align: right;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    margin-right: 140px;
+}
 /* Close button */
-.close-button {
-    position: absolute;
+/* Close button styling */
+.popup-raw-content {
+    position: relative; /* Allow absolute children to align correctly */
+    background: white;
+    border-radius: 10px;
+    width: 400px;
+    padding: 20px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Close button styling */
+.close-raw-button {
+    position: absolute; /* Fixed position relative to the popup */
     top: 10px;
     right: 10px;
-    background: none;
-    border: none;
-    font-size: 20px;
-    color: #555;
-    cursor: pointer;
-    font-weight: bold;
-    transition: color 0.3s;
+    background: none; /* No background to blend with the popup */
+    border: none; /* No border */
+    font-size: 20px; /* Readable size */
+    color: #555; /* Gray color */
+    cursor: pointer; /* Indicate clickable area */
+    font-weight: bold; /* Emphasized appearance */
+    z-index: 1010; /* Ensure it appears above the popup content */
 }
 
-.close-button:hover {
-    color: #000;
+.close-raw-button:hover {
+    color: #000; /* Black color when hovered */
 }
-
-/* Header styling */
-
 
 /* Submit button */
-.submit-button {
-    background: #007BFF;
+.start-raw-button {
+    background: #007BFF; /* Blue background */
     color: white;
     border: none;
-    padding: 12px 20px;
+    padding: 10px 15px;
     font-size: 16px;
-    border-radius: 5px;
+    border-radius: 6px; /* Rounded button corners */
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    width: 30%;
-    margin-left: 150px;
+    transition: background-color 0.3s ease, transform 0.2s;
 }
 
-.submit-button:hover {
-    background: #0056b3;
+.start-raw-button:hover {
+    background: #0056b3; /* Darker blue on hover */
     transform: translateY(-2px);
 }
 
-.submit-button:active {
+.start-raw-button:active {
     transform: translateY(0);
 }
 
-/* Fade-in animation for the popup */
+/* Fade-in animation for popup */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -837,46 +878,457 @@ select:focus {
         transform: scale(1);
     }
 }
-.pop-up {
-    display: block;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-   
+
+
+
+
+/*Update raw Material css*/
+#update-material-section {
+    display: none; /* Initially hidden */
+    position: fixed; /* Fixed position for the popup */
+    top: 0; /* Align at the top of the page */
+    left: 0; /* Align at the left of the page */
+    width: 100%; /* Cover the full screen width */
+    height: 100%; /* Cover the full screen height */
+    background-color: rgba(0, 0, 0, 0.6); /* Dim background */
+    display: flex; /* Flexbox for centering content */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    z-index: 1000; /* Ensure it is on top of other elements */
 }
 
-/* .popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    width: 400px;
+/* Popup form styling */
+#material-update-form {
+    background: #e7e1e9;
+    border-radius: 12px; /* Rounded corners */
+    width: 400px; /* Adjusted width to match production popup */
+    padding: 20px;
+    margin-left: 500px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3); /* Softer shadow */
+    animation: fadeIn 0.3s ease-in-out; /* Smooth animation */
+}
+.popup-update-header {
+    display: flex;
+    font-size: 18px;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e7e1e9; /* Light gray header background */
+    
+    padding: 3px 10px 15px 69px;
+    border-radius: 10px 10px 0 0; /* Rounded corners for the top */
+}
+
+
+.popup-update-body{
+    background-color: white;
+    border-radius: 12px;
+    padding-top: 10px;
+    padding-right: 30px;
+    padding-left: 10px;
+}
+#updateMaterialForm {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center; 
-} */
-
-
-label {
-    font-size: 16px;
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
-    text-align: center; /* Align the label text in the center */
-}
-
-input {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    text-align: center; /* Center input text */
+    padding: 0px;
+    background-color: #e7e1e9; /* Ensures background color remains consistent */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+/* Form group styling */
+.form-update-group {
+    display: flex; /* Use flexbox for horizontal alignment */
+    margin-bottom: 15px; /* Space between rows */
+    align-items: left; 
+    border-bottom: 2px solid #e7e1e9; /* Subtle bottom border */
 }
 
+.form-update-group label {
+    width: 150px; /* Set a fixed width for the labels */
+    margin: 10px; /* Space between label and input */
+    font-weight: bold; /* Bold for emphasis */
+    text-align: left;
+}
+
+.form-update-group input {
+    flex: 1; /* Allow input field to expand to fill available space */
+    
+    padding: 8px; /* Add padding inside input field */
+    font-size: 14px; /* Font size for better readability */
+    border: 1px solid #ca96e5; /* Add a light border */
+    border-radius: 4px;
+}
+
+.form-update-group input:focus {
+    border-color: #007BFF; /* Blue highlight on focus */
+    outline: none;
+}
+.popup-update-footer {
+    text-align: right;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    margin-right: 140px;
+}
+/* Close button */
+/* Close button styling */
+.popup-update-content {
+    position: relative; /* Allow absolute children to align correctly */
+    background: white;
+    border-radius: 10px;
+    width: 400px;
+    padding: 20px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Close button styling */
+.close-update-button {
+    position: absolute; /* Fixed position relative to the popup */
+    top: 10px;
+    right: 10px;
+    background: none; /* No background to blend with the popup */
+    border: none; /* No border */
+    font-size: 20px; /* Readable size */
+    color: #555; /* Gray color */
+    cursor: pointer; /* Indicate clickable area */
+    font-weight: bold; /* Emphasized appearance */
+    z-index: 1010; /* Ensure it appears above the popup content */
+}
+
+.close-update-button:hover {
+    color: #000; /* Black color when hovered */
+}
+
+/* Submit button */
+.start-update-button {
+    background: #007BFF; /* Blue background */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 6px; /* Rounded button corners */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.start-update-button:hover {
+    background: #0056b3; /* Darker blue on hover */
+    transform: translateY(-2px);
+}
+
+.start-update-button:active {
+    transform: translateY(0);
+}
+
+/* Fade-in animation for popup */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+
+/* Tag overview CSS for add new tag */
+#add-tag-section {
+    display: none; /* Initially hidden */
+    position: fixed; /* Fixed position for the popup */
+    top: 0; /* Align at the top of the page */
+    left: 0; /* Align at the left of the page */
+    width: 100%; /* Cover the full screen width */
+    height: 100%; /* Cover the full screen height */
+    background-color: rgba(0, 0, 0, 0.6); /* Dim background */
+    display: flex; /* Flexbox for centering content */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    z-index: 1000; /* Ensure it is on top of other elements */
+    pointer-events: auto;
+}
+
+/* Popup form styling */
+#tag-form {
+    background: #e7e1e9;
+    border-radius: 12px; /* Rounded corners */
+    width: 400px; /* Adjusted width to match production popup */
+    padding: 20px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3); /* Softer shadow */
+    animation: fadeIn 0.3s ease-in-out; /* Smooth animation */
+}
+.popup-tag-header {
+    display: flex;
+    font-size: 18px;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e7e1e9; /* Light gray header background */
+    
+    padding: 3px 10px 15px 69px;
+    border-radius: 10px 10px 0 0; /* Rounded corners for the top */
+}
+
+
+.popup-tag-body{
+    background-color: white;
+    border-radius: 12px;
+    padding-top: 10px;
+    padding-right: 30px;
+    padding-left: 10px;
+}
+#addTagForm {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0px;
+    background-color: #e7e1e9; /* Ensures background color remains consistent */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+/* Form group styling */
+.form-tag-group {
+    display: flex; /* Use flexbox for horizontal alignment */
+    margin-bottom: 15px; /* Space between rows */
+    align-items: left; 
+    border-bottom: 2px solid #e7e1e9; /* Subtle bottom border */
+}
+
+.form-tag-group label {
+    width: 150px; /* Set a fixed width for the labels */
+    margin: 10px; /* Space between label and input */
+    font-weight: bold; /* Bold for emphasis */
+    text-align: left;
+}
+
+.form-tag-group input {
+    flex: 1; /* Allow input field to expand to fill available space */
+    
+    padding: 8px; /* Add padding inside input field */
+    font-size: 14px; /* Font size for better readability */
+    border: 1px solid #ca96e5; /* Add a light border */
+    border-radius: 4px;
+}
+
+.form-tag-group input:focus {
+    border-color: #007BFF; /* Blue highlight on focus */
+    outline: none;
+}
+.popup-tag-footer {
+    text-align: right;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    margin-right: 140px;
+}
+/* Close button */
+/* Close button styling */
+.popup-tag-content {
+    position: relative; /* Allow absolute children to align correctly */
+    background: white;
+    border-radius: 10px;
+    width: 400px;
+    padding: 20px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Close button styling */
+.close-tag-button {
+    position: absolute; /* Fixed position relative to the popup */
+    top: 10px;
+    right: 10px;
+    background: none; /* No background to blend with the popup */
+    border: none; /* No border */
+    font-size: 20px; /* Readable size */
+    color: #555; /* Gray color */
+    cursor: pointer; /* Indicate clickable area */
+    font-weight: bold; /* Emphasized appearance */
+    z-index: 1010; /* Ensure it appears above the popup content */
+}
+
+.close-tag-button:hover {
+    color: #000; /* Black color when hovered */
+}
+
+/* Submit button */
+.start-tag-button {
+    background: #007BFF; /* Blue background */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 6px; /* Rounded button corners */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.start-tag-button:hover {
+    background: #0056b3; /* Darker blue on hover */
+    transform: translateY(-2px);
+}
+
+.start-tag-button:active {
+    transform: translateY(0);
+}
+
+/* Fade-in animation for popup */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Update Tag overview CSS  */
+#update-tag-section {
+    display: none; /* Initially hidden */
+    position: fixed; /* Fixed position for the popup */
+    top: 0; /* Align at the top of the page */
+    left: 0; /* Align at the left of the page */
+    width: 100%; /* Cover the full screen width */
+    height: 100%; /* Cover the full screen height */
+    background-color: rgba(0, 0, 0, 0.6); /* Dim background */
+    display: flex; /* Flexbox for centering content */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    z-index: 1000; /* Ensure it is on top of other elements */
+    pointer-events: auto;
+}
+
+/* Popup form styling */
+#update-tag-form {
+    background: #e7e1e9;
+    border-radius: 12px; /* Rounded corners */
+    width: 400px; /* Adjusted width to match production popup */
+    padding: 20px;
+    margin-top: 130px;
+    margin-left: 500px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3); /* Softer shadow */
+    animation: fadeIn 0.3s ease-in-out; /* Smooth animation */
+}
+.popup-update-tag-header {
+    display: flex;
+    font-size: 18px;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e7e1e9; /* Light gray header background */
+    
+    padding: 3px 10px 15px 69px;
+    border-radius: 10px 10px 0 0; /* Rounded corners for the top */
+}
+
+
+.popup-update-tag-body{
+    background-color: white;
+    border-radius: 12px;
+    padding-top: 10px;
+    padding-right: 30px;
+    padding-left: 10px;
+}
+#updateTagForm {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0px;
+    background-color: #e7e1e9; /* Ensures background color remains consistent */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+/* Form group styling */
+.form-update-tag-group {
+    display: flex; /* Use flexbox for horizontal alignment */
+    margin-bottom: 15px; /* Space between rows */
+    align-items: left; 
+    border-bottom: 2px solid #e7e1e9; /* Subtle bottom border */
+}
+
+.form-update-tag-group label {
+    width: 150px; /* Set a fixed width for the labels */
+    margin: 10px; /* Space between label and input */
+    font-weight: bold; /* Bold for emphasis */
+    text-align: left;
+}
+
+.form-update-tag-group input {
+    flex: 1; /* Allow input field to expand to fill available space */
+    
+    padding: 8px; /* Add padding inside input field */
+    font-size: 14px; /* Font size for better readability */
+    border: 1px solid #ca96e5; /* Add a light border */
+    border-radius: 4px;
+}
+
+.form-update-tag-group input:focus {
+    border-color: #007BFF; /* Blue highlight on focus */
+    outline: none;
+}
+.popup-update-tag-footer {
+    text-align: right;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    margin-right: 140px;
+}
+/* Close button */
+/* Close button styling */
+.popup-update-tag-content {
+    position: relative; /* Allow absolute children to align correctly */
+    background: white;
+    border-radius: 10px;
+    width: 400px;
+    padding: 20px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Close button styling */
+.close-update-tag-button {
+    position: absolute; /* Fixed position relative to the popup */
+    top: 10px;
+    right: 10px;
+    background: none; /* No background to blend with the popup */
+    border: none; /* No border */
+    font-size: 20px; /* Readable size */
+    color: #555; /* Gray color */
+    cursor: pointer; /* Indicate clickable area */
+    font-weight: bold; /* Emphasized appearance */
+    z-index: 1010; /* Ensure it appears above the popup content */
+}
+
+.close-update-tag-button:hover {
+    color: #000; /* Black color when hovered */
+}
+
+/* Submit button */
+.start-update-tag-button {
+    background: #007BFF; /* Blue background */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 6px; /* Rounded button corners */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.start-update-tag-button:hover {
+    background: #0056b3; /* Darker blue on hover */
+    transform: translateY(-2px);
+}
+
+.start-update-tag-button:active {
+    transform: translateY(0);
+}
+
+/* Fade-in animation for popup */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
