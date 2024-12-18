@@ -12,6 +12,12 @@
     <div id="recipe-form">
         <h3>Add New Recipe</h3>
         <button type="button" class="close-button" onclick="toggleRecipeForm()">X</button>
+          <!-- Input to load existing recipe -->
+        <div>
+            <label for="load_recipe_id">Load Existing Recipe:</label>
+            <input type="text" id="load_recipe_id" placeholder="Enter Recipe ID">
+            <button type="button" onclick="loadRecipe()">Load Recipe</button>
+        </div>
         <form action="/add_recipe" method="POST">
             <label for="recipe_id">Recipe ID:</label>
             <input type="text" id="recipe_id" name="recipe_id" required>
@@ -51,12 +57,13 @@
             <label for="Motor_force">Motor_force:</label>
             <input type="text" id="Motor_force" name="Motor_force">
 
-
+<button type="button" class="submit-button" onclick="loadLastPLCValues()">Upload Settings</button>
             <button type="submit" class="submit-button">Submit Recipe</button>
         </form>
     </div>
 </div>
 <style>
+    
     /* Center align all table cells */
     #recipetable th, #recipetable td {
         text-align: center; /* Center-align text */
@@ -67,6 +74,8 @@
     #recipetable th, #recipetable td {
         padding: 8px;
     }
+    
+    
 </style>
 <div class="table-container">
     <table id="recipetable">
@@ -119,4 +128,81 @@
       <span class="pagination-btn disabled">Next</span>
     {% endif %}
 </div>
+<script>
+function loadRecipe() {
+    const recipeId = document.getElementById("load_recipe_id").value;
+
+    if (!recipeId) {
+        alert("Please enter a Recipe ID to load!");
+        return;
+    }
+
+    console.log("Sending recipe ID:", recipeId); // Debug log
+
+    fetch(`/get_recipe?recipe_id=${recipeId}`, {
+        method: "GET",
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log("Response data:", data); // Debug log
+
+            if (data.success) {
+                // Populate form fields with the response data
+                document.getElementById("recipe_id").value = data.recipe_id;
+                document.getElementById("recipe_name").value = data.recipe_name;
+                document.getElementById("filter_size").value = data.filter_size;
+                document.getElementById("filter_code").value = data.filter_code;
+                document.getElementById("art_no").value = data.art_no;
+                document.getElementById("Alu_coil_width").value = data.Alu_coil_width;
+                document.getElementById("Alu_roller_type").value = data.Alu_roller_type;
+                document.getElementById("Spacer").value = data.Spacer;
+                document.getElementById("Motor_speed").value = data.Motor_speed;
+                document.getElementById("Motor_stroke").value = data.Motor_stroke;
+                document.getElementById("Motor_force").value = data.Motor_force;
+                 // Loop through pos fields (pos1, pos2, ..., pos10)
+    // Loop through pos fields (Pos1, Pos2, ..., Pos9)
+   
+    // Loop through Pos1 to Pos9 and populate them
+    for (let i = 1; i <= 9; i++) {
+        const posValue = data[`Pos${i}`];  // Access Pos1, Pos2, ..., Pos9
+        const posSelect = document.getElementById(`pos${i}`);
+        if (posSelect) {
+            posSelect.value = posValue || "";  // Set empty if no value exists
+        }
+    }
+                // document.getElementById("Alu_coil_width").value = data.Alu_coil_width;
+                // document.getElementById("Alu_roller_type").value = data.Alu_roller_type;
+                // document.getElementById("Spacer").value = data.Spacer;
+                // document.getElementById("Motor_speed").value = data.Motor_speed;
+                // document.getElementById("Motor_stroke").value = data.Motor_stroke;
+                // document.getElementById("Motor_force").value = data.Motor_force;
+
+                alert("Recipe loaded successfully!");
+            } else {
+                alert("Recipe not found!");  // Removed recipeId from this line
+            }
+        })
+        .catch((error) => {
+            console.error("Error loading recipe:", error);
+            alert("An error occurred while loading the recipe.");
+        });
+}
+function loadLastPLCValues() {
+    fetch('/get_last_plc_values')  // Replace with your actual endpoint
+        .then(response => response.json())
+        .then(data => {
+            console.log("Last PLC Values:", data);
+            document.getElementById("Motor_speed").value = data.Motor_speed || "";
+            document.getElementById("Motor_stroke").value = data.Motor_stroke || "";
+            document.getElementById("Motor_force").value = data.Motor_force || "";
+            document.getElementById("Alu_coil_width").value = data.coil_Width || "";
+            alert("Last PLC values loaded successfully!");
+        })
+        .catch(error => {
+            console.error("Error fetching PLC values:", error);
+            alert("Failed to load last PLC values.");
+        });
+}
+
+</script>
 {% endblock %}
