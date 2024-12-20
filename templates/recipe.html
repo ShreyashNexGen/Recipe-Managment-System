@@ -10,13 +10,14 @@
 
 <div id="add-recipe-section">
     <div id="recipe-form">
-        <h3>Add New Recipe</h3>
-        <button type="button" class="close-button" onclick="toggleRecipeForm()">X</button>
-          <!-- Input to load existing recipe -->
-        <div>
-            <label for="load_recipe_id">Load Existing Recipe:</label>
-            <input type="text" id="load_recipe_id" placeholder="Enter Recipe ID">
-            <button type="button" onclick="loadRecipe()">Load Recipe</button>
+        <div class="popup-recipe-header">
+            <h3>Add New Recipe</h3>
+            <button type="button" class="close-button" onclick="toggleRecipeForm()">X</button>
+            <div>
+                <label for="load_recipe_id">Load Existing Recipe:</label>
+                <input type="text" id="load_recipe_id" placeholder="Enter Recipe ID">
+                <button type="button" onclick="loadRecipe()">Load Recipe</button>
+            </div>
         </div>
         <form action="/add_recipe" method="POST">
             <label for="recipe_id">Recipe ID:</label>
@@ -41,7 +42,7 @@
                 {% endfor %}
             </select>
             {% endfor %}
-
+            
             <label for="Alu_coil_width">Alu Coil Width:</label>
             <input type="text" id="Alu_coil_width" name="Alu_coil_width">
 
@@ -62,6 +63,67 @@
         </form>
     </div>
 </div>
+
+<div id="update-recipe-section" style="display: none;">
+    <div id="update-recipe-form">
+        <div class="popup-recipe-header">
+            <h3>Update Recipe</h3>
+            <button type="button" class="close-button" onclick="toggleUpdatePopup()">X</button>
+        </div>
+        <form action="/update_recipe" method="POST">
+            <label for="update_recipe_id">Recipe ID:</label>
+            <input type="text" id="update_recipe_id" name="recipe_id" readonly>
+
+            <label for="update_recipe_name">Recipe Name:</label>
+            <input type="text" id="update_recipe_name" name="recipe_name" required>
+
+            <label for="update_filter_size">Filter Size:</label>
+            <input type="text" id="update_filter_size" name="filter_size" required>
+
+            <label for="update_filter_code">Filter Code:</label>
+            <input type="text" id="update_filter_code" name="filter_code" required>
+
+            <label for="update_art_no">Art No:</label>
+            <input type="text" id="update_art_no" name="art_no" required>
+
+            {% for i in range(1, 10) %}
+            <label for="update_pos{{ i }}">Pos{{ i }}:</label>
+            <select id="update_pos{{ i }}" name="pos{{ i }}">
+                <option value="" disabled selected>Select a value</option>
+                {% for value in pos_values %}
+                <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+            {% endfor %}
+
+            <label for="update_alu_coil_width">Alu Coil Width:</label>
+            <input type="text" id="update_alu_coil_width" name="Alu_coil_width">
+
+            <label for="update_alu_roller_type">Alu Roller Type:</label>
+            <input type="text" id="update_alu_roller_type" name="Alu_roller_type">
+
+            <label for="update_spacer">Spacer:</label>
+            <input type="text" id="update_spacer" name="Spacer">
+
+            <label for="update_motor_speed">Motor Speed:</label>
+            <input type="text" id="update_motor_speed" name="Motor_speed">
+
+            <label for="update_motor_stroke">Motor Stroke:</label>
+            <input type="text" id="update_motor_stroke" name="Motor_stroke">
+
+            <label for="update_motor_force">Motor Force:</label>
+            <input type="text" id="update_motor_force" name="Motor_force">
+
+            <button type="submit" class="submit-button">Update Recipe</button>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
 <style>
     
     /* Center align all table cells */
@@ -88,6 +150,7 @@
                 <th>Filter Code</th>
                 <th>Art No</th>
                 <th>Action</th>
+                <th>Update</th>
             </tr>
         </thead>
         <tbody>
@@ -102,7 +165,13 @@
                 <td>
                     <!-- Delete Button -->
                     <button class="delete-button" onclick="confirmDeleteRecipe('{{ recipe.Recipe_ID }}')">
-                        <i class="fa fa-trash"></i> Delete
+                        <i class="fa fa-trash"></i> 
+                    </button>
+                </td>
+                <td>
+                    <!-- Update Button -->
+                    <button class="update-button" onclick="openUpdatePopup('{{ recipe.Recipe_ID }}')">
+                        <i class="fa-regular fa-pen-to-square"></i> 
                     </button>
                 </td>
             </tr>
@@ -202,6 +271,47 @@ function loadLastPLCValues() {
             console.error("Error fetching PLC values:", error);
             alert("Failed to load last PLC values.");
         });
+}
+/* Update function in recipe page*/
+function openUpdatePopup(recipeId) {
+    // Show the update popup
+    document.getElementById('update-recipe-section').style.display = 'block';
+
+    // Fetch the recipe details using recipeId
+    fetch(`/get_recipe?recipe_id=${recipeId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Populate the form fields with the recipe data
+                document.getElementById("update_recipe_id").value = data.recipe_id;
+                document.getElementById("update_recipe_name").value = data.recipe_name;
+                document.getElementById("update_filter_size").value = data.filter_size;
+                document.getElementById("update_filter_code").value = data.filter_code;
+                document.getElementById("update_art_no").value = data.art_no;
+
+                for (let i = 1; i <= 9; i++) {
+                    const posSelect = document.getElementById(`update_pos${i}`);
+                    posSelect.value = data[`Pos${i}`] || ""; // Populate Pos1 to Pos9
+                }
+
+                document.getElementById("update_alu_coil_width").value = data.Alu_coil_width || "";
+                document.getElementById("update_alu_roller_type").value = data.Alu_roller_type || "";
+                document.getElementById("update_spacer").value = data.Spacer || "";
+                document.getElementById("update_motor_speed").value = data.Motor_speed || "";
+                document.getElementById("update_motor_stroke").value = data.Motor_stroke || "";
+                document.getElementById("update_motor_force").value = data.Motor_force || "";
+            } else {
+                alert("Recipe not found!");
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching recipe:", error);
+            alert("Failed to fetch recipe details.");
+        });
+}
+
+function toggleUpdatePopup() {
+    document.getElementById('update-recipe-section').style.display = 'none';
 }
 
 </script>
