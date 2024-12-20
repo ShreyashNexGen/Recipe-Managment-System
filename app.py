@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import json
 import datetime
+from datetime import datetime
 from datetime import timedelta
 from flask_socketio import SocketIO, emit
 from opcua import Client, ua
@@ -10,6 +11,10 @@ from flask import send_from_directory
 import threading
 from threading import Thread
 import time
+import requests
+import json
+import sqlite3
+from bson import json_util
 from pymongo import MongoClient
 from flask_cors import CORS
 app = Flask(__name__)
@@ -278,7 +283,7 @@ def update_tag(tagId):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
 
         # Connect to the database and update the tag
-        conn = sqlite3.connect('a2z_database.db')
+        conn = sqlite3.connect(DB_PATH1)
         cursor = conn.cursor()
 
         # Check if the tag exists
@@ -294,9 +299,11 @@ def update_tag(tagId):
             SET tagName = ?, tagAddress = ?, plcId = ?
             WHERE tagId = ?
         """, (tagName, tagAddress, plcId, tagId))
+        
         conn.commit()
+        
         conn.close()
-
+        fetch_and_update_live_value(tagAddress)
         # Respond with success message
         return jsonify({"success": True, "message": "Tag updated successfully"})
 
@@ -312,12 +319,13 @@ def delete_tag(tag_id):
             return jsonify({"success": False, "error": "Unauthorized"}), 401
 
         # Connect to the specific database
-        conn = sqlite3.connect('a2z_database.db')  # Make sure we're connecting to the right database
+        conn = sqlite3.connect(DB_PATH1)  # Make sure we're connecting to the right database
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
         # Execute deletion query
         cursor.execute('DELETE FROM Tag_Table WHERE tagId = ?', (tag_id,))
+        cursor.execute('DELETE FROM Live_Tags WHERE tagId=?',(tag_id,))
         conn.commit()
 
         # Check if the deletion actually occurred
@@ -751,8 +759,8 @@ def start_recipe(recipe_id):
         return jsonify({"error": "Quantity is required"}), 400
 
     # Generate Batch Code and Timestamp
-    batch_code = f"BATCH-{recipe_id}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    batch_code = f"BATCH-{recipe_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     # Insert into Recipe_Log Table
     try:
@@ -932,6 +940,7 @@ def update_database(updates):
     """
     Update the Live_Tags table with the new live values.
     Insert the updated values into the Live_Log table as a historical record.
+    Include the tagName in the Live_Log entry.
     Convert lists or dictionaries in 'value' to JSON strings.
     """
     updates_serialized = []  # To store serialized updates for Live_Tags
@@ -960,132 +969,236 @@ def update_database(updates):
             WHERE id = ?
         ''', updates_serialized)
 
-        # 2. Insert into Live_Log table (fetch tagId using record_id)
+        # 2. Insert into Live_Log table (fetch tagId and tagName using record_id)
         for record_id, value in live_log_entries:
             cursor.execute('''
-                INSERT INTO Live_Log (tagId, value, timestamp)
-                SELECT tagId, ?, CURRENT_TIMESTAMP
-                FROM Live_Tags
-                WHERE id = ?
+                INSERT INTO Live_Log (tagId, tagName, value, timestamp)
+                SELECT lt.tagId, tt.tagName, ?, CURRENT_TIMESTAMP
+                FROM Live_Tags lt
+                LEFT JOIN Tag_Table tt ON lt.tagId = tt.Tagid
+                WHERE lt.id = ?
             ''', (value, record_id))
 
-        
         conn.commit()
-        # clean_live_log()
-       
-def clean_live_log():
+      
+
+API_URL = "http://localhost:4000/suvi/api/v1/machine-data"  # Change this to your Flask API URL
+
+BATCH_SIZE = 10
+
+def is_json(value):
     """
-    Fetch the latest 100 records from the Live_Log table and delete older records.
-    """
-    try:
-        with sqlite3.connect(DB_PATH1) as conn:
-            cursor = conn.cursor()
-
-            # Fetch the latest 100 records (optional step for confirmation or display)
-            cursor.execute('''
-                SELECT * 
-                FROM Live_Log 
-                ORDER BY timestamp DESC 
-                LIMIT 100
-            ''')
-            latest_records = cursor.fetchall()
-            
-
-            # Delete older records, keeping only the latest 100
-            cursor.execute('''
-                DELETE FROM Live_Log
-                WHERE id NOT IN (
-                    SELECT id 
-                    FROM Live_Log 
-                    ORDER BY timestamp DESC 
-                    LIMIT 100
-                )
-            ''')
-
-            # Commit the transaction
-            conn.commit()
-            print("Cleaned up older records, keeping only the latest 100 entries.")
-
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
-    except Exception as e:
-        print(f"Error: {e}")
-from pymongo import MongoClient
-import sqlite3
-import json
-
-# Database configuration
-
-
-def upload_live_log_to_mongodb():
-    """
-    Fetch the latest 100 records for each tagId from SQLite 
-    and upload them to MongoDB.
+    Check if a value is a valid JSON.
     """
     try:
-        # Connect to MongoDB
-        mongo_client = MongoClient(MONGO_URI)
-        mongo_db = mongo_client[MONGO_DB_NAME]
-        mongo_collection = mongo_db[MONGO_COLLECTION_NAME]
-        print("Connected to MongoDB!")
-
-        # Connect to SQLite
-        with sqlite3.connect(DB_PATH1) as conn:
-            cursor = conn.cursor()
-
-            # Fetch distinct tagIds from SQLite
-            cursor.execute("SELECT DISTINCT tagId FROM Live_Log")
-            tag_ids = cursor.fetchall()
-
-            # Process each tagId
-            for tag_id_tuple in tag_ids:
-                tag_id = tag_id_tuple[0]  # Extract tagId
-
-                # Fetch the latest 100 records for the current tagId
-                cursor.execute('''
-                    SELECT id, tagId, value, timestamp 
-                    FROM Live_Log 
-                    WHERE tagId = ?
-                    ORDER BY timestamp DESC 
-                    LIMIT 100
-                ''', (tag_id,))
-                records = cursor.fetchall()
-
-                # Convert the records into MongoDB-friendly JSON format
-                documents = [
-                    {
-                        "id": record[0],
-                        "tagId": record[1],
-                        "value": json.loads(record[2]) if is_json(record[2]) else record[2],
-                        "timestamp": record[3]
-                    }
-                    for record in records
-                ]
-
-                # Upload records to MongoDB (replace data for the tagId)
-                mongo_collection.delete_many({"tagId": tag_id})  # Clear old records for this tagId
-                if documents:
-                    mongo_collection.insert_many(documents)  # Insert latest records
-                print(f"Uploaded latest 100 records for tagId: {tag_id}")
-
-        print("Data successfully uploaded to MongoDB!")
-
-    except Exception as e:
-        print(f"Error: {e}")
-
-    finally:
-        mongo_client.close()
-
-def is_json(my_string):
-    """Helper function to check if a string is JSON."""
-    try:
-        json.loads(my_string)
+        json.loads(value)
         return True
     except ValueError:
         return False
 
-# Call the function
-upload_live_log_to_mongodb()
+def clean_live_log_last_100(conn, record_ids):
+    """
+    Clean up successfully uploaded records from SQLite.
+    """
+    try:
+        cursor = conn.cursor()
+        cursor.execute(f'''
+            DELETE FROM Live_Log
+            WHERE id IN ({','.join(['?'] * len(record_ids))})
+        ''', record_ids)
+        conn.commit()
+        print("Successfully cleaned up uploaded records from SQLite.")
+    except Exception as e:
+        print(f"Error cleaning records: {e}")
+
+def process_value(tag_name, value):
+    """
+    Process the value field:
+    - If it's an array, convert each element into a separate field like field1, field2, etc.
+    - If it's not an array, return as-is.
+    """
+    if isinstance(value, list):
+        return {f"{tag_name}{i+1}": v for i, v in enumerate(value)}
+    else:
+        return {tag_name: value}
+
+def timestamp_to_epoch(timestamp):
+    """
+    Convert timestamp from 'YYYY-MM-DD HH:MM:SS' (string) to epoch seconds,
+    or use the timestamp directly if it's already in epoch form (integer).
+    """
+    try:
+        # If timestamp is an integer (epoch time)
+        if isinstance(timestamp, int):
+            return timestamp
+        
+        # If timestamp is a string in 'YYYY-MM-DD HH:MM:SS' format
+        elif isinstance(timestamp, str):
+            datetime_obj = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+            return int(datetime_obj.timestamp())
+        
+        # Handle unexpected timestamp types
+        else:
+            print(f"Unexpected timestamp type: {type(timestamp)}")
+            return None
+    except ValueError as e:
+        print(f"Error converting timestamp: {e}")
+        return None
+
+def upload_live_log_to_mongodb():
+    """
+    Fetch records from SQLite, format them, send them to Flask API, and clean up SQLite.
+    """
+    try:
+        # Connect to SQLite
+        with sqlite3.connect(DB_PATH1) as conn:
+            cursor = conn.cursor()
+
+            # Fetch all records grouped by timestamp
+            cursor.execute('''
+                SELECT id, tagName, value, timestamp
+                FROM Live_Log
+                ORDER BY timestamp ASC, id ASC
+            ''')
+            records = cursor.fetchall()
+
+            if not records:
+                print("No records to upload.")
+                return
+
+            # Group records by timestamp
+            grouped_data = {}
+            record_ids = []
+
+            for record in records:
+                record_id, tag_name, value, timestamp = record
+
+                # Convert timestamp to epoch format
+                epoch_timestamp = timestamp_to_epoch(timestamp)
+                if epoch_timestamp is None:
+                    continue  # Skip if timestamp conversion failed
+
+                # Parse value if it's JSON
+                parsed_value = json.loads(value) if is_json(value) else value
+
+                # Process value to split arrays into separate fields
+                processed_data = process_value(tag_name, parsed_value)
+
+                if epoch_timestamp not in grouped_data:
+                    grouped_data[epoch_timestamp] = []
+                grouped_data[epoch_timestamp].append(processed_data)
+
+                # Collect record IDs for cleanup
+                record_ids.append(record_id)
+
+            # Prepare the batch format
+            batches = []
+            for epoch_timestamp, tags in grouped_data.items():
+                # Combine all tags for the same timestamp into one dictionary
+                combined_tags = {}
+                for tag in tags:
+                    combined_tags.update(tag)
+
+                batch = {
+                    "plcId": 3,
+                    "serialNo": 11223344,
+                    "values": [{"dbId": 2,"dbNo":1001,"dbName":"dbCloud", "data": [{"temp":1,"timestamp": epoch_timestamp*1000, **combined_tags}]}]
+                }
+                batches.append(batch)
+
+            # Send data in batches of 10
+            for i in range(0, len(batches), BATCH_SIZE):
+                batch_to_send = batches[i:i + BATCH_SIZE]
+
+                response = requests.post(API_URL, json=batch_to_send)
+
+                if response.status_code in [200, 201]:
+                    print(f"Batch {i // BATCH_SIZE + 1} uploaded successfully.")
+                    # Clean up uploaded records
+                    clean_live_log_last_100(conn, record_ids)
+                else:
+                    print(f"Failed to upload batch {i // BATCH_SIZE + 1}. Status code: {response.status_code}")
+                    print(f"Response: {response.text}")
+
+        print("Process completed.")
+        print(f"Response from final API (Batch {i // BATCH_SIZE + 1}): {response.status_code}, {response.text}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+def schedule_live_log_upload_background(interval=15):
+    """
+    Run the upload function in a background thread every `interval` seconds.
+    """
+    def background_task():
+        while True:
+            try:
+                with sqlite3.connect(DB_PATH1) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('''SELECT COUNT(*) FROM Live_Log''')
+                    count = cursor.fetchone()[0]
+
+                    if count > 1000:
+                        upload_live_log_to_mongodb()
+                    else:
+                        print("Less than 1000 records in Live_Log. Skipping upload...")
+            except Exception as e:
+                print(f"Error in background task: {e}")
+            time.sleep(interval)  # Wait before the next check
+
+    # Start the background task in a separate thread
+    thread = threading.Thread(target=background_task, daemon=True)
+    thread.start()
+
+# Call this function to start the background thread
+schedule_live_log_upload_background(interval=15)
+# Connect to MongoDB
+# mongo_client = MongoClient(MONGO_URI)
+# mongo_db = mongo_client[MONGO_DB_NAME]
+# mongo_collection = mongo_db[MONGO_COLLECTION_NAME]
+
+# @app.route('/upload_data', methods=['POST'])
+# def upload_data():
+#     try:
+#         # Get the JSON data from the request
+#         data = request.get_json()
+        
+#         if not data:
+#             return jsonify({"message": "No data received"}), 400
+
+#         # Forward the data to the final API
+#         response = requests.post(
+#             'http://localhost:4000/suvi/api/v1/machine-data',
+#             json=data,
+#             headers={'Content-Type': 'application/json'}
+#         )
+
+#         # Check the response from the final API
+#         if response.status_code == 201:
+#             print("Data successfully forwarded to final API.")
+
+#             # Attempt to save data to MongoDB
+#             try:
+#                 mongo_collection.insert_many(data)
+#                 print("Data successfully saved to MongoDB.")
+#                 return jsonify({
+#                     "message": "Data successfully uploaded to final API and saved in MongoDB"
+#                 }), 201
+#             except Exception as mongo_error:
+#                 print(f"Error saving data to MongoDB: {mongo_error}")
+#                 return jsonify({
+#                     "message": "Data uploaded to final API but failed to save in MongoDB",
+#                     "mongo_error": str(mongo_error)
+#                 }), 500
+#         else:
+#             return jsonify({
+#                 "message": "Failed to upload data to final API",
+#                 "status_code": response.status_code,
+#                 "response_text": response.text
+#             }), response.status_code
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 def update_all_live_tags():
     """
@@ -1172,10 +1285,10 @@ def read_values():
             try:
                 node = client.get_node(node_id)
                 value = node.get_value()
-                timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add current timestamp
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add current timestamp
                 results.append({"nodeId": node_id, "value": value, "timestamp": timestamp})
             except Exception as e:
-                timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Include timestamp for errors
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Include timestamp for errors
                 results.append({"nodeId": node_id, "error": str(e), "timestamp": timestamp})
 
         client.disconnect()
