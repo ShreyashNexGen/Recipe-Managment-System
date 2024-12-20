@@ -620,6 +620,62 @@ def compare_pos():
 
     return jsonify({"match": match})
 
+
+
+@app.route('/update_recipe', methods=['POST'])
+def update_recipe():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    recipe_id = request.form.get('recipe_id')
+    recipe_name = request.form.get('recipe_name')
+    filter_size = request.form.get('filter_size')
+    filter_code = request.form.get('filter_code')
+    art_no = request.form.get('art_no')
+    pos_values = [request.form.get(f'pos{i}') for i in range(1, 10)]
+    alu_coil_width = request.form.get('Alu_coil_width')
+    motor_speed = request.form.get('Motor_speed')
+
+    conn = get_db_connection()
+    if not conn:
+        return redirect(url_for('recipe_list'))
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            '''UPDATE Recipe 
+               SET Recipe_Name = ?, Filter_Size = ?, Filter_Code = ?, Art_No = ?
+               WHERE Recipe_ID = ?''',
+            (recipe_name, filter_size, filter_code, art_no, recipe_id)
+        )
+        cursor.execute(
+            '''UPDATE Recipe_Details1 
+               SET Pos1 = ?, Pos2 = ?, Pos3 = ?, Pos4 = ?, Pos5 = ?, 
+                   Pos6 = ?, Pos7 = ?, Pos8 = ?, Pos9 = ?, Alu_coil_width = ?
+               WHERE Recipe_ID = ?''',
+            (*pos_values, alu_coil_width, recipe_id)
+        )
+        cursor.execute(
+            '''UPDATE Sub_Menu 
+               SET motor_speed = ?
+               WHERE Recipe_ID = ?''',
+            (motor_speed, recipe_id)
+        )
+
+        conn.commit()
+        flash("Recipe updated successfully!", "success")
+    except sqlite3.Error as e:
+        flash(f"Database error: {e}", "danger")
+    finally:
+        conn.close()
+
+    return redirect(url_for('recipe_list'))
+
+
+
+
+
+
 @app.route('/add_recipe', methods=['POST'])
 def add_recipe():
     if 'username' not in session:
@@ -1009,41 +1065,13 @@ def clean_live_log_last_100(conn, record_ids):
         conn.commit()
         print("Successfully cleaned up uploaded records from SQLite.")
     except Exception as e:
-        print(f"Error cleaning records: {e}")
+        print(f"Error: {e}")
+from pymongo import MongoClient
+import sqlite3
+import json
 
-def process_value(tag_name, value):
-    """
-    Process the value field:
-    - If it's an array, convert each element into a separate field like field1, field2, etc.
-    - If it's not an array, return as-is.
-    """
-    if isinstance(value, list):
-        return {f"{tag_name}{i+1}": v for i, v in enumerate(value)}
-    else:
-        return {tag_name: value}
+# Database configuration
 
-def timestamp_to_epoch(timestamp):
-    """
-    Convert timestamp from 'YYYY-MM-DD HH:MM:SS' (string) to epoch seconds,
-    or use the timestamp directly if it's already in epoch form (integer).
-    """
-    try:
-        # If timestamp is an integer (epoch time)
-        if isinstance(timestamp, int):
-            return timestamp
-        
-        # If timestamp is a string in 'YYYY-MM-DD HH:MM:SS' format
-        elif isinstance(timestamp, str):
-            datetime_obj = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-            return int(datetime_obj.timestamp())
-        
-        # Handle unexpected timestamp types
-        else:
-            print(f"Unexpected timestamp type: {type(timestamp)}")
-            return None
-    except ValueError as e:
-        print(f"Error converting timestamp: {e}")
-        return None
 
 def upload_live_log_to_mongodb():
     """
