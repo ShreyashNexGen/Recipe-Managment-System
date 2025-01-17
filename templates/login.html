@@ -1,35 +1,36 @@
 {% extends "base.html" %}
-
-{% block title %}Login{% endblock %}
+{% block title %}User Login{% endblock %}
 
 {% block content %}
-<div class="login-container">
-    <h2>Login</h2>
+<div id="login-container">
+    <div id="login-card">
+        <h3 id="login-title">User Login</h3>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <ul>
-        {% for category, message in messages %}
-        <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% endwith %}
-
-    <form method="POST" onsubmit="return validatePassword()">
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
+        <!-- Flash messages for success or error -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="login-alert" class="alert alert-{{ messages[0][0] }} alert-dismissible fade show">
+                {{ messages[0][1] }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('login') }}" id="login-form">
+            <div class="login-form-group">
+                <label for="username" class="login-label">Username</label>
+                <input type="text" id="username" name="username" class="login-input" required>
+            </div>
+            <div class="login-form-group">
+                <label for="password" class="login-label">Password</label>
+                <input type="password" id="password" name="password" class="login-input" required>
+            </div>
+            <button type="submit" id="login-button">Login</button>
+        </form>
+        
+        <div id="login-footer">
+            <p>Not a member? <a href="{{ url_for('register') }}" id="register-link">Register</a></p>
         </div>
-        <div class="form-group password-wrapper">
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            <span id="togglePassword" class="show-password">&#128065;</span>
-            <small id="passwordError" style="color: red; display: none;">
-                Password must be at least 8 characters long.
-            </small>
-        </div>
-        <button type="submit">Login</button>
-    </form>
+    </div>
 </div>
 {% endblock %}

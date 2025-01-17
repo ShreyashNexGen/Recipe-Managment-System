@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}User List{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center mt-4">List of Users</h2>
+    <table class="table table-bordered table-hover mt-4">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Is Admin</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user[0] }}</td>  <!-- User ID -->
+                <td>{{ user[1] }}</td>  <!-- Username -->
+                <td>{{ user[2] }}</td>  <!-- Email -->
+                <td>{{ 'Admin' if user[3] == 1 else 'User' }}</td>  <!-- Admin Status -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

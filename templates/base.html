@@ -17,6 +17,7 @@
             Recipe Management
         </h2>
         <ul class="nav flex-column">
+            {% if session.get('username') %}
             <li><a href="/dashboard" class="nav-link"><i class="fa-sharp fa-solid fa-chart-line"></i>Dashboard</a></li>
             <li><a href="/raw-material" class="nav-link"><i class="fa-solid fa-box-open"></i>Raw Material</a></li>
             <li><a href="/recipe" class="nav-link"><i class="fa-solid fa-clipboard-list"></i>Recipe</a></li>
@@ -32,25 +33,44 @@
                 <a href="/" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-user-tie"></i>Admin</a>
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="/plc">&bull; PLC</a></li>
-                    <li><a class="dropdown-item" href="/Users">&bull; Users</a></li>
+                    <li><a class="dropdown-item" href="/users">&bull; Users</a></li>
                     <li><a class="dropdown-item" href="/Role">&bull; Role</a></li>
                     <li><a class="dropdown-item" href="/Assign-Role">&bull; Assign Role</a></li>
                     <li><a class="dropdown-item" href="/Event-Log">&bull; Event Log</a></li>
                 </ul>
             </li>
-        </ul>
-        <a href="/logout" class="logout">Logout</a>
+            <a href="/logout" class="logout">Logout</a>
+        {% else %}
+            <li><a href="/login" class="nav-link"><i class="fa-solid fa-sign-in-alt"></i>Login</a></li>
+            <li><a href="/register" class="nav-link"><i class="fa-solid fa-user-plus"></i>Register</a></li>
+        {% endif %}
+    </ul>
     </div>
+    <!-- Admin Password Popup -->
+    <div id="admin-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">
+        <h4>Enter Admin Password</h4>
+        <form id="admin-password-form">
+            <input type="password" id="admin-password" placeholder="Admin Password" required>
+            <button type="submit" id="admin-submit">Submit</button>
+            <button type="button" id="cancel-button">Cancel</button>
+        </form>
+    </div>
+    <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
     
 
     <!-- Main Content -->
     <div class="main-content">
         <div class="navbar">
             <div class="user-info">
-                <span>Admin</span>
+                {% if session.get('username') %}
+                    <span>{{ session.get('username', 'Admin') }}</span>
+                {% else %}
+                    <span>Guest</span>
+                {% endif %}
                 <a href="/profile"><i class="fa-solid fa-user"></i></a>
             </div>
         </div>
+        
 
         <!-- Page-specific Content -->
         <div class="page-content">
@@ -59,7 +79,109 @@
             {% endblock %}
         </div>
     </div>
-    
+    <style>
+        #admin-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        #admin-popup input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        #admin-popup button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #admin-popup button:hover {
+            background-color: #0056b3;
+        }
+        
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const adminLink = document.getElementById('admin-link');
+            const adminPopup = document.getElementById('admin-popup');
+            const overlay = document.getElementById('overlay');
+            const adminForm = document.getElementById('admin-password-form');
+            const cancelButton = document.getElementById('cancel-button');
+        
+            // Show popup on clicking Admin
+            adminLink.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default link behavior
+                adminPopup.style.display = 'block';
+                overlay.style.display = 'block';
+            });
+        
+            // Cancel the password popup
+            cancelButton.addEventListener('click', function () {
+                adminPopup.style.display = 'none';
+                overlay.style.display = 'none';
+            });
+        
+            // Submit password and verify
+            adminForm.addEventListener('submit', async function (event) {
+                event.preventDefault(); // Prevent form submission
+                const inputPassword = document.getElementById('admin-password').value;
+        
+                try {
+                    const response = await fetch('/validate-admin-password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ password: inputPassword }),
+                    });
+        
+                    const result = await response.json();
+        
+                    if (result.success) {
+                        alert('Access granted!');
+                        adminPopup.style.display = 'none';
+                        overlay.style.display = 'none';
+                        // Redirect to admin dashboard or other relevant page
+                        window.location.href = "/admin-dashboard"; // Adjust URL as needed
+                    } else {
+                        alert('Invalid password!');
+                    }
+                } catch (error) {
+                    console.error('Error validating password:', error);
+                }
+            });
+        });
+        
+        
+    </script>
   
 </body>
 </html>
