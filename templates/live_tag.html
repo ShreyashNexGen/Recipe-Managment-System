@@ -12,63 +12,107 @@
             </tr>
         </thead>
         <tbody>
-            <!-- {% for tag in live_tags %}
-            <tr>
-                <td>{{ tag.tagId }}</td>
-                <td>{{ tag.value }}</td>
-                <td>{{ tag.timestamp }}</td>
-            </tr>
-            {% endfor %} -->
+            <!-- Rows will be populated dynamically -->
         </tbody>
     </table>
 </div>
 
-<divclass="container mt-4">
+<div class="container mt-4">
     <h1>Live PLC Data</h1>
     <table class="table table-bordered" id="liveDataTable1">
-    <thead>
-        <tr>
-            <th>Tag ID</th>
-            <th>Value</th>
-            <th>Timestamp</th>
-        </tr>
-    </thead>
-    <tbody>      </tbody>
-        </table>
+        <thead>
+            <tr>
+                <th>Tag ID</th>
+                <th>Value</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be populated dynamically -->
+        </tbody>
+    </table>
 </div>
 
-<script> function fetchLiveData() {
-    fetch('http://localhost:5000/getLiveValues')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const tableBody = document.getElementById('liveDataTable').getElementsByTagName('tbody')[0];
-                tableBody.innerHTML = ''; // Clear previous rows
-                
-                data.data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${row.tagId}</td>
-                        <td>${row.value}</td>
-                        <td>${row.timestamp}</td>
-                    `;
-                    tableBody.appendChild(tr);
-                });
-            } else {
-                console.error('Failed to fetch live data:', data.error);
-            }
-        })
-        .catch(error => console.error('Error fetching live data:', error));
-}
+<style>
+    /* CSS for truncating text in the "Value" column */
+    td.value-cell {
+        max-width: 300px; /* Adjust the max width */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+    }
 
-// Fetch live data every 10 seconds
-setInterval(fetchLiveData, 1000);
+    /* Expanded view */
+    td.value-cell.expanded {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
 
-// Fetch live data once on page load
-window.onload = fetchLiveData;
-</script>
+    .table {
+        table-layout: fixed; /* Uniform column width */
+        word-wrap: break-word; /* Allow word wrapping in expanded mode */
+    }
+</style>
 
 <script>
+    // Store expanded state for cells
+    const expandedCells = new Set();
+
+    function toggleExpand(cell) {
+        const cellKey = cell.dataset.cellKey;
+
+        // Toggle expanded state on click
+        if (expandedCells.has(cellKey)) {
+            expandedCells.delete(cellKey);
+            cell.classList.remove("expanded");
+            cell.title = "Click to expand";
+            cell.innerHTML = cell.dataset.truncatedValue; // Collapse to truncated value
+        } else {
+            expandedCells.add(cellKey);
+            cell.classList.add("expanded");
+            cell.title = "Click to collapse";
+            cell.innerHTML = cell.dataset.fullValue; // Expand to full value
+        }
+    }
+
+    function fetchLiveData() {
+        fetch('http://localhost:5000/getLiveValues')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const tableBody = document.getElementById('liveDataTable').getElementsByTagName('tbody')[0];
+                    tableBody.innerHTML = ''; // Clear previous rows
+
+                    data.data.forEach((row, index) => {
+                        const tr = document.createElement('tr');
+                        const cellKey = `liveDataTable-${index}`; // Unique key for each cell
+                        const truncatedValue = row.value.slice(0, 50) + '...'; // Adjust truncation as needed
+
+                        const isExpanded = expandedCells.has(cellKey); // Check expanded state
+                        tr.innerHTML = `
+                            <td>${row.tagId}</td>
+                            <td class="value-cell" 
+                                data-cell-key="${cellKey}" 
+                                data-full-value="${row.value}" 
+                                data-truncated-value="${truncatedValue}" 
+                                onclick="toggleExpand(this)" 
+                                title="${isExpanded ? 'Click to collapse' : 'Click to expand'}">
+                                ${isExpanded ? row.value : truncatedValue}
+                            </td>
+                            <td>${row.timestamp}</td>
+                        `;
+
+                        tableBody.appendChild(tr);
+                    });
+                } else {
+                    console.error('Failed to fetch live data:', data.error);
+                }
+            })
+            .catch(error => console.error('Error fetching live data:', error));
+    }
+
     function fetchLivePLCData() {
         fetch('http://localhost:5000/readValues')
             .then(response => response.json())
@@ -77,13 +121,28 @@ window.onload = fetchLiveData;
                     const tableBody = document.getElementById('liveDataTable1').getElementsByTagName('tbody')[0];
                     tableBody.innerHTML = ''; // Clear previous rows
 
-                    data.results.forEach(item => { // Access the 'results' array
+                    data.results.forEach((item, index) => {
                         const row = document.createElement('tr');
+                        const cellKey = `liveDataTable1-${index}`; // Unique key for each cell
+                        truncatedValue=item.value
+                        if (typeof item.value === 'string' || Array.isArray(item.value)) {
+                        truncatedValue = item.value.slice(0, 50) + '...'; // Adjust truncation as needed
+                        }
+
+                        const isExpanded = expandedCells.has(cellKey); // Check expanded state
                         row.innerHTML = `
                             <td>${item.nodeId}</td>
-                            <td>${item.value}</td>
+                            <td class="value-cell" 
+                                data-cell-key="${cellKey}" 
+                                data-full-value="${item.value}" 
+                                data-truncated-value="${truncatedValue}" 
+                                onclick="toggleExpand(this)" 
+                                title="${isExpanded ? 'Click to collapse' : 'Click to expand'}">
+                                ${isExpanded ? item.value : truncatedValue}
+                            </td>
                             <td>${item.timestamp}</td>
                         `;
+
                         tableBody.appendChild(row);
                     });
                 } else {
@@ -93,15 +152,21 @@ window.onload = fetchLiveData;
             .catch(error => console.error('Error:', error));
     }
 
-    // Fetch data every 5 seconds
-    setInterval(fetchLivePLCData, 1000); // Adjusted to 5 seconds
+    // Fetch live data every 5 seconds
+    setInterval(fetchLiveData, 5000);
+    setInterval(fetchLivePLCData, 5000);
 
-    // Fetch data once on page load
-    window.onload = fetchLivePLCData;
+    // Fetch live data once on page load
+    window.onload = () => {
+        fetchLiveData();
+        fetchLivePLCData();
+    };
 </script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock %}

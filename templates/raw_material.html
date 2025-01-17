@@ -36,44 +36,29 @@
 
         <!-- Form Content -->
         <form id="addRawMaterialForm" action="{{ url_for('raw_material') }}" method="POST">
-        <div class="popup-raw-body">
-            <div class="form-raw-group">
-                <label for="material_Id">Material ID:</label>
-                <input type="text" id="material_Id" name="material_Id" placeholder="Enter Material ID" required>
+            <div class="popup-raw-body">
+                <div class="form-raw-group">
+                    <label for="typeCode">Type Code:</label>
+                    <input type="text" id="typeCode" name="typeCode" placeholder="Enter Type Code" required>
+                </div>
+                <div class="form-raw-group">
+                    <label for="lotNo">Lot Number:</label>
+                    <input type="text" id="lotNo" name="lotNo" placeholder="Enter Lot No." required>
+                </div>
+                <div class="form-raw-group">
+                    <label for="materialType">Material Type:</label>
+                    <input type="text" id="materialType" name="materialType" placeholder="Enter Material Name" required>
+                </div>
             </div>
-            <div class="form-raw-group">
-                <label for="typeCode">Type Code:</label>
-                <input type="text" id="typeCode" name="typeCode" placeholder="Enter Type Code" required>
-            </div>
-            <div class="form-raw-group">
-                <label for="lotNo">Lot Number:</label>
-                <input type="text" id="lotNo" name="lotNo" placeholder="Enter Lot No." required>
-            </div>
-            <div class="form-raw-group">
-                <label for="make">Make:</label>
-                <input type="text" id="make" name="make" placeholder="Enter Make" required>
-            </div>
-            <div class="form-raw-group">
-                <label for="user">User:</label>
-                <input type="text" id="user" name="user" placeholder="Enter User" required>
-            </div>
-            <div class="form-raw-group">
-                <label for="materialType">Material Name:</label>
-                <input type="text" id="materialType" name="materialType" placeholder="Enter Material Name" required>
-            </div>
-            <div class="form-raw-group">
-                <label for="barcode">Barcode:</label>
-                <input type="text" id="barcode" name="barcode" placeholder="Enter Barcode" required>
-            </div>
-        </div>
 
-        <!-- Footer -->
-        <div class="popup-raw-footer">
-            <button type="submit" class="start-raw-button">Submit</button>
-        </div>
-    </form>
+            <!-- Footer -->
+            <div class="popup-raw-footer">
+                <button type="submit" class="start-raw-button">Submit</button>
+            </div>
+        </form>
     </div>
 </div>
+
 <!-- Update Raw Material Popup Form -->
 <div id="update-material-section" class="pop-update-up" style="display: none;">
     <div id="material-update-form" class="popup-update-content">

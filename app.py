@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for, s
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import json
+import logging
 import datetime
 from datetime import datetime
 from datetime import timedelta
@@ -14,76 +15,366 @@ import time
 import requests
 import json
 import sqlite3
+import platform
+import subprocess
+import wmi  # For Windows systems (install with `pip install WMI`)
 from bson import json_util
 from pymongo import MongoClient
 from flask_cors import CORS
 app = Flask(__name__)
-app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
-socketio = SocketIO(app, cors_allowed_origins="*")  # Allow connections from any origin
+# socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 # OPC UA connection options
-ENDPOINT_URL = "opc.tcp://192.168.0.1:4840"
 
+import os
+DB_PATH = 'a2z_database.db'
+# DB_PATH = 'Main_database.db'
+# Fetch the ENDPOINT_URL dynamically
+def fetch_endpoint_url():
+    """Fetch plcIp and plcPort from the database and construct ENDPOINT_URL."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            
+            # Fetch plcIp and plcPort from the database
+            cursor.execute("SELECT plcIp, plcPort FROM Plc_Table LIMIT 1")
+            result = cursor.fetchone()
+            
+            if result:
+                plc_ip, plc_port = result
+                endpoint_url = f"opc.tcp://{plc_ip}:{plc_port}"
+                return endpoint_url
+            else:
+                return "No PLC data available in the database."
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+ENDPOINT_URL = fetch_endpoint_url()
+
+# Get the base directory of the executable or script
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Paths to each database
+database1_path = os.path.join(base_dir, 'suvi_database.db')
+database2_path = os.path.join(base_dir, 'a2z_database.db')
+database3_path = os.path.join(base_dir, 'RMS.db')
+# Example: Configure SQLAlchemy or SQLite connections
+app.config['DATABASE_1_URI'] = f'sqlite:///{database1_path}'
+app.config['DATABASE_2_URI'] = f'sqlite:///{database2_path}'
+app.config['DATABASE_3_URI'] = f'sqlite:///{database3_path}'
 # SQLite database setup
 # Secret key for session encryption
 app.secret_key = 'your_secret_key'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.permanent_session_lifetime = timedelta(minutes=30)  # Session timeout
-DB_PATH = 'a2z_database.db'
-DB_PATH1 = 'suvi_database.db'
-MONGO_URI = "mongodb://localhost:27017"  # MongoDB URI
-MONGO_DB_NAME = "suvi_flask_db"          # MongoDB Database Name
-MONGO_COLLECTION_NAME = "suvi_flask"       # MongoDB Collection Name      # MongoDB Collection Name
+
+
+# DB_PATH1 = 'suvi_database.db'
+# MONGO_URI = "mongodb://localhost:27017"  # MongoDB URI
+# MONGO_DB_NAME = "suvi_flask_db"          # MongoDB Database Name
+# MONGO_COLLECTION_NAME = "suvi_flask"       # MongoDB Collection Name      # MongoDB Collection Name
+# pos_values = []
+# submenu_values =[]
 # Function to browser
 def init_db():
     """Initialize the SQLite database."""
-    with sqlite3.connect(DB_PATH1) as conn:
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS Tag_Table (
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            # Create Tag_Table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS Tag_Table (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tagId TEXT UNIQUE NOT NULL,
+                    tagName TEXT UNIQUE NOT NULL,
+                    tagAddress TEXT NOT NULL,
+                    plcId TEXT NOT NULL
+                )
+            ''')
+            conn.commit()  # Commit after creating Tag_Table
+
+            # Create Live_Tags table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS Live_Tags (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tagId TEXT NOT NULL,
+                    value TEXT NOT NULL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (tagId) REFERENCES Tag_Table(tagId)
+                )
+            ''')
+            conn.commit()  # Commit after creating Live_Tags table
+
+            # Create Live_Log table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS Live_Log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tagName TEXT NOT NULL,     
+                    tagId TEXT NOT NULL,
+                    value TEXT NOT NULL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()  # Commit after creating Live_Log table
+            cursor.execute("""
+        CREATE TABLE IF NOT EXISTS connection_status (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            internet_status TEXT NOT NULL,
+            plc_status TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+              )
+          """)
+            conn.commit()
+
+    except sqlite3.Error as e:
+        print(f"Error initializing the database: {e}")
+
+# Call the function to initialize the database
+
+init_db()
+def setup_database():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            
+            # Create Raw_Materials table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS Raw_Materials (
+                    material_Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    typeCode TEXT NOT NULL,
+                    lotNo TEXT NOT NULL,
+                    materialType TEXT NOT NULL UNIQUE,
+                    make TEXT NOT NULL,
+                    user TEXT NOT NULL,
+                    barcode TEXT NOT NULL
+                )
+            """)
+            
+            # Create Recipe_Details1 table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS Recipe_Details1 (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Pos1 TEXT,
+                    Pos2 TEXT,
+                    Pos3 TEXT,
+                    Pos4 TEXT,
+                    Pos5 TEXT,
+                    Pos6 TEXT,
+                    Pos7 TEXT,
+                    Pos8 TEXT,
+                    Pos9 TEXT,
+                    Alu_coil_width TEXT,
+                    Alu_roller_type INTEGER,
+                    Spacer REAL,
+                    Recipe_ID INTEGER,
+                    FOREIGN KEY (Recipe_ID) REFERENCES Recipe (Recipe_ID)
+                )
+            """)
+            
+            # Create Recipe table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS Recipe (
+                    Recipe_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Filter_Size TEXT,
+                    Filter_Code TEXT,
+                    Art_No INTEGER,
+                    Recipe_Name TEXT
+                )
+            """)
+            
+            # Create Recipe_Log table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS Recipe_Log (
+                    Batch_No INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Batch_Code TEXT NOT NULL,
+                    Timestamp TEXT NOT NULL,
+                    Recipe_ID INTEGER NOT NULL,
+                    motor_speed TEXT,
+                    motor_stroke TEXT,
+                    other_speed_force TEXT,
+                    alu_coil_width TEXT,
+                    Quantity INTEGER,
+                    Batch_Running_Status TEXT NOT NULL,
+                    Batch_Completion_Status TEXT NOT NULL,
+                    FOREIGN KEY (Recipe_ID) REFERENCES Recipe (Recipe_ID)
+                )
+            """)
+            
+            # Create Sub_Menu table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS Sub_Menu (
+                    Recipe_ID INTEGER PRIMARY KEY,
+                    motor_speed TEXT,
+                    motor_stroke TEXT,
+                    other_speed_force TEXT,
+                    alu_coil_width TEXT,
+                    FOREIGN KEY (Recipe_ID) REFERENCES Recipe (Recipe_ID)
+                )
+            """)
+
+            # Commit changes
+            conn.commit()
+            
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Plc_Table (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plcId INTEGER DEFAULT 1,
+            plcName VARCHAR(50) DEFAULT 'Pl1',
+            plcIp VARCHAR(50) DEFAULT '192.168.0.1',
+            plcPort INTEGER DEFAULT 4840,
+            intervalTime INTEGER DEFAULT 20,
+            serial_Key VARCHAR(50) DEFAULT '12345')""")
+            conn.commit()
+            
+            
+# Insert the first entry if the table is empty
+            cursor.execute("SELECT COUNT(*) FROM Plc_Table")
+            if cursor.fetchone()[0] == 0:  # Check if the table is empty
+                cursor.execute("""
+             INSERT INTO Plc_Table (plcId, plcName, plcIp, plcPort, intervalTime, serial_Key)
+           VALUES (1, 'Plc1', '192.168.1.1', 4840, 20, '11223344')
+        """)
+                conn.commit()
+            
+            print("Database setup completed successfully.")
+
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS BatchTracker (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tagId TEXT UNIQUE NOT NULL,
-                tagName TEXT UNIQUE NOT NULL,
-                tagAddress TEXT NOT NULL,
-                plcId TEXT NOT NULL
+                number_of_batches_created INTEGER NOT NULL
             )
         ''')
-         # Create Live_Tags table to store continuously updated tag values
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS Live_Tags (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tagId TEXT NOT NULL,
-                value TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (tagId) REFERENCES Tag_Table(tagId)
-            )
-        ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS Live_Log (
-             id INTEGER PRIMARY KEY AUTOINCREMENT,
-              tagId TEXT NOT NULL,
-              value TEXT NOT NULL,
-              timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-            )
-        ''')
+        # Check if there's an entry in the table; if not, insert an initial value
+        cursor.execute('SELECT COUNT(*) FROM BatchTracker')
+        if cursor.fetchone()[0] == 0:
+            cursor.execute('INSERT INTO BatchTracker (number_of_batches_created) VALUES (0)')
+            conn.commit()
         
+    except sqlite3.Error as e:
+        print(f"Error setting up the database: {e}")
 
-
-        
-        
-        conn.commit()
-
+# Call the setup function
+setup_database()
 
 # Hardcoded user data for simplicity 
 USER_DATA = {
     'username': 'admin',
     'password_hash': generate_password_hash('password123')  # Secure hashed password
 }
+@app.route('/status', methods=['GET'])
+def get_status():
+    try:
+        # Connect to the database
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            # Fetch PLC IP and Interval Time
+            cursor.execute("SELECT plcIp, intervalTime FROM Plc_Table LIMIT 1")
+            plc_data = cursor.fetchone()
+            plc_ip = plc_data[0] if plc_data else "Not Available"
+            interval_time = plc_data[1] if plc_data else "Not Set"
+
+            # Fetch Tag Count
+            cursor.execute("SELECT COUNT(*) FROM Tag_Table")  # Replace Tags_Table with actual table
+            tags_count = cursor.fetchone()[0]
+
+            # # Fetch Log Count
+            # cursor.execute("SELECT COUNT(*) FROM Recipe_Log")  # Replace Logs_Table with actual table
+            # logs_count = cursor.fetchone()[0]
+            # # Fetch the value of number_of_batches_created from BatchTracker
+
+            cursor.execute('SELECT number_of_batches_created FROM BatchTracker')
+            result = cursor.fetchone()
+            if result is None:
+               logs_count = 0
+            else:
+               logs_count = result[0]
+            # Get Serial Key
+            serial_key = platform.node()  # Fetches the computer's hostname as serial key
+             # Update serial key in Plc_Table
+            cursor.execute("UPDATE Plc_Table SET serial_Key = ? WHERE plcId = 1", (serial_key,))
+            conn.commit()  # Commit the transaction
+
+        # Internet and PLC connection statuses
+        internet_connected = check_internet_connection()  # Custom function to check internet
+        plc_connected = check_plc_connection(plc_ip)  # Custom function to check PLC connection
+
+        # Return the statuses
+        return jsonify({
+            "Plc_IP": plc_ip,
+            "Internet_Connected": internet_connected,
+            "Plc_Connected": plc_connected,
+            "No_Of_Tags_Created": tags_count,
+            "No_Of_Logs_Created": logs_count,
+            "Interval_Time_Of_Log_Entry": interval_time,
+            "Serial_Key": serial_key
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+def check_internet_connection():
+    """Check if the server has internet connectivity."""
+    try:
+        import socket
+        # Attempt to resolve a common domain
+        socket.create_connection(("8.8.8.8", 53), timeout=2)
+        return "Yes"
+    except Exception:
+        return "No"
+def check_plc_connection(plc_ip):
+    """Check if the PLC is reachable."""
+    try:
+        import os
+        response = os.system(f"ping -n 1 {plc_ip}")  # Replace `-c` with `-n` on Windows
+        return "Yes" if response == 0 else "No"
+    except Exception:
+        return "Unknown"
+def log_status():
+    """Log the internet and PLC connection statuses with timestamps."""
+    while True:
+        internet_status = check_internet_connection()
+        plc_status = check_plc_connection("192.168.1.100")  # Replace with your PLC IP
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Current timestamp
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        # Insert the statuses into the table
+        cursor.execute("""
+            INSERT INTO connection_status (timestamp, internet_status, plc_status)
+            VALUES (?, ?, ?)
+        """, (timestamp, internet_status, plc_status))
+
+        conn.commit()
+        conn.close()
+        time.sleep(60)  # Update every 1 seconds
+    
+#Example usage
+
+# log_status(internet_status, plc_status)
+@app.route('/status1', methods=['GET'])
+def get_status_summary():
+    """Fetch summary for pie charts."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            SUM(CASE WHEN internet_status = 'Yes' THEN 1 ELSE 0 END) AS internet_uptime,
+            SUM(CASE WHEN internet_status = 'No' THEN 1 ELSE 0 END) AS internet_downtime,
+            SUM(CASE WHEN plc_status = 'Yes' THEN 1 ELSE 0 END) AS plc_connected,
+            SUM(CASE WHEN plc_status = 'No' THEN 1 ELSE 0 END) AS plc_disconnected
+        FROM connection_status
+    """)
+    result = cursor.fetchone()
+    conn.close()
+
+    return jsonify({
+        "internet": {"uptime": result[0], "downtime": result[1]},
+        "plc": {"connected": result[2], "disconnected": result[3]}
+    })
+
 
 def get_db_connection():
     try:
-        conn = sqlite3.connect('RMS.db')
+        conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         return conn
     except sqlite3.Error as e:
@@ -109,7 +400,7 @@ def index():
     ).fetchall()
 
     # Fetch unique Pos_Values
-    pos_values = [row[0] for row in conn.execute("SELECT DISTINCT Pos_Values FROM Pos_Options").fetchall()]
+    # pos_values = [row[0] for row in conn.execute("SELECT DISTINCT Pos_Values FROM Pos_Options").fetchall()]
 
     # Calculate total pages
     total_count = conn.execute('SELECT COUNT(*) FROM Recipe').fetchone()[0]
@@ -139,7 +430,7 @@ def recipe_list():
     recipes = conn.execute(
         'SELECT * FROM Recipe LIMIT ? OFFSET ?', (per_page, offset)
     ).fetchall()
-    pos_values = [row[0] for row in conn.execute("SELECT DISTINCT Pos_Values FROM Pos_Options").fetchall()]
+    pos_values = [row[0] for row in conn.execute("SELECT materialType FROM Raw_Materials").fetchall()]
     total_count = conn.execute('SELECT COUNT(*) FROM Recipe').fetchone()[0]
     total_pages = (total_count + per_page - 1) // per_page
     conn.close()
@@ -191,6 +482,9 @@ def update_batch_status():
                 elif completion_percentage >= 100:
                     completion_status = "Completed"
                     running_status = "Completed"  # Both statuses set to completed
+                    node = client.get_node(machine_state_field_path)
+                    variant = ua.DataValue(ua.Variant(0,ua.VariantType.Int32))
+                    node.set_value(variant)
                 conn.execute(
                     '''
                     UPDATE Recipe_Log
@@ -200,6 +494,7 @@ def update_batch_status():
                     (running_status, completion_status, batch_code)
                 )
                 conn.commit()
+                 # Update machineState PLC field to 0
         except Exception as e:
             print(f"Error updating batch status: {e}")
         finally:
@@ -207,26 +502,95 @@ def update_batch_status():
             conn.close()
 
         
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if 'username' in session:  # Redirect logged-in users
-        return redirect(url_for('index'))
-
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
-        if username == USER_DATA['username'] and check_password_hash(USER_DATA['password_hash'], password):
-            session['username'] = username  # Create session
-            session.permanent = True  # Set session timeout
-            flash("Login successful!", 'success')
-            return redirect(url_for('index'))
+        
+        conn = sqlite3.connect('a2z_database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        
+        if user and check_password_hash(user[3], password):  # Checking hashed password
+            session['user_id'] = user[0]
+            session['username'] = user[1]
+            session['is_admin'] = user[4]
+            
+            # Record login time
+            cursor.execute("INSERT INTO user_activity (username, login_time) VALUES (?, datetime('now'))", (username,))
+            conn.commit()
+            flash('Login successful!', 'success')
+            return redirect(url_for('dashboard'))
         else:
-            flash("Invalid credentials, please try again.", 'danger')
-
+            flash('Invalid username or password.', 'danger')
+        conn.close()
+        
     return render_template('login.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        # Check if passwords match
+        if password != confirm_password:
+            flash('Passwords do not match!', 'danger')
+            return redirect(url_for('register'))
+
+        # Hash the password
+        hashed_password = generate_password_hash(password)
+
+        try:
+            # Connect to the database
+            conn = sqlite3.connect('a2z_database.db')
+            cursor = conn.cursor()
+
+            # Check if the username or email already exists
+            cursor.execute("SELECT 1 FROM users WHERE username = ? OR email = ?", (username, email))
+            if cursor.fetchone():
+                flash('Username or email already taken!', 'danger')
+                conn.close()
+                return redirect(url_for('register'))
+
+            # Insert the new user into the database
+            cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", 
+                           (username, email, hashed_password))
+            conn.commit()
+            conn.close()
+
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for('login'))  # Redirect to the login page
+
+        except sqlite3.Error as e:
+            flash(f"Database error: {e}", 'danger')
+            return redirect(url_for('register'))
+    
+    return render_template('register.html')
+@app.route('/users')
+def users():
+    conn = sqlite3.connect('a2z_database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, email, is_admin FROM users")
+    users = cursor.fetchall()
+    print("This is users",users)
+    conn.close()
+    
+    return render_template('users.html', users=users)
+@app.route('/validate-admin-password', methods=['POST'])
+def validate_admin_password():
+    data = request.json
+    admin_password = "admin123"  # Predefined admin password
+
+    if data.get('password') == admin_password:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False})
 @app.route('/logout')
 def logout():
     session.pop('username', None)  # Clear session
@@ -242,7 +606,7 @@ def tag_overview():
     limit = int(request.args.get('limit', 10))  # Default limit is 10 if not provided
     
     # Database connection
-    conn = sqlite3.connect(DB_PATH1)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -283,7 +647,7 @@ def update_tag(tagId):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
 
         # Connect to the database and update the tag
-        conn = sqlite3.connect(DB_PATH1)
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
         # Check if the tag exists
@@ -319,7 +683,7 @@ def delete_tag(tag_id):
             return jsonify({"success": False, "error": "Unauthorized"}), 401
 
         # Connect to the specific database
-        conn = sqlite3.connect(DB_PATH1)  # Make sure we're connecting to the right database
+        conn = sqlite3.connect(DB_PATH)  # Make sure we're connecting to the right database
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -349,7 +713,8 @@ def live_tag():
     current_page = int(request.args.get('page', 1))
 
     # Connect to the database
-    conn = sqlite3.connect('a2z_database.db')
+    # 'suvi_database.db'
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row  # Rows are returned as dictionaries
     cursor = conn.cursor()
 
@@ -380,7 +745,7 @@ def live_tag():
 @app.route('/plc')
 def plc():
     # Connect to the database
-    conn = sqlite3.connect('a2z_database.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row  # Return rows as dictionaries
     cursor = conn.cursor()
 
@@ -397,68 +762,145 @@ def plc():
     
 
 
+# @app.route('/raw-material', methods=['GET', 'POST'])
+# def raw_material():
+#     # Handle POST request for adding a new material
+#     if request.method == 'POST':
+#         try:
+#             material_id = request.form['material_Id']
+#             type_code = request.form['typeCode']
+#             lot_no = request.form['lotNo']
+#             material_type = request.form['materialType']
+#             make = request.form.get('make', '')  # Optional
+#             user = request.form.get('user', '')  # Optional
+#             barcode = request.form.get('barcode', '')  # Optional
+
+#             # Connect to the database
+#             conn = sqlite3.connect('a2z_database.db')
+#             cursor = conn.cursor()
+
+#             # Insert into the database
+#             cursor.execute("""
+#                 INSERT INTO Raw_Materials (material_Id, typeCode, lotNo, make, user, materialType, barcode) 
+#                 VALUES (?, ?, ?, ?, ?, ?, ?)""", 
+#                 (material_id, type_code, lot_no, make, user, material_type, barcode))
+#             conn.commit()
+#             conn.close()
+
+#             # Return a proper success response
+#             return jsonify({"success": True, "message": "Material added successfully!"})
+
+#         except Exception as e:
+#             # Print the error for debugging
+#             print(f"Error: {e}")
+#             return jsonify({"success": False, "message": f"An error occurred: {str(e)}"})
+
+#     # Handle GET request to display the raw materials
+#     current_page = int(request.args.get('page', 1))  # Default to page 1 if not provided
+#     limit = int(request.args.get('limit', 10))  # Get limit from URL parameter (default 10)
+#     conn = sqlite3.connect('a2z_database.db')
+#     conn.row_factory = sqlite3.Row
+#     cursor = conn.cursor()
+
+#     # Pagination setup
+#     offset = (current_page - 1) * limit
+
+#     # Fetch data for the current page based on the limit
+#     cursor.execute('SELECT * FROM Raw_Materials LIMIT ? OFFSET ?', (limit, offset))
+#     raw_materials = cursor.fetchall()
+
+#     # Calculate total pages
+#     cursor.execute('SELECT COUNT(*) FROM Raw_Materials')
+#     total_rows = cursor.fetchone()[0]
+#     total_pages = (total_rows + limit - 1) // limit  # Calculate total pages based on limit
+
+#     conn.close()
+
+#     # Render the template with the raw material data
+#     return render_template(
+#         'raw_material.html',
+#         raw_materials=raw_materials,
+#         page=current_page,
+#         total_pages=total_pages,
+#         limit=limit  # Pass the selected limit to the template
+#     )
+
+
+
+
+# Ensure database is set up
+
+
+
+# material_id_counter = 1000
 @app.route('/raw-material', methods=['GET', 'POST'])
 def raw_material():
-    # Handle POST request for adding a new material
+    global material_id_counter
     if request.method == 'POST':
         try:
-            material_id = request.form['material_Id']
+            # Extract required fields
             type_code = request.form['typeCode']
             lot_no = request.form['lotNo']
             material_type = request.form['materialType']
-            make = request.form.get('make', '')  # Optional
-            user = request.form.get('user', '')  # Optional
-            barcode = request.form.get('barcode', '')  # Optional
+
+            # Auto-generate fields
+            # material_id = material_id_counter
+            # material_id_counter += 1  # Increment for the next entry
+            make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            user = "admin"
+            barcode = f"-{type_code}-{lot_no}"  # Example auto-generated barcode
 
             # Connect to the database
-            conn = sqlite3.connect('a2z_database.db')
+            conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
 
-            # Insert into the database
+            # Insert data into the table
             cursor.execute("""
-                INSERT INTO Raw_Materials (material_Id, typeCode, lotNo, make, user, materialType, barcode) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)""", 
-                (material_id, type_code, lot_no, make, user, material_type, barcode))
+                INSERT INTO Raw_Materials (typeCode, lotNo, materialType, make, user, barcode) 
+                VALUES (?, ?, ?, ?, ?,?)""",
+                (type_code, lot_no, material_type, make, user, barcode))
             conn.commit()
             conn.close()
 
-            # Return a proper success response
             return jsonify({"success": True, "message": "Material added successfully!"})
 
         except Exception as e:
-            # Print the error for debugging
             print(f"Error: {e}")
             return jsonify({"success": False, "message": f"An error occurred: {str(e)}"})
 
-    # Handle GET request to display the raw materials
-    current_page = int(request.args.get('page', 1))  # Default to page 1 if not provided
-    limit = int(request.args.get('limit', 10))  # Get limit from URL parameter (default 10)
-    conn = sqlite3.connect('a2z_database.db')
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    # Handle GET request for pagination
+    try:
+        current_page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        offset = (current_page - 1) * limit
 
-    # Pagination setup
-    offset = (current_page - 1) * limit
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
 
-    # Fetch data for the current page based on the limit
-    cursor.execute('SELECT * FROM Raw_Materials LIMIT ? OFFSET ?', (limit, offset))
-    raw_materials = cursor.fetchall()
+        # Fetch data for the current page
+        cursor.execute('SELECT * FROM Raw_Materials LIMIT ? OFFSET ?', (limit, offset))
+        raw_materials = cursor.fetchall()
 
-    # Calculate total pages
-    cursor.execute('SELECT COUNT(*) FROM Raw_Materials')
-    total_rows = cursor.fetchone()[0]
-    total_pages = (total_rows + limit - 1) // limit  # Calculate total pages based on limit
+        # Calculate total pages
+        cursor.execute('SELECT COUNT(*) FROM Raw_Materials')
+        total_rows = cursor.fetchone()[0]
+        total_pages = (total_rows + limit - 1) // limit
 
-    conn.close()
+        conn.close()
 
-    # Render the template with the raw material data
-    return render_template(
-        'raw_material.html',
-        raw_materials=raw_materials,
-        page=current_page,
-        total_pages=total_pages,
-        limit=limit  # Pass the selected limit to the template
-    )
+        # Render the template with the paginated data
+        return render_template(
+            'raw_material.html',
+            raw_materials=raw_materials,
+            page=current_page,
+            total_pages=total_pages,
+            limit=limit
+        )
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"success": False, "message": f"An error occurred: {str(e)}"})
+
 
 @app.route('/delete-raw-material/<int:raw_material_id>', methods=['DELETE'])
 def delete_raw_material(raw_material_id):
@@ -471,7 +913,7 @@ def delete_raw_material(raw_material_id):
             return jsonify({"success": False, "error": "Unauthorized"}), 401
 
         # Connect to the SQLite database
-        conn = sqlite3.connect('a2z_database.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
         # Check if the material exists
@@ -503,32 +945,51 @@ def delete_raw_material(raw_material_id):
 
 @app.route('/update-raw-material/<int:material_Id>', methods=['POST'])
 def update_raw_material(material_Id):
-    data = request.json
-    typecode = data.get("typeCode")
-    lotNo = data.get("lotNo")
-    make = data.get("make")
-    user = data.get("user")
-    materialType = data.get("materialType")
-    barcode = data.get("barcode")
-
-    if not typecode or not lotNo or not make or not user or not materialType or not barcode:
-        return jsonify({"success": False, "error": "Missing fields in the request."})
-
     try:
+        # Parse JSON data from the request
+        data = request.json
+        typeCode = data.get("typeCode")
+        lotNo = data.get("lotNo")
+        make = data.get("make")
+        user = data.get("user")
+        materialType = data.get("materialType")
+        barcode = data.get("barcode")
+
+        # Validate required fields
+        missing_fields = [field for field in ["typeCode", "lotNo", "make", "user", "materialType", "barcode"] if not data.get(field)]
+        if missing_fields:
+            return jsonify({"success": False, "error": f"Missing fields: {', '.join(missing_fields)}"}), 400
+
         # Connect to the database and update the record
-        with sqlite3.connect('a2z_database.db') as conn:
+        with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
+
+            # Check if the material_Id exists
+            cursor.execute("SELECT COUNT(*) FROM Raw_Materials WHERE material_Id = ?", (material_Id,))
+            if cursor.fetchone()[0] == 0:
+                return jsonify({"success": False, "error": "Material with the given ID does not exist."}), 404
+
+            # Update the record
             cursor.execute('''
                 UPDATE Raw_Materials
                 SET typeCode = ?, lotNo = ?, make = ?, user = ?, materialType = ?, barcode = ?
                 WHERE material_Id = ?
-            ''', (typecode, lotNo, make, user, materialType, material_Id,barcode))
+            ''', (typeCode, lotNo, make, user, materialType, barcode, material_Id))
             conn.commit()
 
-            return jsonify({"success": True, "message": "Raw material updated successfully."})
+        # Check if the update was successful
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "No changes were made to the raw material."}), 400
+
+        return jsonify({"success": True, "message": "Raw material updated successfully."})
+
+    except sqlite3.IntegrityError as e:
+        if "UNIQUE constraint failed: Raw_Materials.materialType" in str(e):
+            return jsonify({"success": False, "error": "Material Type must be unique."}), 409
+        return jsonify({"success": False, "error": f"Database integrity error: {str(e)}"}), 400
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {str(e)}"}), 500
 
 
 @app.route('/delete-recipe/<recipe_id>', methods=['DELETE'])
@@ -540,7 +1001,7 @@ def delete_recipe(recipe_id):
             return jsonify({"success": False, "error": "Unauthorized access"}), 401
         
         # Database connection and deletion logic
-        conn = sqlite3.connect('RMS.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute('DELETE FROM Recipe WHERE Recipe_ID = ?', (recipe_id,))
         conn.commit()
@@ -567,19 +1028,19 @@ def recipe_details(recipe_id):
         return redirect(url_for('login'))
 
     recipe_details = conn.execute('SELECT * FROM Recipe_Details1 WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
-   
+    sub_menu = conn.execute('SELECT * FROM Sub_Menu WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
+    conn.close()
     try:
         pos_values = extract_pos_values(recipe_details)
+        submenu_values = extract_submenu_vaues(sub_menu)
         barcode_value = "S3"  # Replace this with actual logic to fetch the barcode value
         # print (dict(recipe_details));
-        # print("Values from subtable: ",pos_values)
-        update_plc_with_pos_values(pos_values)
+        print("Values from subtable: ",submenu_values)
+        # update_plc_with_pos_values(pos_values)
+        # update_plc_with_values(pos_values,submenu_values)
         flash(f"POS values written to PLC successfully for Recipe ID {recipe_id}.", "success")
     except Exception as e:
         flash(f"Error writing POS values: {e}", "danger")
-
-    sub_menu = conn.execute('SELECT * FROM Sub_Menu WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
-    conn.close()
 
     if not recipe_details:
         flash("Recipe not found!", "danger")
@@ -606,6 +1067,15 @@ def extract_pos_values(recipe_details):
     ]
    
     return pos_values
+
+def extract_submenu_vaues(sub_menu):
+    submenu_values = [
+        sub_menu['motor_speed'],
+        sub_menu['motor_stroke'],
+        sub_menu['other_Speed_force'],
+        sub_menu['alu_coil_width'],
+    ]
+    return submenu_values
 @app.route('/compare-pos', methods=['POST'])
 def compare_pos():
     data = request.json  # Receive data from frontend
@@ -619,7 +1089,6 @@ def compare_pos():
     match = pos_value == barcode_value
 
     return jsonify({"match": match})
-
 
 
 @app.route('/update_recipe', methods=['POST'])
@@ -670,11 +1139,6 @@ def update_recipe():
         conn.close()
 
     return redirect(url_for('recipe_list'))
-
-
-
-
-
 
 @app.route('/add_recipe', methods=['POST'])
 def add_recipe():
@@ -735,18 +1199,79 @@ def add_recipe():
 # Function to update PLC via OPC UA based on POS values
 
 
-def update_plc_with_pos_values(pos_values):
+# def update_plc_with_pos_values(pos_values):
+#     """
+#     Update PLC with POS values and Recipe ID (assumed as the last element in pos_values).
+#     """
+#     client = Client(ENDPOINT_URL)
+#     client.session_timeout = 30000  # Adjust timeout as needed
+    
+#     try:
+#         client.connect()
+#         # Ensure pos_values is a list with at least 10 elements (9 POS values + 1 Recipe ID)
+#         # if not isinstance(pos_values, list) or len(pos_values) < 10:
+#         #     raise ValueError("pos_values must be a list with at least 10 elements (including Recipe ID).")
+
+#         # Extract Recipe ID (last element)
+#         recipe_id = pos_values[-1]
+#         pos_values = pos_values[:-1]  # Remove Recipe ID from the list, keeping only POS values
+
+#         # Write POS values (1 to 9) to PLC nodes
+#         for i in range(1, 10):
+#             pos_value = pos_values[i - 1]  # Access by index (0-based for lists)
+#             node_id = f'ns=3;s="OpenRecipe"."selectedRoll{i}"'
+            
+
+#             try:
+#                 # Get the node object
+#                 node = client.get_node(node_id)
+              
+
+#                 # Determine the value to set
+#                 if pos_value:  # Check if the value is present (not None or empty)
+#                     node.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
+                   
+#                 else:
+#                     node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+                   
+
+#             except Exception as node_error:
+#                 print(f"Error processing Node ID {node_id}: {node_error}")
+
+#         # Write the Recipe ID to a specific OPC UA node
+#         try:
+#             recipe_node_id = 'ns=3;s="OpenRecipe"."recipeId"'  # Replace with actual node ID for Recipe ID
+#             recipe_node = client.get_node(recipe_node_id)
+           
+
+#             recipe_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
+           
+
+#         except Exception as recipe_error:
+#             print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
+
+    
+       
+#         client.disconnect()
+      
+#     except Exception as e:
+#         print(f"Error updating PLC: {e}")
+def update_plc_with_values(pos_values, submenu_values):
     """
-    Update PLC with POS values and Recipe ID (assumed as the last element in pos_values).
+    Update PLC with POS values, Recipe ID (assumed as the last element in pos_values), 
+    and submenu values.
     """
+    from opcua import Client, ua
+
     client = Client(ENDPOINT_URL)
     client.session_timeout = 30000  # Adjust timeout as needed
-    
+
     try:
         client.connect()
+
         # Ensure pos_values is a list with at least 10 elements (9 POS values + 1 Recipe ID)
-        # if not isinstance(pos_values, list) or len(pos_values) < 10:
-        #     raise ValueError("pos_values must be a list with at least 10 elements (including Recipe ID).")
+        if not isinstance(pos_values, list) or len(pos_values) < 10:
+            raise ValueError("pos_values must be a list with at least 10 elements (including Recipe ID).")
 
         # Extract Recipe ID (last element)
         recipe_id = pos_values[-1]
@@ -756,21 +1281,12 @@ def update_plc_with_pos_values(pos_values):
         for i in range(1, 10):
             pos_value = pos_values[i - 1]  # Access by index (0-based for lists)
             node_id = f'ns=3;s="OpenRecipe"."selectedRoll{i}"'
-            
 
             try:
                 # Get the node object
                 node = client.get_node(node_id)
-              
-
                 # Determine the value to set
-                if pos_value:  # Check if the value is present (not None or empty)
-                    node.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
-                   
-                else:
-                    node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
-                   
-
+                node.set_value(ua.DataValue(ua.Variant(bool(pos_value), ua.VariantType.Boolean)))
             except Exception as node_error:
                 print(f"Error processing Node ID {node_id}: {node_error}")
 
@@ -778,20 +1294,30 @@ def update_plc_with_pos_values(pos_values):
         try:
             recipe_node_id = 'ns=3;s="OpenRecipe"."recipeId"'  # Replace with actual node ID for Recipe ID
             recipe_node = client.get_node(recipe_node_id)
-           
-
             recipe_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
-           
-
         except Exception as recipe_error:
             print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
+        submenu_fields = ["servoMotorForce", "servoMotorSpeed", "servoMotorStroke", "coilWidth"]
+        # Write submenu values to specific nodes
+        try:
+         submenu_values = [float(value) for value in submenu_values] 
+        except ValueError as conversion_error:
+         raise ValueError(f"Error converting submenu values to float: {conversion_error}")
 
-    
-       
-        client.disconnect()
-      
+        for field_name, submenu_value in zip(submenu_fields, submenu_values):
+            submenu_node_id = f'ns=3;s="OpenRecipe"."{field_name}"'  # Replace with actual node ID pattern
+            try:
+                # Get the node object
+                node = client.get_node(submenu_node_id)
+                node.set_value(ua.DataValue(ua.Variant(submenu_value, ua.VariantType.Float)))
+            except Exception as submenu_error:
+                print(f"Error processing Submenu Node ID {submenu_node_id}: {submenu_error}")
+
+        print("POS values, Recipe ID, and Submenu values written successfully to PLC.")
     except Exception as e:
         print(f"Error updating PLC: {e}")
+    finally:
+        client.disconnect()
 
 @app.route('/start_recipe/<int:recipe_id>', methods=['POST'])
 def start_recipe(recipe_id):
@@ -801,7 +1327,9 @@ def start_recipe(recipe_id):
     conn = get_db_connection()
     recipe_details = conn.execute('SELECT * FROM Recipe_Details1 WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
     sub_menu = conn.execute('SELECT * FROM Sub_Menu WHERE Recipe_ID = ?', (recipe_id,)).fetchone()
-    
+    pos_values = extract_pos_values(recipe_details)
+    submenu_values = extract_submenu_vaues(sub_menu)
+    update_plc_with_values(pos_values, submenu_values)
     if not recipe_details or not sub_menu:
         flash("Recipe details not found!", "danger")
         return redirect(url_for('recipe_details', recipe_id=recipe_id))
@@ -862,7 +1390,7 @@ def add_tag():
         return jsonify({"success": False, "error": "Missing fields in the request."})
 
     try:
-        with sqlite3.connect(DB_PATH1) as conn:
+        with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO Tag_Table (tagId, tagName, tagAddress, plcId)
@@ -896,7 +1424,7 @@ def fetch_and_update_live_value(tag_address):
         else:
             value = str(value)  # Convert single number or other value to string
         # Fetch the tagId from the Tag_Table for this tagAddress
-        with sqlite3.connect(DB_PATH1) as conn:
+        with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute('''SELECT Tagid FROM Tag_Table WHERE tagAddress = ?''', (tag_address,))
             tag_id = cursor.fetchone()
@@ -920,10 +1448,11 @@ def fetch_and_update_live_value(tag_address):
                 conn.commit()
 
         # Emit live data to the frontend via SocketIO
-        socketio.emit('liveData', {"success": True, "tagAddress": tag_address, "value": value})
+        # socketio.emit('liveData', {"success": True, "tagAddress": tag_address, "value": value})
 
     except Exception as e:
-        socketio.emit('liveData', {"success": False, "error": str(e)})
+        # socketio.emit('liveData', {"success": False, "error": str(e)})
+        print(f"Error fetching and updating live value: {e}")
 
     finally:
         client.disconnect()
@@ -932,7 +1461,7 @@ def fetch_live_tag_data():
     """
     Fetch live tags and their corresponding tag addresses from the database.
     """
-    with sqlite3.connect(DB_PATH1) as conn:
+    with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('''
             SELECT lt.id, lt.tagId, tt.tagAddress 
@@ -990,7 +1519,7 @@ def read_opcua_values(tag_data):
 
     return updates
 
-import json
+
 
 def update_database(updates):
     """
@@ -1000,7 +1529,7 @@ def update_database(updates):
     Convert lists or dictionaries in 'value' to JSON strings.
     """
     updates_serialized = []  # To store serialized updates for Live_Tags
-    live_log_entries = []    # To store entries for the Live_Log table
+    # live_log_entries = []    # To store entries for the Live_Log table
 
     for value, record_id in updates:
         if isinstance(value, (list, dict)):
@@ -1012,10 +1541,10 @@ def update_database(updates):
         updates_serialized.append((value, record_id))
 
         # Prepare for Live_Log insert (fetch tagId dynamically)
-        live_log_entries.append((record_id, value))
+        # live_log_entries.append((record_id, value))
 
     # Database operations
-    with sqlite3.connect(DB_PATH1) as conn:
+    with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
 
         # 1. Update the Live_Tags table
@@ -1026,20 +1555,20 @@ def update_database(updates):
         ''', updates_serialized)
 
         # 2. Insert into Live_Log table (fetch tagId and tagName using record_id)
-        for record_id, value in live_log_entries:
-            cursor.execute('''
-                INSERT INTO Live_Log (tagId, tagName, value, timestamp)
-                SELECT lt.tagId, tt.tagName, ?, CURRENT_TIMESTAMP
-                FROM Live_Tags lt
-                LEFT JOIN Tag_Table tt ON lt.tagId = tt.Tagid
-                WHERE lt.id = ?
-            ''', (value, record_id))
+        # for record_id, value in live_log_entries:
+        #     cursor.execute('''
+        #         INSERT INTO Live_Log (tagId, tagName, value, timestamp)
+        #         SELECT lt.tagId, tt.tagName, ?, CURRENT_TIMESTAMP
+        #         FROM Live_Tags lt
+        #         LEFT JOIN Tag_Table tt ON lt.tagId = tt.Tagid
+        #         WHERE lt.id = ?
+        #     ''', (value, record_id))
 
         conn.commit()
-      
-
-API_URL = "http://localhost:4000/suvi/api/v1/machine-data"  # Change this to your Flask API URL
-
+     
+# API_URL = "https://api.ngsmart.in:5000/suvi/api/v1/machine-data"  # Change this to your Flask API URL
+# API_URL = "https://api.ngsmart.in:5000/suvi/api/v1/machine-data"
+API_URL =   "http://localhost:4000/suvi/api/v1/machine-data"
 BATCH_SIZE = 10
 
 def is_json(value):
@@ -1051,35 +1580,131 @@ def is_json(value):
         return True
     except ValueError:
         return False
-
-def clean_live_log_last_100(conn, record_ids):
+def process_value(tag_name, value):
     """
-    Clean up successfully uploaded records from SQLite.
+    Process the value field:
+    - If it's an array, convert each element into a separate field like field1, field2, etc.
+    - If it's not an array, return as-is.
+    """
+    if isinstance(value, list):
+        return {f"{tag_name}{i+1}": v for i, v in enumerate(value)}
+    else:
+        return {tag_name: value}
+def timestamp_to_epoch(timestamp):
+    """
+    Convert timestamp from 'YYYY-MM-DD HH:MM:SS' (string) to epoch seconds,
+    or use the timestamp directly if it's already in epoch form (integer).
+    """
+    try:
+        # If timestamp is an integer (epoch time)
+        if isinstance(timestamp, int):
+            return timestamp
+        
+        # If timestamp is a string in 'YYYY-MM-DD HH:MM:SS' format
+        elif isinstance(timestamp, str):
+            datetime_obj = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+            return int(datetime_obj.timestamp())
+        
+        # Handle unexpected timestamp types
+        else:
+            print(f"Unexpected timestamp type: {type(timestamp)}")
+            return None
+    except ValueError as e:
+        print(f"Error converting timestamp: {e}")
+        return None
+def get_current_batch_count():
+    """
+    Fetch the current total number of batches from the database.
+    """
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT number_of_batches_created FROM BatchTracker WHERE id = 1')
+        result = cursor.fetchone()
+        return result[0] if result else 0
+def update_batch_count(new_batches):
+    """
+    Add the count of new batches to the existing total and update the database.
+    """
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+
+        # Get the current batch count
+        current_count = get_current_batch_count()
+        print(f"Current batch count: {current_count}")
+
+        # Calculate the new total
+        updated_count = current_count + new_batches
+
+        # Update the table with the new count
+        cursor.execute('UPDATE BatchTracker SET number_of_batches_created = ? WHERE id = 1', (updated_count,))
+        conn.commit()
+
+        print(f"Updated batch count: {updated_count}")
+        return updated_count
+# def clean_live_log_last_batch(conn, record_ids):
+#     """
+#     Clean up successfully uploaded records from SQLite.
+#     """
+#     try:
+#         cursor = conn.cursor()
+#         cursor.execute(f'''
+#             DELETE FROM Live_Log
+#             WHERE id IN ({','.join(['?'] * len(record_ids))})
+#         ''', record_ids)
+#         conn.commit()
+#         print("Successfully cleaned up uploaded records from SQLite.")
+#     except Exception as e:
+#         print(f"Error: {e}")
+def clean_live_log_last_batch(conn, record_ids, chunk_size=500):
+    """
+    Clean up successfully uploaded records from SQLite in chunks to avoid 'too many SQL variables' error.
     """
     try:
         cursor = conn.cursor()
-        cursor.execute(f'''
-            DELETE FROM Live_Log
-            WHERE id IN ({','.join(['?'] * len(record_ids))})
-        ''', record_ids)
-        conn.commit()
+        # Process deletions in chunks
+        for i in range(0, len(record_ids), chunk_size):
+            chunk = record_ids[i:i + chunk_size]
+            placeholders = ','.join(['?'] * len(chunk))
+            cursor.execute(f'''
+                DELETE FROM Live_Log
+                WHERE id IN ({placeholders})
+            ''', chunk)
+            conn.commit()
         print("Successfully cleaned up uploaded records from SQLite.")
     except Exception as e:
-        print(f"Error: {e}")
-from pymongo import MongoClient
-import sqlite3
-import json
+        print(f"Error during cleanup: {e}")
+def fetch_plc_info():
+    """Fetch plcId and serialKey from Plc_Table."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
 
-# Database configuration
+            # Fetch plcId and serialKey for the first PLC (you can modify this if needed)
+            cursor.execute("SELECT plcId, serial_Key FROM Plc_Table LIMIT 1")
+            plc_info = cursor.fetchone()
 
+            if plc_info:
+                plc_id, serial_key = plc_info
+                return plc_id, serial_key
+            else:
+                return None, None  # Return None if no data found
 
+    except Exception as e:
+        print(f"Error fetching PLC info: {e}")
+        return None, None
 def upload_live_log_to_mongodb():
     """
     Fetch records from SQLite, format them, send them to Flask API, and clean up SQLite.
     """
     try:
+        # Fetch plcId and serialKey from Plc_Table
+        plc_id, serial_key = fetch_plc_info()
+        if plc_id is None or serial_key is None:
+            print("Error: plcId or serialKey not found in Plc_Table.")
+            return
+
         # Connect to SQLite
-        with sqlite3.connect(DB_PATH1) as conn:
+        with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
 
             # Fetch all records grouped by timestamp
@@ -1128,11 +1753,12 @@ def upload_live_log_to_mongodb():
                     combined_tags.update(tag)
 
                 batch = {
-                    "plcId": 3,
-                    "serialNo": 11223344,
-                    "values": [{"dbId": 2,"dbNo":1001,"dbName":"dbCloud", "data": [{"temp":1,"timestamp": epoch_timestamp*1000, **combined_tags}]}]
+                    "plcId": plc_id,
+                    "serialNo": serial_key,
+                    "values": [{"dbId": 3,"dbNo":1001,"dbName":"dbCloud", "data": [{"temp":1,"timestamp": epoch_timestamp*1000, **combined_tags}]}]
                 }
                 batches.append(batch)
+            successful_batches = 0
 
             # Send data in batches of 10
             for i in range(0, len(batches), BATCH_SIZE):
@@ -1142,26 +1768,27 @@ def upload_live_log_to_mongodb():
 
                 if response.status_code in [200, 201]:
                     print(f"Batch {i // BATCH_SIZE + 1} uploaded successfully.")
+                    successful_batches+=1
                     # Clean up uploaded records
-                    clean_live_log_last_100(conn, record_ids)
+                    clean_live_log_last_batch(conn, record_ids,chunk_size=500)
                 else:
                     print(f"Failed to upload batch {i // BATCH_SIZE + 1}. Status code: {response.status_code}")
                     print(f"Response: {response.text}")
-
+        update_batch_count(successful_batches)
         print("Process completed.")
         print(f"Response from final API (Batch {i // BATCH_SIZE + 1}): {response.status_code}, {response.text}")
 
     except Exception as e:
         print(f"Error: {e}")
 
-def schedule_live_log_upload_background(interval=15):
+def schedule_live_log_upload_background(interval=100000):
     """
     Run the upload function in a background thread every `interval` seconds.
     """
     def background_task():
         while True:
             try:
-                with sqlite3.connect(DB_PATH1) as conn:
+                with sqlite3.connect(DB_PATH) as conn:
                     cursor = conn.cursor()
                     cursor.execute('''SELECT COUNT(*) FROM Live_Log''')
                     count = cursor.fetchone()[0]
@@ -1172,61 +1799,14 @@ def schedule_live_log_upload_background(interval=15):
                         print("Less than 1000 records in Live_Log. Skipping upload...")
             except Exception as e:
                 print(f"Error in background task: {e}")
-            time.sleep(interval)  # Wait before the next check
+            time.sleep(interval/1000)  # Wait before the next check
 
     # Start the background task in a separate thread
     thread = threading.Thread(target=background_task, daemon=True)
     thread.start()
 
 # Call this function to start the background thread
-schedule_live_log_upload_background(interval=15)
-# Connect to MongoDB
-# mongo_client = MongoClient(MONGO_URI)
-# mongo_db = mongo_client[MONGO_DB_NAME]
-# mongo_collection = mongo_db[MONGO_COLLECTION_NAME]
-
-# @app.route('/upload_data', methods=['POST'])
-# def upload_data():
-#     try:
-#         # Get the JSON data from the request
-#         data = request.get_json()
-        
-#         if not data:
-#             return jsonify({"message": "No data received"}), 400
-
-#         # Forward the data to the final API
-#         response = requests.post(
-#             'http://localhost:4000/suvi/api/v1/machine-data',
-#             json=data,
-#             headers={'Content-Type': 'application/json'}
-#         )
-
-#         # Check the response from the final API
-#         if response.status_code == 201:
-#             print("Data successfully forwarded to final API.")
-
-#             # Attempt to save data to MongoDB
-#             try:
-#                 mongo_collection.insert_many(data)
-#                 print("Data successfully saved to MongoDB.")
-#                 return jsonify({
-#                     "message": "Data successfully uploaded to final API and saved in MongoDB"
-#                 }), 201
-#             except Exception as mongo_error:
-#                 print(f"Error saving data to MongoDB: {mongo_error}")
-#                 return jsonify({
-#                     "message": "Data uploaded to final API but failed to save in MongoDB",
-#                     "mongo_error": str(mongo_error)
-#                 }), 500
-#         else:
-#             return jsonify({
-#                 "message": "Failed to upload data to final API",
-#                 "status_code": response.status_code,
-#                 "response_text": response.text
-#             }), response.status_code
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
+# schedule_live_log_upload_background(interval=15000)
 
 def update_all_live_tags():
     """
@@ -1244,7 +1824,43 @@ def update_all_live_tags():
 
     except Exception as e:
         print(f"Error: {e}")
+        # Global variable to store the user-defined interval (in seconds)
+def update_all_live_tags_to_log():
+    """
+    Insert values into Live_Log table based on user-defined interval.
+    """
+    try:
+        # Fetch the live tag data again to ensure we get the latest values
+        tag_data = fetch_live_tag_data()
 
+        # Read values from OPC UA
+        updates = read_opcua_values(tag_data)
+
+        # Prepare and insert into the Live_Log table
+        live_log_entries = []
+        for value, record_id in updates:
+            if isinstance(value, (list, dict)):
+                value = json.dumps(value)  # Convert list/dict to JSON string
+            else:
+                value = str(value)  # Convert other types to string
+            live_log_entries.append((record_id, value))
+
+        # Insert into Live_Log table
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            for record_id, value in live_log_entries:
+                cursor.execute('''
+                    INSERT INTO Live_Log (tagId, tagName, value, timestamp)
+                    SELECT lt.tagId, tt.tagName, ?, CURRENT_TIMESTAMP
+                    FROM Live_Tags lt
+                    LEFT JOIN Tag_Table tt ON lt.tagId = tt.Tagid
+                    WHERE lt.id = ?
+                ''', (value, record_id))
+
+            conn.commit()
+
+    except Exception as e:
+        print(f"Error: {e}")
 @app.route('/writeValue', methods=['POST'])
 def write_value():
     data = request.json
@@ -1292,7 +1908,7 @@ def write_value():
 def read_values():
     try:
         # Connect to SQL Database
-        conn = sqlite3.connect('suvi_database.db')  # Update with your DB 
+        conn = sqlite3.connect(DB_PATH)  # Update with your DB 
         cursor = conn.cursor()
 
 
@@ -1354,18 +1970,18 @@ def read_live_values(node_ids):
                     results.append({"nodeId": node_id, "error": str(e)})
 
             print("Emitting data to frontend:", results)  # Debug emitted data
-            socketio.emit('liveData', {"success": True, "results": results})
+            # socketio.emit('liveData', {"success": True, "results": results})
             time.sleep(1)  # Fetch data every 2 seconds
     except Exception as e:
         print(f"Error in OPC UA connection: {e}")  # Log connection errors
-        socketio.emit('liveData', {"success": False, "error": str(e)})
+        # socketio.emit('liveData', {"success": False, "error": str(e)})
     finally:
         client.disconnect()
         print("Disconnected from OPC UA server!")  # Debug disconnection
 @app.route('/getLiveValues', methods=['GET'])
 def get_live_values():
     try:
-        with sqlite3.connect(DB_PATH1) as conn:
+        with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute('''
                 SELECT Id,value, timestamp,tagId
@@ -1521,7 +2137,52 @@ def run_periodic_update1():
         update_all_live_tags()
         
         time.sleep(1)  # Update every 1 seconds
+# Initialize the default update interval
+update_interval = 20
+interval_lock = threading.Lock()
 
+@app.route('/api/update_interval_time', methods=['POST'])
+def update_interval_time():
+    global update_interval
+
+    try:
+        # Get the intervalTime value from the request body
+        data = request.json
+        interval_time = data.get('intervalTime')
+
+        if not interval_time or interval_time <= 0:
+            return jsonify({"success": False, "error": "Invalid interval time provided."})
+
+        # Update the intervalTime value in the SQLite database
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE Plc_Table SET intervalTime = ? WHERE plcId = 1", (interval_time,))
+            conn.commit()
+
+        # Safely update the global update_interval value
+        with interval_lock:
+            update_interval = interval_time
+
+        return jsonify({"success": True, "message": "Interval time updated successfully."})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+
+def run_periodic_update3():
+    global update_interval
+
+    while True:
+        # Perform the periodic update task
+        update_all_live_tags_to_log()  # Insert data into Live_Log after the interval
+
+        # Safely access the update_interval value
+        with interval_lock:
+            # print("Interval time:",update_interval)
+            sleep_time = update_interval
+
+        time.sleep(sleep_time)  # Sleep for the specified interval
+ # Sleep for the specified interval 
 def run_periodic_update2():
     while True:
         
@@ -1531,6 +2192,11 @@ def run_periodic_update2():
         
 if __name__ == '__main__':
     print("Starting Flask app...")
+    schedule_live_log_upload_background(interval=10000)
     threading.Thread(target=run_periodic_update1, daemon=True).start()
     threading.Thread(target=run_periodic_update2, daemon=True).start()
-    socketio.run(app, host='0.0.0.0', port=5000)
+    threading.Thread(target=run_periodic_update3, daemon=True).start()
+    threading.Thread(target=log_status, daemon=True).start()
+    # socketio.run(app, host='0.0.0.0', port=5000)
+    app.run(debug=True)
+

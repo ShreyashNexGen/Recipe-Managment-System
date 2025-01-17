@@ -4,7 +4,37 @@
 <div class="container mt-4">
     <h1 style="font-size: 30px; color: #3d2758; text-align: center; font-weight: bold;">Dashboard</h1>
     
-    <h2 style="font-size: 20px; color: #333;text-align: center; font-weight: 500;">Current Running Recipe No.: 1234</h2>
+    <!-- <h2 style="font-size: 20px; color: #333;text-align: center; font-weight: 500;">Current Running Recipe No.: 1234</h2> -->
+
+     <!-- Status Overview Section -->
+     <div class="status-overview mt-5">
+        <h2 style="font-size: 24px; color: #3d2758; text-align: center; font-weight: bold;">System Status</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <p><strong>PLC IP:</strong> <span id="plc-ip">Loading...</span></p>
+                <p><strong>Internet Connected:</strong> <span id="internet-connected">Loading...</span></p>
+            </div>
+            <div class="col-md-4">
+                <p><strong>PLC Connected:</strong> <span id="plc-connected">Loading...</span></p>
+                <p><strong>No. of Tags Created:</strong> <span id="tags-count">Loading...</span></p>
+            </div>
+            <div class="col-md-4">
+                <p><strong>No. of Logs Created:</strong> <span id="logs-count">Loading...</span></p>
+                <p><strong>Interval Time of Log Entry:</strong> <span id="interval-time">Loading...</span></p>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <p><strong>Serial Key:</strong> <span id="serial-key">Loading...</span></p>
+        </div>
+        <div class="container mt-4">
+            <div class="update-interval-container">
+                <label for="interval-time" class="form-label">Set Interval Time:</label>
+                <input type="number" id="interval-time1" class="form-control" placeholder="Enter Interval Time">
+                <button id="update-interval-btn" class="btn btn-primary mt-2">Update</button>
+            </div>
+        </div>
+    </div>
+   
     <!-- Status Bar Section -->
     <div class="status-bars">
         <!-- Machine Running Status -->
@@ -27,12 +57,14 @@
     <div class="pie-chart-container">
         <!-- Pie Chart 1 -->
         <div class="pie-chart">
-            <canvas id="pieChart1"></canvas>
+            <h2 style="text-align: center;">Internet Status</h2>
+            <canvas id="internetChart"></canvas>
         </div>
 
         <!-- Pie Chart 2 -->
         <div class="pie-chart">
-            <canvas id="pieChart2"></canvas>
+            <h2 style="text-align: center;">Plc Status</h2>
+            <canvas  id="plcChart"></canvas>
         </div>
     </div>
     <h2 class="highlighted-box">List of 10 Products</h2>
@@ -74,50 +106,78 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // Data for Pie Chart 1
-    const data1 = {
-        labels: ['Category A', 'Category B', 'Category C'],
-        datasets: [{
-            label: 'Dataset 1',
-            data: [40, 30, 30], // Static values
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-            hoverOffset: 4
-        }]
-    };
+    // // Data for Pie Chart 1
+    // // const data1 = {
+    // //     labels: ['Category A', 'Category B', 'Category C'],
+    // //     datasets: [{
+    // //         label: 'Dataset 1',
+    // //         data: [40, 30, 30], // Static values
+    // //         backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+    // //         hoverOffset: 4
+    // //     }]
+    // // };
 
-    // Data for Pie Chart 2
-    const data2 = {
-        labels: ['Item 1', 'Item 2', 'Item 3', 'Item 4'],
-        datasets: [{
-            label: 'Dataset 2',
-            data: [25, 25, 30, 20], // Static values
-            backgroundColor: ['#4BC0C0', '#FF9F40', '#9966FF', '#FF6384'],
-            hoverOffset: 4
-        }]
-    };
+    // // Data for Pie Chart 2
+    // const data2 = {
+    //     labels: ['Item 1', 'Item 2', 'Item 3', 'Item 4'],
+    //     datasets: [{
+    //         label: 'Dataset 2',
+    //         data: [25, 25, 30, 20], // Static values
+    //         backgroundColor: ['#4BC0C0', '#FF9F40', '#9966FF', '#FF6384'],
+    //         hoverOffset: 4
+    //     }]
+    // };
 
-    // Configuration for Pie Chart 1
-    const config1 = {
-        type: 'pie',
-        data: data1,
-    };
+    // // // Configuration for Pie Chart 1
+    // // const config1 = {
+    // //     type: 'pie',
+    // //     data: data1,
+    // // };
 
-    // Configuration for Pie Chart 2
-    const config2 = {
-        type: 'pie',
-        data: data2,
-    };
+    // // Configuration for Pie Chart 2
+    // const config2 = {
+    //     type: 'pie',
+    //     data: data2,
+    // };
 
-    // Render Pie Charts
-    const pieChart1 = new Chart(
-        document.getElementById('pieChart1'),
-        config1
-    );
+    // // // Render Pie Charts
+    // // const pieChart1 = new Chart(
+    // //     document.getElementById('pieChart1'),
+    // //     config1
+    // // );
 
-    const pieChart2 = new Chart(
-        document.getElementById('pieChart2'),
-        config2
-    );
+    // const pieChart2 = new Chart(
+    //     document.getElementById('pieChart2'),
+    //     config2
+    // );
+    document.getElementById('update-interval-btn').addEventListener('click', () => {
+    const intervalTime = document.getElementById('interval-time1').value;
+    console.log(intervalTime);
+    if (!intervalTime || intervalTime <= 0) {
+        alert('Please enter a valid interval time.');
+        return;
+    }
+
+    // Send updated intervalTime to the backend
+    fetch('/api/update_interval_time', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ intervalTime: parseInt(intervalTime) })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Interval time updated successfully!');
+                // Optionally, reload the page or refresh the dashboard to reflect changes
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => console.error('Error updating interval time:', error));
+});
+
     // Fetch and display the recipe log
     function fetchRecipeLog() {
             fetch('/api/recipe_log')
@@ -148,5 +208,222 @@
         // Refresh the table every 5 seconds
         setInterval(fetchRecipeLog, 1000);
         fetchRecipeLog(); // Initial fetch
+        // Fetch and display system statuses
+    function fetchSystemStatus() {
+        fetch('/status') // Update with your actual Flask endpoint
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('plc-ip').innerText = data.Plc_IP;
+                document.getElementById('internet-connected').innerText = data.Internet_Connected;
+                document.getElementById('plc-connected').innerText = data.Plc_Connected;
+                document.getElementById('tags-count').innerText = data.No_Of_Tags_Created;
+                document.getElementById('logs-count').innerText = data.No_Of_Logs_Created;
+                document.getElementById('interval-time').innerText = data.Interval_Time_Of_Log_Entry;
+                document.getElementById('serial-key').innerText = data.Serial_Key;
+            })
+            .catch(error => console.error('Error fetching system status:', error));
+    }
+
+    let pieChartInstance; // Global variable to store the chart instance
+ fetchSystemStatus();
+    setInterval(fetchSystemStatus, 2000); // Refresh every 5 seconds
+    let internetChart = null;
+    let plcChart = null;
+
+      function fetchStatusSummary1() {
+         fetch('/status1')
+        .then(response => response.json())
+        .then(data => {
+            // Destroy existing Internet Chart
+            if (internetChart) {
+                internetChart.destroy();
+            }
+
+            // Internet Pie Chart
+            const internetData = {
+                labels: ['Uptime', 'Downtime'],
+                datasets: [{
+                    data: [data.internet.uptime, data.internet.downtime],
+                    backgroundColor: ['#36A2EB', '#FF6384'],
+                }]
+            };
+            internetChart = new Chart(
+                document.getElementById('internetChart'),
+                { type: 'pie', data: internetData }
+            );
+
+            // Destroy existing PLC Chart
+            if (plcChart) {
+                plcChart.destroy();
+            }
+
+            // PLC Pie Chart
+            const plcData = {
+                labels: ['Connected', 'Disconnected'],
+                datasets: [{
+                    data: [data.plc.connected, data.plc.disconnected],
+                    backgroundColor: ['#4BC0C0', '#FF9F40'],
+                }]
+            };
+            plcChart = new Chart(
+                document.getElementById('plcChart'),
+                { type: 'pie', data: plcData }
+            );
+        })
+        .catch(error => console.error('Error fetching status summary:', error));
+}
+
+
+fetchStatusSummary1();
+setInterval(fetchStatusSummary1, 60000);
+
 </script>
+<style>/* Status Overview Section */
+.status-overview {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.status-overview h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #3d2758;
+    text-align: center;
+    font-weight: bold;
+}
+
+.status-overview .row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.status-overview p {
+    font-size: 1rem;
+    margin: 10px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-overview p strong {
+    color: #3d2758;
+}
+
+.status-overview span {
+    background: #e3f2fd;
+    color: #0d47a1;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .status-overview .row {
+        flex-direction: column;
+    }
+
+    .status-overview p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Status Bar Section */
+.status-bars {
+    margin-top: 30px;
+}
+
+.status-bars .status-bar {
+    margin-bottom: 15px;
+}
+
+.status-bars h4 {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    color: #3d2758;
+}
+/* Update Interval Button Section */
+.update-interval-container {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 500px;
+    text-align: center;
+}
+
+.update-interval-container .form-label {
+    font-size: 1rem;
+    color: #3d2758;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: block;
+    text-align: left;
+}
+
+.update-interval-container .form-control {
+    border: 1px solid #eaeaea;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 1rem;
+    width: 100%;
+    margin-bottom: 15px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.update-interval-container .form-control:focus {
+    border-color: #0d47a1;
+    box-shadow: 0 0 5px rgba(13, 71, 161, 0.5);
+    outline: none;
+}
+
+.update-interval-container .btn-primary {
+    background-color: #0d47a1;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.update-interval-container .btn-primary:hover {
+    background-color: #093c8a;
+    transform: translateY(-2px);
+}
+
+.update-interval-container .btn-primary:active {
+    background-color: #082f6e;
+    transform: translateY(1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .update-interval-container {
+        padding: 15px;
+    }
+
+    .update-interval-container .form-label {
+        font-size: 0.9rem;
+    }
+
+    .update-interval-container .btn-primary {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+    }
+}
+
+</style>
 {% endblock %}
