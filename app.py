@@ -91,7 +91,7 @@ def init_db():
                     plcId TEXT NOT NULL
                 )
             ''')
-            conn.commit()  # Commit after creating Tag_Table
+            conn.commit()
 
             # Create Live_Tags table
             cursor.execute('''
@@ -103,7 +103,7 @@ def init_db():
                     FOREIGN KEY (tagId) REFERENCES Tag_Table(tagId)
                 )
             ''')
-            conn.commit()  # Commit after creating Live_Tags table
+            conn.commit()
 
             # Create Live_Log table
             cursor.execute('''
@@ -115,15 +115,65 @@ def init_db():
                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
-            conn.commit()  # Commit after creating Live_Log table
-            cursor.execute("""
-        CREATE TABLE IF NOT EXISTS connection_status (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            internet_status TEXT NOT NULL,
-            plc_status TEXT NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-              )
-          """)
+            conn.commit()
+
+            # Create connection_status table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS connection_status (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    internet_status TEXT NOT NULL,
+                    plc_status TEXT NOT NULL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+
+            # Create internet_status table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS internet_status (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    startTime TEXT NOT NULL,
+                    endTime TEXT NOT NULL,
+                    time_Duration TEXT NOT NULL,
+                    status TEXT NOT NULL
+                )
+            ''')
+            conn.commit()
+
+            # Create plc_status table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS plc_status (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    startTime TEXT NOT NULL,
+                    endTime TEXT NOT NULL,
+                    time_Duration TEXT NOT NULL,
+                    status TEXT NOT NULL
+                )
+            ''')
+            conn.commit()
+
+            # Create users table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    email TEXT NOT NULL UNIQUE,
+                    password TEXT NOT NULL,
+                    is_admin INTEGER DEFAULT 0
+                )
+            ''')
+            conn.commit()
+
+            # Create user_activity table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_activity (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    login_time DATETIME,
+                    logout_time DATETIME,
+                    FOREIGN KEY (username) REFERENCES users(username)
+                )
+            ''')
             conn.commit()
 
     except sqlite3.Error as e:
@@ -219,8 +269,8 @@ def setup_database():
             CREATE TABLE IF NOT EXISTS Plc_Table (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             plcId INTEGER DEFAULT 1,
-            plcName VARCHAR(50) DEFAULT 'Pl1',
-            plcIp VARCHAR(50) DEFAULT '192.168.0.1',
+            plcName VARCHAR(50) DEFAULT 'Plc1',
+            plcIp VARCHAR(50) DEFAULT '192.168.1.1',
             plcPort INTEGER DEFAULT 4840,
             intervalTime INTEGER DEFAULT 20,
             serial_Key VARCHAR(50) DEFAULT '12345')""")
@@ -316,40 +366,116 @@ def check_internet_connection():
     """Check if the server has internet connectivity."""
     try:
         import socket
-        # Attempt to resolve a common domain
         socket.create_connection(("8.8.8.8", 53), timeout=2)
-        return "Yes"
+        return "Connected"
     except Exception:
-        return "No"
+        return "Not Connected"
+
 def check_plc_connection(plc_ip):
     """Check if the PLC is reachable."""
     try:
         import os
-        response = os.system(f"ping -n 1 {plc_ip}")  # Replace `-c` with `-n` on Windows
-        return "Yes" if response == 0 else "No"
+        response = os.system(f"ping -n 1 {plc_ip}")  # Replace `-c` with `-n` for Windows
+        return "Connected" if response == 0 else "Not Connected"
     except Exception:
         return "Unknown"
+
+def get_last_status(table_name):
+    """Retrieve the last status from the specified table."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT status FROM {table_name} ORDER BY id DESC LIMIT 1")
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result else None
+def get_last_combined_status():
+    """Retrieve the last combined status (internet and PLC) from the connection_status table."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT internet_status, plc_status FROM connection_status
+        ORDER BY id DESC LIMIT 1
+    """)
+    result = cursor.fetchone()
+    conn.close()
+    return result if result else (None, None)
+def calculate_duration(start_time, end_time):
+    """Calculate the duration between two timestamps."""
+    start = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    end = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+    duration = end - start
+    return str(duration)
+
 def log_status():
-    """Log the internet and PLC connection statuses with timestamps."""
+    """Log statuses for Internet and PLC into tables."""
+    # Initialize previous statuses and start times
+    last_internet_status = check_internet_connection()
+    last_plc_status = check_plc_connection("192.168.1.1")  # Replace with your PLC IP
+    internet_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    plc_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     while True:
+        # Get current statuses
         internet_status = check_internet_connection()
-        plc_status = check_plc_connection("192.168.1.100")  # Replace with your PLC IP
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Current timestamp
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        # Insert the statuses into the table
-        cursor.execute("""
-            INSERT INTO connection_status (timestamp, internet_status, plc_status)
-            VALUES (?, ?, ?)
-        """, (timestamp, internet_status, plc_status))
+        plc_status = check_plc_connection("192.168.1.1")  # Replace with your PLC IP
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        conn.commit()
-        conn.close()
-        time.sleep(60)  # Update every 1 seconds
-    
-#Example usage
+        # Get the last logged combined status
+        last_combined_status = get_last_combined_status()
 
+        # Log to connection_status table only if status has changed
+        if (internet_status, plc_status) != last_combined_status:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO connection_status (timestamp, internet_status, plc_status)
+                VALUES (?, ?, ?)
+            """, (current_time, internet_status, plc_status))
+            conn.commit()
+            conn.close()
+
+        # Handle internet status changes
+        if internet_status != last_internet_status:
+            last_record_status = get_last_status("internet_status")
+            if last_record_status != internet_status:
+                duration = calculate_duration(internet_start_time, current_time)
+                conn = sqlite3.connect(DB_PATH)
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO internet_status (startTime, endTime, time_Duration, status)
+                    VALUES (?, ?, ?, ?)
+                """, (internet_start_time, current_time, duration, internet_status))
+                conn.commit()
+                conn.close()
+
+            # Update start time and last status
+            internet_start_time = current_time
+            last_internet_status = internet_status
+
+        # Handle PLC status changes
+        if plc_status != last_plc_status:
+            last_record_status = get_last_status("plc_status")
+            if last_record_status != plc_status:
+                duration = calculate_duration(plc_start_time, current_time)
+                conn = sqlite3.connect(DB_PATH)
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO plc_status (startTime, endTime, time_Duration, status)
+                    VALUES (?, ?, ?, ?)
+                """, (plc_start_time, current_time, duration, plc_status))
+                conn.commit()
+                conn.close()
+
+            # Update start time and last status
+            plc_start_time = current_time
+            last_plc_status = plc_status
+
+        # Wait for 1 second before the next check
+        time.sleep(1)
 # log_status(internet_status, plc_status)
+
+
+
 @app.route('/status1', methods=['GET'])
 def get_status_summary():
     """Fetch summary for pie charts."""
@@ -357,10 +483,10 @@ def get_status_summary():
     cursor = conn.cursor()
     cursor.execute("""
         SELECT 
-            SUM(CASE WHEN internet_status = 'Yes' THEN 1 ELSE 0 END) AS internet_uptime,
-            SUM(CASE WHEN internet_status = 'No' THEN 1 ELSE 0 END) AS internet_downtime,
-            SUM(CASE WHEN plc_status = 'Yes' THEN 1 ELSE 0 END) AS plc_connected,
-            SUM(CASE WHEN plc_status = 'No' THEN 1 ELSE 0 END) AS plc_disconnected
+            SUM(CASE WHEN internet_status = 'Connected' THEN 1 ELSE 0 END) AS internet_uptime,
+            SUM(CASE WHEN internet_status = 'Not Connected' THEN 1 ELSE 0 END) AS internet_downtime,
+            SUM(CASE WHEN plc_status = 'Connected' THEN 1 ELSE 0 END) AS plc_connected,
+            SUM(CASE WHEN plc_status = 'Not Connected' THEN 1 ELSE 0 END) AS plc_disconnected
         FROM connection_status
     """)
     result = cursor.fetchone()
@@ -508,7 +634,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        conn = sqlite3.connect('a2z_database.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
@@ -548,7 +674,7 @@ def register():
 
         try:
             # Connect to the database
-            conn = sqlite3.connect('a2z_database.db')
+            conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
 
             # Check if the username or email already exists
@@ -574,7 +700,7 @@ def register():
     return render_template('register.html')
 @app.route('/users')
 def users():
-    conn = sqlite3.connect('a2z_database.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT id, username, email, is_admin FROM users")
     users = cursor.fetchall()
@@ -1406,8 +1532,6 @@ def add_tag():
         return jsonify({"success": False, "error": "TagId already exists."})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
-    
-
 def fetch_and_update_live_value(tag_address):
     """Fetch live value for a tag and update the Live_Tags table."""
     client = Client(ENDPOINT_URL)
@@ -1423,6 +1547,7 @@ def fetch_and_update_live_value(tag_address):
             value = json.dumps(value)  # Convert to JSON string
         else:
             value = str(value)  # Convert single number or other value to string
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         # Fetch the tagId from the Tag_Table for this tagAddress
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
@@ -1438,12 +1563,12 @@ def fetch_and_update_live_value(tag_address):
 
                 if existing_entry:
                     # Update the value in Live_Tags table if an entry exists
-                    cursor.execute('''UPDATE Live_Tags SET value = ?, timestamp = CURRENT_TIMESTAMP WHERE id = ?''',
-                                   (value, existing_entry[0]))
+                    cursor.execute('''UPDATE Live_Tags SET value = ?, timestamp = ? WHERE id = ?''',
+                                   (value, timestamp, existing_entry[0]))
                 else:
                     # Insert the new value into Live_Tags table
-                    cursor.execute('''INSERT INTO Live_Tags (value, tagId, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)''',
-                                   (value, tag_id))
+                    cursor.execute('''INSERT INTO Live_Tags (value, tagId, timestamp) VALUES (?, ?, ?)''',
+                                   (value, tag_id, timestamp))
 
                 conn.commit()
 
@@ -1524,12 +1649,12 @@ def read_opcua_values(tag_data):
 def update_database(updates):
     """
     Update the Live_Tags table with the new live values.
-    Insert the updated values into the Live_Log table as a historical record.
-    Include the tagName in the Live_Log entry.
     Convert lists or dictionaries in 'value' to JSON strings.
     """
     updates_serialized = []  # To store serialized updates for Live_Tags
-    # live_log_entries = []    # To store entries for the Live_Log table
+     # Generate a single consistent timestamp
+    consistent_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 
     for value, record_id in updates:
         if isinstance(value, (list, dict)):
@@ -1538,10 +1663,7 @@ def update_database(updates):
             value = str(value)  # Convert other types to string
         
         # Prepare for Live_Tags update
-        updates_serialized.append((value, record_id))
-
-        # Prepare for Live_Log insert (fetch tagId dynamically)
-        # live_log_entries.append((record_id, value))
+        updates_serialized.append((value,consistent_timestamp, record_id))
 
     # Database operations
     with sqlite3.connect(DB_PATH) as conn:
@@ -1550,19 +1672,9 @@ def update_database(updates):
         # 1. Update the Live_Tags table
         cursor.executemany('''
             UPDATE Live_Tags
-            SET value = ?, timestamp = CURRENT_TIMESTAMP
+            SET value = ?, timestamp = ?
             WHERE id = ?
         ''', updates_serialized)
-
-        # 2. Insert into Live_Log table (fetch tagId and tagName using record_id)
-        # for record_id, value in live_log_entries:
-        #     cursor.execute('''
-        #         INSERT INTO Live_Log (tagId, tagName, value, timestamp)
-        #         SELECT lt.tagId, tt.tagName, ?, CURRENT_TIMESTAMP
-        #         FROM Live_Tags lt
-        #         LEFT JOIN Tag_Table tt ON lt.tagId = tt.Tagid
-        #         WHERE lt.id = ?
-        #     ''', (value, record_id))
 
         conn.commit()
      
@@ -1755,7 +1867,7 @@ def upload_live_log_to_mongodb():
                 batch = {
                     "plcId": plc_id,
                     "serialNo": serial_key,
-                    "values": [{"dbId": 3,"dbNo":1001,"dbName":"dbCloud", "data": [{"temp":1,"timestamp": epoch_timestamp*1000, **combined_tags}]}]
+                    "values": [{"dbId": 3,"dbNo":1001,"dbName":"dbCloud", "data": [{"temp":1,"timeStamp": epoch_timestamp * 1000, **combined_tags}]}]
                 }
                 batches.append(batch)
             successful_batches = 0
@@ -1836,6 +1948,9 @@ def update_all_live_tags_to_log():
         # Read values from OPC UA
         updates = read_opcua_values(tag_data)
 
+         # Generate a single consistent timestamp
+        consistent_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
         # Prepare and insert into the Live_Log table
         live_log_entries = []
         for value, record_id in updates:
@@ -1851,11 +1966,11 @@ def update_all_live_tags_to_log():
             for record_id, value in live_log_entries:
                 cursor.execute('''
                     INSERT INTO Live_Log (tagId, tagName, value, timestamp)
-                    SELECT lt.tagId, tt.tagName, ?, CURRENT_TIMESTAMP
+                    SELECT lt.tagId, tt.tagName, ?, ?
                     FROM Live_Tags lt
                     LEFT JOIN Tag_Table tt ON lt.tagId = tt.Tagid
                     WHERE lt.id = ?
-                ''', (value, record_id))
+                ''', (value, consistent_timestamp, record_id))
 
             conn.commit()
 
