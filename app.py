@@ -538,15 +538,26 @@ def index():
         'dashboard.html',
     )
 
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'register', 'static']  # Allow public routes and static files
+    if request.endpoint not in allowed_routes and 'user_id' not in session:
+        if not request.endpoint or request.endpoint.startswith('static'):  # Allow static files
+            return
+        flash('Please log in to access this page.', 'warning')
+        return redirect(url_for('login'))
+
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
+        flash('Please log in to access the dashboard.', 'warning')
         return redirect(url_for('login'))
-
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', username=session['username'])
 
 @app.route('/recipe')
 def recipe_list():
+    if 'username' not in session:  # Check if the user is logged in
+        return redirect(url_for('login'))
     # Logic for listing recipes
     page = max(1, request.args.get('page', 1, type=int))
     per_page = 10
@@ -627,7 +638,156 @@ def update_batch_status():
             client.disconnect()
             conn.close()
 
+@app.route('/role', methods=['GET', 'POST'])
+def role():
+    if not session.get('username') == 'Admin':  # Replace 'Admin' with your admin identifier
+        flash('Access denied: Admins only.', 'danger')
+        return redirect(url_for('dashboard'))
+    conn = sqlite3.connect('a2z_database.db')
+    cursor = conn.cursor()
+
+    # Fetch unique usernames
+    cursor.execute("SELECT DISTINCT username FROM users")
+    users = [row[0] for row in cursor.fetchall()]
+
+    if request.method == 'POST':
+        # Retrieve selected username and roles from the form
+        selected_user = request.form.get('username')
+        roles = request.form.getlist('roles')
+
+        # Save roles to the database
+        roles_str = ','.join(roles)
+        print(roles_str)
+        cursor.execute(
+            "UPDATE users SET roles = ? WHERE username = ?",
+            (roles_str, selected_user)
+        )
+        conn.commit()
+        flash(f'Roles updated for {selected_user}', 'success')
+
+    conn.close()
+    return render_template('roles.html', users=users)
+@app.route('/get_roles', methods=['POST'])
+def get_roles():
+    username = request.json.get('username')  # Get the username from the AJAX request
+    conn = sqlite3.connect('a2z_database.db')
+    cursor = conn.cursor()
+
+    # Fetch roles for the selected user
+    cursor.execute("SELECT roles FROM users WHERE username = ?", (username,))
+    result = cursor.fetchone()
+    conn.close()
+
+    roles = result[0].split(',') if result and result[0] else []
+    return jsonify({'roles': roles}) 
+@app.route('/event_log', methods=['GET'])
+def event_log():
+    if not session.get('username') == 'Admin':  # Replace 'Admin' with your admin identifier
+        flash('Access denied: Admins only.', 'danger')
+        return redirect(url_for('dashboard'))
+    conn = sqlite3.connect('a2z_database.db')
+    cursor = conn.cursor()
+
+    # Fetch user summary data for activity logs, ensuring correct logout handling
+    cursor.execute("""
+        SELECT 
+            username,
+            MAX(login_time) AS last_login_time,
+            (SELECT logout_time FROM user_activity 
+             WHERE username = ua.username 
+             AND logout_time IS NOT NULL 
+             ORDER BY logout_time DESC LIMIT 1) AS last_logout_time
+        FROM user_activity ua
+        GROUP BY username
+    """)
+    
+    user_summary = []
+    for row in cursor.fetchall():
+        username, last_login_time, last_logout_time = row
+        last_login_date = last_login_time.split()[0] if last_login_time else "N/A"
+        last_login_time = last_login_time.split()[1] if last_login_time else "N/A"
+        last_logout_date = last_logout_time.split()[0] if last_logout_time else "N/A"
+        last_logout_time = last_logout_time.split()[1] if last_logout_time else "N/A"
+
+        user_summary.append({
+            'username': username,
+            'last_login_date': last_login_date,
+            'last_login_time': last_login_time,
+            'last_logout_date': last_logout_date,
+            'last_logout_time': last_logout_time if last_logout_time else "Currently Logged In"
+        })
+
+    # Pagination setup
+    page = request.args.get('page', 1, type=int)
+    per_page = 5
+    offset = (page - 1) * per_page
+
+    selected_username = request.args.get('username')
+    selected_user_details = []
+    total_pages = None
+
+    if selected_username:
+        cursor.execute("""
+            SELECT 
+                DATE(login_time, 'localtime') AS login_date,
+                TIME(login_time, 'localtime') AS login_time,
+                CASE 
+                    WHEN logout_time IS NULL THEN NULL 
+                    ELSE DATE(logout_time, 'localtime') 
+                END AS logout_date,
+                CASE 
+                    WHEN logout_time IS NULL THEN NULL 
+                    ELSE TIME(logout_time, 'localtime') 
+                END AS logout_time
+            FROM user_activity
+            WHERE username = ?
+            ORDER BY login_time DESC
+            LIMIT ? OFFSET ?
+        """, (selected_username, per_page, offset))
         
+        selected_user_details = [
+            {
+                'login_date': row[0],
+                'login_time': row[1],
+                'logout_date': row[2] or "Currently Logged In",
+                'logout_time': row[3] or "Currently Logged In",
+            }
+            for row in cursor.fetchall()
+        ]
+
+        cursor.execute("SELECT COUNT(*) FROM user_activity WHERE username = ?", (selected_username,))
+        total_logs = cursor.fetchone()[0]
+        total_pages = (total_logs + per_page - 1) // per_page
+
+    conn.close()
+
+    return render_template(
+        'event_log.html',
+        user_summary=user_summary,
+        selected_username=selected_username,
+        selected_user_details=selected_user_details,
+        page=page,
+        total_pages=total_pages
+    )
+
+@app.route('/reset-password', methods=['POST'])
+def reset_password():
+    
+    user_id = request.form['user_id']
+    new_password = request.form['new_password']
+
+    # Hash the new password (important for security)
+    hashed_password = generate_password_hash(new_password)
+
+    # Update the password in the database
+    conn = sqlite3.connect('a2z_database.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_password, user_id))
+    conn.commit()
+    conn.close()
+
+    flash('Password has been reset successfully!', 'success')
+    return redirect(url_for('users'))
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -700,6 +860,9 @@ def register():
     return render_template('register.html')
 @app.route('/users')
 def users():
+    if not session.get('username') == 'Admin':  # Replace 'Admin' with your admin identifier
+        flash('Access denied: Admins only.', 'danger')
+        return redirect(url_for('dashboard'))
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT id, username, email, is_admin FROM users")
@@ -719,14 +882,33 @@ def validate_admin_password():
         return jsonify({'success': False})
 @app.route('/logout')
 def logout():
-    session.pop('username', None)  # Clear session
-    flash("Logged out successfully.", 'info')
-    return redirect(url_for('login'))
+    if 'username' in session:
+        username = session['username']
 
+        # Update the logout time for the latest login session
+        conn = sqlite3.connect('a2z_database.db')
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE user_activity 
+            SET logout_time = DATETIME('now', 'localtime') 
+            WHERE username = ? 
+            AND logout_time IS NULL
+        """, (username,))
+        conn.commit()
+        conn.close()
+
+        # Remove user from session
+        session.pop('username', None)
+
+        flash('You have been logged out successfully.', 'success')
+    return redirect(url_for('login'))
 
 
 @app.route('/tag-overview')
 def tag_overview():
+    if 'username' not in session:  # Check if the user is logged in
+        flash("Login first to access the Tag Overview.")
+        return redirect(url_for('login'))  # Redirect to login if not logged in
     # Get the page and limit parameters from the query string
     current_page = int(request.args.get('page', 1))  # Default to page 1 if not provided
     limit = int(request.args.get('limit', 10))  # Default limit is 10 if not provided
@@ -833,8 +1015,44 @@ def delete_tag(tag_id):
 
 
 
+# @app.route('/live-tag')
+# def live_tag():
+#     # Get the current page from the query string (default to 1)
+#     current_page = int(request.args.get('page', 1))
+
+#     # Connect to the database
+#     # 'suvi_database.db'
+#     conn = sqlite3.connect(DB_PATH)
+#     conn.row_factory = sqlite3.Row  # Rows are returned as dictionaries
+#     cursor = conn.cursor()
+
+#     # Pagination setup: 10 items per page
+#     items_per_page = 10
+#     offset = (current_page - 1) * items_per_page
+
+#     # Fetch data for the current page
+#     cursor.execute('SELECT * FROM Live_Tags LIMIT ? OFFSET ?', (items_per_page, offset))
+#     live_tags = cursor.fetchall()
+
+#     # Calculate total pages
+#     cursor.execute('SELECT COUNT(*) FROM Live_Tags')
+#     total_rows = cursor.fetchone()[0]
+#     total_pages = (total_rows + items_per_page - 1) // items_per_page
+
+#     conn.close()
+
+#     return render_template(
+#         'live_tag.html',
+#         live_tags=live_tags,       # Pass the retrieved live tag data
+#         page=current_page,         # Pass the current page number
+#         total_pages=total_pages,   # Pass total number of pages
+#         active_menu='tags',        # Keep the Tags dropdown open
+#         active_submenu='live-tag'  # Highlight the Live Tags submenu
+#     )
 @app.route('/live-tag')
 def live_tag():
+    if 'username' not in session:  # Check if the user is logged in
+        return redirect(url_for('login'))
     # Get the current page from the query string (default to 1)
     current_page = int(request.args.get('page', 1))
 
@@ -849,7 +1067,11 @@ def live_tag():
     offset = (current_page - 1) * items_per_page
 
     # Fetch data for the current page
-    cursor.execute('SELECT * FROM Live_Tags LIMIT ? OFFSET ?', (items_per_page, offset))
+    cursor.execute('''
+    SELECT Live_Tags.Id, Tag_Table.tagName, Live_Tags.value, Live_Tags.timestamp
+    FROM Live_Tags
+    JOIN Tag_Table ON Live_Tags.tagId = Tag_Table.tagId
+    LIMIT ? OFFSET ?  ''', (items_per_page, offset))
     live_tags = cursor.fetchall()
 
     # Calculate total pages
@@ -867,9 +1089,11 @@ def live_tag():
         active_menu='tags',        # Keep the Tags dropdown open
         active_submenu='live-tag'  # Highlight the Live Tags submenu
     )
-
 @app.route('/plc')
 def plc():
+    if not session.get('username') == 'Admin':  # Replace 'Admin' with your admin identifier
+        flash('Access denied: Admins only.', 'danger')
+        return redirect(url_for('dashboard'))
     # Connect to the database
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row  # Return rows as dictionaries
@@ -961,6 +1185,8 @@ def plc():
 # material_id_counter = 1000
 @app.route('/raw-material', methods=['GET', 'POST'])
 def raw_material():
+    if 'username' not in session:
+        return redirect(url_for('login'))
     global material_id_counter
     if request.method == 'POST':
         try:
@@ -2019,6 +2245,46 @@ def write_value():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
+# @app.route('/readValues', methods=['GET'])
+# def read_values():
+#     try:
+#         # Connect to SQL Database
+#         conn = sqlite3.connect(DB_PATH)  # Update with your DB 
+#         cursor = conn.cursor()
+
+
+#         # Fetch node IDs from the SQL table
+#         cursor.execute("SELECT DISTINCT tagAddress FROM Tag_Table")  # Update table/column names
+#         node_ids = [row[0] for row in cursor.fetchall()]
+#         # print("Node IDs: {}".format(node_ids));
+#         if not node_ids:
+#             return jsonify({"success": False, "error": "No node IDs found in the database"})
+
+#         # Connect to the PLC
+#         client = Client(ENDPOINT_URL)
+#         client.session_timeout = 30000  # Adjust timeout as needed
+#         client.connect()
+
+#         results = []
+#         for node_id in node_ids:
+#             try:
+#                 node = client.get_node(node_id)
+#                 value = node.get_value()
+#                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add current timestamp
+#                 results.append({"nodeId": node_id, "value": value, "timestamp": timestamp})
+#             except Exception as e:
+#                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Include timestamp for errors
+#                 results.append({"nodeId": node_id, "error": str(e), "timestamp": timestamp})
+
+#         client.disconnect()
+#         conn.close()
+#         return jsonify({"success": True, "results": results})
+
+#     except sqlite3.Error as db_error:
+#         return jsonify({"success": False, "error": f"Database error: {str(db_error)}"})
+
+#     except Exception as e:
+#         return jsonify({"success": False, "error": f"Unexpected error: {str(e)}"})
 @app.route('/readValues', methods=['GET'])
 def read_values():
     try:
@@ -2027,12 +2293,12 @@ def read_values():
         cursor = conn.cursor()
 
 
-        # Fetch node IDs from the SQL table
-        cursor.execute("SELECT DISTINCT tagAddress FROM Tag_Table")  # Update table/column names
-        node_ids = [row[0] for row in cursor.fetchall()]
-        # print("Node IDs: {}".format(node_ids));
-        if not node_ids:
-            return jsonify({"success": False, "error": "No node IDs found in the database"})
+        # Fetch node IDs and their corresponding tag names
+        cursor.execute("SELECT DISTINCT tagAddress, tagName FROM Tag_Table")  # Include tagName
+        tag_data = cursor.fetchall()
+
+        if not tag_data:
+            return jsonify({"success": False, "error": "No tag data found in the database"})
 
         # Connect to the PLC
         client = Client(ENDPOINT_URL)
@@ -2040,15 +2306,15 @@ def read_values():
         client.connect()
 
         results = []
-        for node_id in node_ids:
+        for tag_address, tag_name in tag_data:
             try:
-                node = client.get_node(node_id)
+                node = client.get_node(tag_address)
                 value = node.get_value()
                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add current timestamp
-                results.append({"nodeId": node_id, "value": value, "timestamp": timestamp})
+                results.append({"nodeId": tag_address, "tagName": tag_name, "value": value, "timestamp": timestamp})
             except Exception as e:
-                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Include timestamp for errors
-                results.append({"nodeId": node_id, "error": str(e), "timestamp": timestamp})
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                results.append({"nodeId": tag_address, "tagName": tag_name, "error": str(e), "timestamp": timestamp})
 
         client.disconnect()
         conn.close()
@@ -2059,7 +2325,6 @@ def read_values():
 
     except Exception as e:
         return jsonify({"success": False, "error": f"Unexpected error: {str(e)}"})
-
 
 def read_live_values(node_ids):
     """Connect to OPC UA server and emit live data to the frontend."""
@@ -2093,23 +2358,40 @@ def read_live_values(node_ids):
     finally:
         client.disconnect()
         print("Disconnected from OPC UA server!")  # Debug disconnection
+# @app.route('/getLiveValues', methods=['GET'])
+# def get_live_values():
+#     try:
+#         with sqlite3.connect(DB_PATH) as conn:
+#             cursor = conn.cursor()
+#             cursor.execute('''
+#                 SELECT Id,value, timestamp,tagId
+#                 FROM Live_Tags 
+#             ''')
+#             live_values = cursor.fetchall()
+
+#         results = [{"tagId": value[3], "value": value[1], "timestamp": value[2]} for value in live_values]
+#         return jsonify({"success": True, "data": results})
+
+#     except Exception as e:
+#         return jsonify({"success": False, "error": str(e)})
 @app.route('/getLiveValues', methods=['GET'])
 def get_live_values():
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT Id,value, timestamp,tagId
-                FROM Live_Tags 
+                SELECT Live_Tags.Id, Live_Tags.value, Live_Tags.timestamp, Tag_Table.tagName
+                FROM Live_Tags
+                JOIN Tag_Table ON Live_Tags.tagId = Tag_Table.tagId
             ''')
+
             live_values = cursor.fetchall()
 
-        results = [{"tagId": value[3], "value": value[1], "timestamp": value[2]} for value in live_values]
+        results = [{"tagName": value[3], "value": value[1], "timestamp": value[2]} for value in live_values]
         return jsonify({"success": True, "data": results})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
-
 @app.route('/startLiveRead', methods=['POST'])
 def start_live_read():
     """API endpoint to initiate live data reading."""
