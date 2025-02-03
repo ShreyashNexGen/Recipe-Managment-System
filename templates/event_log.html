@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Event Log{% endblock %}
+
+{% block content %}
+<h1>Event Log</h1>
+
+<!-- User Summary Table -->
+<h2>User Activity Summary</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Last Login Date</th>
+            <th>Last Login Time</th>
+            <th>Last Logout Date</th>
+            <th>Last Logout Time</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in user_summary %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.last_login_date or "N/A" }}</td>
+            <td>{{ user.last_login_time or "N/A" }}</td>
+            <td>{{ user.last_logout_date or "N/A" }}</td>
+            <td>{{ user.last_logout_time or "N/A" }}</td>
+            <td><a href="{{ url_for('event_log', username=user.username) }}">View Details</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Detailed Logs for Selected User -->
+{% if selected_username %}
+<h2>Activity Logs for {{ selected_username }}</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Login Date</th>
+            <th>Login Time</th>
+            <th>Logout Date</th>
+            <th>Logout Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in selected_user_details %}
+        <tr>
+            <td>{{ log.login_date }}</td>
+            <td>{{ log.login_time }}</td>
+            <td>{{ log.logout_date or "Currently Logged In" }}</td>
+            <td>{{ log.logout_time or "Currently Logged In" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination -->
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('event_log', username=selected_username, page=page-1) }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('event_log', username=selected_username, page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        {% if page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('event_log', username=selected_username, page=page+1) }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+<style>
+    /* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.pagination .page-item {
+    margin: 0 5px;
+}
+
+.pagination .page-link {
+    display: inline-block;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background-color: #f8f9fa;
+    color: #007bff;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+    pointer-events: none; /* Disable clicking on the active page */
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: #e9ecef;
+    color: #6c757d;
+    border-color: #ddd;
+    pointer-events: none; /* Disable interaction with disabled items */
+    cursor: not-allowed;
+}
+
+</style>
+<script>
+    function logoutUser() {
+        fetch('/logout')
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/login';
+                }
+            });
+    }
+
+    // Auto logout after 15 minutes of inactivity
+    let timeout;
+    function resetTimer() {
+        clearTimeout(timeout);
+        timeout = setTimeout(logoutUser, 15 * 60 * 1000);  // 15 minutes
+    }
+
+    document.onload = resetTimer();
+    document.onmousemove = resetTimer;
+    document.onkeydown = resetTimer;
+</script>
+{% endblock %}

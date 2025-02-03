@@ -29,16 +29,16 @@
                     <li><a class="dropdown-item" href="/live-tag">&bull;Live Tag</a></li>
                 </ul>
             </li>
+            {% if session['username'] == 'Admin' %}
             <li class="dropdown">
                 <a href="/" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-user-tie"></i>Admin</a>
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="/plc">&bull; PLC</a></li>
                     <li><a class="dropdown-item" href="/users">&bull; Users</a></li>
-                    <li><a class="dropdown-item" href="/Role">&bull; Role</a></li>
-                    <li><a class="dropdown-item" href="/Assign-Role">&bull; Assign Role</a></li>
-                    <li><a class="dropdown-item" href="/Event-Log">&bull; Event Log</a></li>
+                    <li><a class="dropdown-item" href="/role">&bull; Assign Role</a></li>
+                    <li><a class="dropdown-item" href="/event_log">&bull; Event Log</a></li>
                 </ul>
-            </li>
+            </li>{% endif %}
             <a href="/logout" class="logout">Logout</a>
         {% else %}
             <li><a href="/login" class="nav-link"><i class="fa-solid fa-sign-in-alt"></i>Login</a></li>
@@ -67,7 +67,7 @@
                 {% else %}
                     <span>Guest</span>
                 {% endif %}
-                <a href="/profile"><i class="fa-solid fa-user"></i></a>
+                <a href="#"><i class="fa-solid fa-user"></i></a>
             </div>
         </div>
         

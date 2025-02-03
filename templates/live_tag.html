@@ -6,7 +6,7 @@
     <table class="table table-bordered" id="liveDataTable">
         <thead>
             <tr>
-                <th>Tag ID</th>
+                <th>Tag Name</th>
                 <th>Value</th>
                 <th>Timestamp</th>
             </tr>
@@ -22,7 +22,7 @@
     <table class="table table-bordered" id="liveDataTable1">
         <thead>
             <tr>
-                <th>Tag ID</th>
+                <th>Tag Name</th>
                 <th>Value</th>
                 <th>Timestamp</th>
             </tr>
@@ -92,7 +92,7 @@
 
                         const isExpanded = expandedCells.has(cellKey); // Check expanded state
                         tr.innerHTML = `
-                            <td>${row.tagId}</td>
+                            <td>${row.tagName}</td>
                             <td class="value-cell" 
                                 data-cell-key="${cellKey}" 
                                 data-full-value="${row.value}" 
@@ -131,7 +131,7 @@
 
                         const isExpanded = expandedCells.has(cellKey); // Check expanded state
                         row.innerHTML = `
-                            <td>${item.nodeId}</td>
+                            <td>${item.tagName}</td>
                             <td class="value-cell" 
                                 data-cell-key="${cellKey}" 
                                 data-full-value="${item.value}" 
