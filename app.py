@@ -608,7 +608,7 @@ def get_recipe_log():
 
 # import datetime
 # from opcua import Client, ua
-BASE_NODE = 'ns=3;s="OpenRecipe"'
+BASE_NODE = 'ns=3;s="dbRecipe1"."Recipe"'
 def update_batch_status():
     """Fetch and update batch status based on PLC values."""
     while True:
@@ -1946,7 +1946,7 @@ def update_plc_with_values(pos_values, submenu_values):
         for i in range(1, 10):
             pos_value = pos_values[i - 1]  # Access by index (0-based for lists)
             # node_id = f'ns=3;s="OpenRecipe"."selectedRoll{i}"'
-            node_id = f'ns=3;s="dbRecipe1"."decoilerSelection{i}"'
+            node_id = f'{BASE_NODE}."decoilerSelection{i}"'
 
             try:
                 # Get the node object
@@ -1957,12 +1957,12 @@ def update_plc_with_values(pos_values, submenu_values):
                 print(f"Error processing Node ID {node_id}: {node_error}")
 
         # Write the Recipe ID to a specific OPC UA node
-        try:
-            recipe_node_id = 'ns=3;s="OpenRecipe"."recipeId"'  # Replace with actual node ID for Recipe ID
-            recipe_node = client.get_node(recipe_node_id)
-            recipe_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
-        except Exception as recipe_error:
-            print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
+        # try:
+        #     recipe_node_id = 'ns=3;s="OpenRecipe"."recipeId"'  # Replace with actual node ID for Recipe ID
+        #     # recipe_node = client.get_node(recipe_node_id)
+        #     # recipe_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
+        # except Exception as recipe_error:
+        #     print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
         submenu_fields = ["servoMotorSpeed", "servoMotorStroke","servoMotorForce", "coilWidth",
             "Corr1Feed_length", "Corr2feed_length", "Pleat_Height", "Blade_opening",
             "Left_Blade_MediaTHickness", "Right_Blade_MediaThickness", "Soft_Touch", "Press_Touch",
@@ -1977,7 +1977,7 @@ def update_plc_with_values(pos_values, submenu_values):
          raise ValueError(f"Error converting submenu values to float: {conversion_error}")
 
         for field_name, submenu_value in zip(submenu_fields, submenu_values):
-            submenu_node_id = f'ns=3;s="dbRecipe1"."{field_name}"'  # Replace with actual node ID pattern
+            submenu_node_id = f'{BASE_NODE}."{field_name}"'  # Replace with actual node ID pattern
             try:
                 # Get the node object
                 node = client.get_node(submenu_node_id)
@@ -2985,14 +2985,15 @@ def get_last_plc_values():
         print("Connected to OPC UA Server")
 
         # Base node for fetching values
-        base_node = 'ns=3;s="OpenRecipe".'
+        base_node = 'ns=3;s="dbRecipe1"."Recipe".'
+        
 
         # Fetch values from OPC UA
         last_plc_values = {
-            "Motor_speed": str(client.get_node(f'{base_node}"servoMotorSpeed"').get_value()),
-            "Motor_stroke": str(client.get_node(f'{base_node}"servoMotorStroke"').get_value()),
-            "Motor_force": str(client.get_node(f'{base_node}"servoMotorForce"').get_value()),
-            "coil_Width": str(client.get_node(f'{base_node}"coilWidth"').get_value()),
+            "Motor_speed": str(client.get_node(f'{base_node}"decoilerSelection"[14]"').get_value()),
+            "Motor_stroke": str(client.get_node(f'{base_node}"decoilerSelection"[14]"').get_value()),
+            "Motor_force": str(client.get_node(f'{base_node}"decoilerSelection"[14]"').get_value()),
+            "coil_Width": str(client.get_node(f'{base_node}"decoilerSelection"[14]"').get_value()),
             "Corr1Feed_length": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
             "Corr2feed_length": str(client.get_node(f'{base_node}"Corr2feed_length"').get_value()),
             "Pleat_Height": str(client.get_node(f'{base_node}"Pleat_Height"').get_value()),
