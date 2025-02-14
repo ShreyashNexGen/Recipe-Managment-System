@@ -301,6 +301,28 @@ function loadRecipe() {
                 document.getElementById("Motor_speed").value = data.Motor_speed;
                 document.getElementById("Motor_stroke").value = data.Motor_stroke;
                 document.getElementById("Motor_force").value = data.Motor_force;
+                document.getElementById("Corr1Feed_length").value = data.Corr1Feed_length;
+document.getElementById("Corr2feed_length").value = data.Corr2feed_length;
+document.getElementById("Pleat_Height").value = data.Pleat_Height;
+document.getElementById("Blade_opening").value = data.Blade_opening;
+document.getElementById("Left_Blade_MediaTHickness").value = data.Left_Blade_MediaTHickness;
+document.getElementById("Right_Blade_MediaThickness").value = data.Right_Blade_MediaThickness;
+document.getElementById("Soft_Touch").value = data.Soft_Touch;
+document.getElementById("Press_Touch").value = data.Press_Touch;
+document.getElementById("Puller_Start_pos").value = data.Puller_Start_pos;
+document.getElementById("Puller_End_pos").value = data.Puller_End_pos;
+document.getElementById("Puller2_Feed_Correction").value = data.Puller2_Feed_Correction;
+document.getElementById("Filter_Box_Height").value = data.Filter_Box_Height;
+document.getElementById("Filter_Box_Width").value = data.Filter_Box_Width;
+document.getElementById("Filter_Box_Length").value = data.Filter_Box_Length;
+document.getElementById("Set_Pleat_Count").value = data.Set_Pleat_Count;
+document.getElementById("Set_Pleat_Pitch").value = data.Set_Pleat_Pitch;
+document.getElementById("Set_Batch_Count").value = data.Set_Batch_Count;
+document.getElementById("Machine_Speed_Ref").value = data.Machine_Speed_Ref;
+document.getElementById("Decoiler_Set_point").value = data.Decoiler_Set_point;
+document.getElementById("Low_Dia_Set").value = data.Low_Dia_Set;
+document.getElementById("Cutter_Park_pos").value = data.Cutter_Park_pos;
+document.getElementById("Cutter_Fwd_Pos").value = data.Cutter_Fwd_Pos;
                  // Loop through pos fields (pos1, pos2, ..., pos10)
     // Loop through pos fields (Pos1, Pos2, ..., Pos9)
    
@@ -329,15 +351,39 @@ function loadRecipe() {
             alert("An error occurred while loading the recipe.");
         });
 }
+// function loadLastPLCValues() {
+//     fetch('/get_last_plc_values')  // Replace with your actual endpoint
+//         .then(response => response.json())
+//         .then(data => {
+//             console.log("Last PLC Values:", data);
+//             document.getElementById("Motor_speed").value = data.Motor_speed || "";
+//             document.getElementById("Motor_stroke").value = data.Motor_stroke || "";
+//             document.getElementById("Motor_force").value = data.Motor_force || "";
+//             document.getElementById("Alu_coil_width").value = data.coil_Width || "";
+//             alert("Last PLC values loaded successfully!");
+//         })
+//         .catch(error => {
+//             console.error("Error fetching PLC values:", error);
+//             alert("Failed to load last PLC values.");
+//         });
+// }
+// /* Update function in recipe page*/
 function loadLastPLCValues() {
     fetch('/get_last_plc_values')  // Replace with your actual endpoint
         .then(response => response.json())
         .then(data => {
             console.log("Last PLC Values:", data);
-            document.getElementById("Motor_speed").value = data.Motor_speed || "";
-            document.getElementById("Motor_stroke").value = data.Motor_stroke || "";
-            document.getElementById("Motor_force").value = data.Motor_force || "";
-            document.getElementById("Alu_coil_width").value = data.coil_Width || "";
+
+            // Loop through response data and update input fields dynamically
+            Object.keys(data).forEach(key => {
+                const inputField = document.getElementById(key);
+                if (inputField) {
+                    inputField.value = data[key] || "";
+                } else {
+                    console.warn(`No input field found for: ${key}`);
+                }
+            });
+
             alert("Last PLC values loaded successfully!");
         })
         .catch(error => {
@@ -345,7 +391,7 @@ function loadLastPLCValues() {
             alert("Failed to load last PLC values.");
         });
 }
-/* Update function in recipe page*/
+
 function openUpdatePopup(recipeId) {
     // Show the update popup
     document.getElementById('update-recipe-section').style.display = 'block';

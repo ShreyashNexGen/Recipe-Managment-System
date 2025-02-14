@@ -1691,6 +1691,30 @@ def extract_submenu_vaues(sub_menu):
         first_row[2],  # Assuming `motor_stroke` is at index 2
         first_row[3],  # Assuming `other_Speed_force` is at index 3
         first_row[4],  # Assuming `alu_coil_width` is at index 4
+        first_row[5],
+        first_row[6],
+        first_row[7],
+        first_row[8],
+        first_row[9],
+        first_row[19],
+        first_row[11],
+        first_row[12],
+        first_row[13],
+        first_row[14],
+        first_row[15],
+        first_row[16],
+        first_row[17],
+        first_row[18],
+        first_row[19],
+        first_row[20],
+        first_row[21],
+        first_row[22],
+        first_row[23],
+        first_row[24],
+        first_row[25],
+        first_row[26],
+        
+
     ]
     return submenu_values
 
@@ -1921,7 +1945,8 @@ def update_plc_with_values(pos_values, submenu_values):
         # Write POS values (1 to 9) to PLC nodes
         for i in range(1, 10):
             pos_value = pos_values[i - 1]  # Access by index (0-based for lists)
-            node_id = f'ns=3;s="OpenRecipe"."selectedRoll{i}"'
+            # node_id = f'ns=3;s="OpenRecipe"."selectedRoll{i}"'
+            node_id = f'ns=3;s="dbRecipe1"."decoilerSelection{i}"'
 
             try:
                 # Get the node object
@@ -1938,7 +1963,13 @@ def update_plc_with_values(pos_values, submenu_values):
             recipe_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
         except Exception as recipe_error:
             print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
-        submenu_fields = ["servoMotorForce", "servoMotorSpeed", "servoMotorStroke", "coilWidth"]
+        submenu_fields = ["servoMotorSpeed", "servoMotorStroke","servoMotorForce", "coilWidth",
+            "Corr1Feed_length", "Corr2feed_length", "Pleat_Height", "Blade_opening",
+            "Left_Blade_MediaTHickness", "Right_Blade_MediaThickness", "Soft_Touch", "Press_Touch",
+            "Puller_Start_pos", "Puller_End_pos", "Puller2_Feed_Correction", "Filter_Box_Height",
+            "Filter_Box_Width", "Filter_Box_Length", "Set_Pleat_Count", "Set_Pleat_Pitch",
+            "Set_Batch_COunt", "Machine_Speed_Ref", "Decoiler_Set_point", "Low_Dia_Set",
+            "Cutter_Park_pos", "Cutter_Fwd_Pos"]
         # Write submenu values to specific nodes
         try:
          submenu_values = [float(value) for value in submenu_values] 
@@ -1946,7 +1977,7 @@ def update_plc_with_values(pos_values, submenu_values):
          raise ValueError(f"Error converting submenu values to float: {conversion_error}")
 
         for field_name, submenu_value in zip(submenu_fields, submenu_values):
-            submenu_node_id = f'ns=3;s="OpenRecipe"."{field_name}"'  # Replace with actual node ID pattern
+            submenu_node_id = f'ns=3;s="dbRecipe1"."{field_name}"'  # Replace with actual node ID pattern
             try:
                 # Get the node object
                 node = client.get_node(submenu_node_id)
@@ -1994,6 +2025,8 @@ def start_recipe(recipe_id):
         # Extract Position and Submenu Values
         pos_values = extract_pos_values([recipe_details])
         submenu_values = extract_submenu_vaues([sub_menu])
+        print("pos_valuues: ",pos_values)
+        print("submenu_valuess: ",submenu_values)
         update_plc_with_values(pos_values, submenu_values)
         # Get JSON Payload
         data = request.get_json()
@@ -2878,6 +2911,7 @@ def get_recipe():
         cursor.execute("SELECT * FROM Sub_Menu WHERE recipe_id = ?", (recipe_id,))
         recipe_motor = cursor.fetchone()
         recipe_motor_dict = {column[0]: value for column, value in zip(cursor.description, recipe_motor)} if recipe_motor else {}
+        print
 
         # Build the response data
         data = {
@@ -2892,7 +2926,29 @@ def get_recipe():
             "Motor_speed": recipe_motor_dict.get("motor_speed", ""),
             "Motor_stroke": recipe_motor_dict.get("motor_stroke", ""),
             "Motor_force": recipe_motor_dict.get("other_speed_force", ""),
-        }
+            "Corr1Feed_length": recipe_motor_dict.get("Corr1Feed_length", ""),
+    "Corr2feed_length": recipe_motor_dict.get("Corr2feed_length", ""),
+    "Pleat_Height": recipe_motor_dict.get("Pleat_Height", ""),
+    "Blade_opening": recipe_motor_dict.get("Blade_opening", ""),
+    "Left_Blade_MediaTHickness": recipe_motor_dict.get("Left_Blade_MediaTHickness", ""),
+    "Right_Blade_MediaThickness": recipe_motor_dict.get("Right_Blade_MediaThickness", ""),
+    "Soft_Touch": recipe_motor_dict.get("Soft_Touch", ""),
+    "Press_Touch": recipe_motor_dict.get("Press_Touch", ""),
+    "Puller_Start_pos": recipe_motor_dict.get("Puller_Start_pos", ""),
+    "Puller_End_pos": recipe_motor_dict.get("Puller_End_pos", ""),
+    "Puller2_Feed_Correction": recipe_motor_dict.get("Puller2_Feed_Correction", ""),
+    "Filter_Box_Height": recipe_motor_dict.get("Filter_Box_Height", ""),
+    "Filter_Box_Width": recipe_motor_dict.get("Filter_Box_Width", ""),
+    "Filter_Box_Length": recipe_motor_dict.get("Filter_Box_Length", ""),
+    "Set_Pleat_Count": recipe_motor_dict.get("Set_Pleat_Count", ""),
+    "Set_Pleat_Pitch": recipe_motor_dict.get("Set_Pleat_Pitch", ""),
+    "Set_Batch_Count": recipe_motor_dict.get("Set_Batch_COunt", ""),
+    "Machine_Speed_Ref": recipe_motor_dict.get("Machine_Speed_Ref", ""),
+    "Decoiler_Set_point": recipe_motor_dict.get("Decoiler_Set_point", ""),
+    "Low_Dia_Set": recipe_motor_dict.get("Low_Dia_Set", ""),
+    "Cutter_Park_pos": recipe_motor_dict.get("Cutter_Park_pos", ""),
+    "Cutter_Fwd_Pos": recipe_motor_dict.get("Cutter_Fwd_Pos", "")
+};
 
         # Overwrite Alu_roller_type and Spacer from `recipe_pos` table
         for pos in recipe_pos_list:
@@ -2926,19 +2982,41 @@ def get_last_plc_values():
     try:
         # Connect to OPC UA server
         client.connect()
-        # Fetch values for the given Node IDs
-        coil_Width = client.get_node('ns=3;s="OpenRecipe"."coilWidth"').get_value()
-        motor_force = client.get_node('ns=3;s="OpenRecipe"."servoMotorForce"').get_value()
-        motor_stroke = client.get_node('ns=3;s="OpenRecipe"."servoMotorStroke"').get_value()
-        motor_speed = client.get_node('ns=3;s="OpenRecipe"."servoMotorSpeed"').get_value()
+        print("Connected to OPC UA Server")
 
-        # Build response
+        # Base node for fetching values
+        base_node = 'ns=3;s="OpenRecipe".'
+
+        # Fetch values from OPC UA
         last_plc_values = {
-            "Motor_speed": str(motor_speed),
-            "Motor_stroke": str(motor_stroke),
-            "Motor_force": str(motor_force),
-            "coil_Width":  str(coil_Width)
+            "Motor_speed": str(client.get_node(f'{base_node}"servoMotorSpeed"').get_value()),
+            "Motor_stroke": str(client.get_node(f'{base_node}"servoMotorStroke"').get_value()),
+            "Motor_force": str(client.get_node(f'{base_node}"servoMotorForce"').get_value()),
+            "coil_Width": str(client.get_node(f'{base_node}"coilWidth"').get_value()),
+            "Corr1Feed_length": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
+            "Corr2feed_length": str(client.get_node(f'{base_node}"Corr2feed_length"').get_value()),
+            "Pleat_Height": str(client.get_node(f'{base_node}"Pleat_Height"').get_value()),
+            "Blade_opening": str(client.get_node(f'{base_node}"Blade_opening"').get_value()),
+            "Left_Blade_MediaTHickness": str(client.get_node(f'{base_node}"Left_Blade_MediaTHickness"').get_value()),
+            "Right_Blade_MediaThickness": str(client.get_node(f'{base_node}"Right_Blade_MediaThickness"').get_value()),
+            "Soft_Touch": str(client.get_node(f'{base_node}"Soft_Touch"').get_value()),
+            "Press_Touch": str(client.get_node(f'{base_node}"Press_Touch"').get_value()),
+            "Puller_Start_pos": str(client.get_node(f'{base_node}"Puller_Start_pos"').get_value()),
+            "Puller_End_pos": str(client.get_node(f'{base_node}"Puller_End_pos"').get_value()),
+            "Puller2_Feed_Correction": str(client.get_node(f'{base_node}"Puller2_Feed_Correction"').get_value()),
+            "Filter_Box_Height": str(client.get_node(f'{base_node}"Filter_Box_Height"').get_value()),
+            "Filter_Box_Width": str(client.get_node(f'{base_node}"Filter_Box_Width"').get_value()),
+            "Filter_Box_Length": str(client.get_node(f'{base_node}"Filter_Box_Length"').get_value()),
+            "Set_Pleat_Count": str(client.get_node(f'{base_node}"Set_Pleat_Count"').get_value()),
+            "Set_Pleat_Pitch": str(client.get_node(f'{base_node}"Set_Pleat_Pitch"').get_value()),
+            "Set_Batch_Count": str(client.get_node(f'{base_node}"Set_Batch_COunt"').get_value()),
+            "Machine_Speed_Ref": str(client.get_node(f'{base_node}"Machine_Speed_Ref"').get_value()),
+            "Decoiler_Set_point": str(client.get_node(f'{base_node}"Decoiler_Set_point"').get_value()),
+            "Low_Dia_Set": str(client.get_node(f'{base_node}"Low_Dia_Set"').get_value()),
+            "Cutter_Park_pos": str(client.get_node(f'{base_node}"Cutter_Park_pos"').get_value()),
+            "Cutter_Fwd_Pos": str(client.get_node(f'{base_node}"Cutter_Fwd_Pos"').get_value())
         }
+
         return jsonify(last_plc_values)
 
     except Exception as e:
@@ -2947,7 +3025,6 @@ def get_last_plc_values():
     finally:
         client.disconnect()
         print("Disconnected from OPC UA Server")
-
 def run_periodic_update1():
     while True:
         
