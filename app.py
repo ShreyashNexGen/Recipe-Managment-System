@@ -636,16 +636,16 @@ def update_batch_status():
                 batch_code, recipe_name, article_no, serial_no, param1, param2 = log
 
                 # PLC field paths (replace with actual paths)
-                quantity_field_path = f'{BASE_NODE}."actBatchQty"'
-                machine_state_field_path = f'{BASE_NODE}."machineState"'
-                total_quantity_path = f'{BASE_NODE}."BatchQty"'
+                # quantity_field_path = f'{BASE_NODE}."actBatchQty"'
+                machine_state_field_path = f'{BASE_NODE}."decoilerSelection"[13]"'
+                # total_quantity_path = f'{BASE_NODE}."BatchQty"'
                 filter_complete_field_path = f'{BASE_NODE}."filterComplete"'
                 pack_number_field_path =f'{BASE_NODE}."packNumber"'                                       
 
                 # Fetch values from PLC
-                current_quantity = client.get_node(quantity_field_path).get_value()
+                # current_quantity = client.get_node(quantity_field_path).get_value()
                 machine_state = client.get_node(machine_state_field_path).get_value()
-                total_quantity = client.get_node(total_quantity_path).get_value()
+                # total_quantity = client.get_node(total_quantity_path).get_value()
                 filter_complete = client.get_node(filter_complete_field_path).get_value()
                 pack_number = client.get_node(pack_number_field_path).get_value()
 
@@ -654,24 +654,24 @@ def update_batch_status():
                 new_serial_number = f"{today_date}{pack_number}"
 
                 # Calculate completion percentage
-                completion_percentage = (current_quantity / total_quantity) * 100
+                # completion_percentage = (current_quantity / total_quantity) * 100
 
                 # Determine running status
-                running_status = "Pending" if machine_state == 0 else "Running"
+                # running_status = "Pending" if machine_state == 0 else "Running"
                 
                 # Determine completion status
-                if completion_percentage < 100:
-                    completion_status = "Pending"
+                # if completion_percentage < 100:
+                #     completion_status = "Pending"
                 # elif 60 <= completion_percentage < 100:
                 #     completion_status = "Partially Completed"
-                else:
+                # else:
                     # completion_status = "Completed"
                     # running_status = "Completed"
 
                     # Set `machineState` to `0` in PLC
-                    node = client.get_node(machine_state_field_path)
-                    variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
-                    node.set_value(variant)
+                    # node = client.get_node(machine_state_field_path)
+                    # variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
+                    # node.set_value(variant)
 
                 # **If `filterComplete` is `1`, call `printData()` and update status**
                 if filter_complete == 1:
@@ -684,6 +684,9 @@ def update_batch_status():
                     # Reset `filterComplete` in PLC
                     filter_complete_node = client.get_node(filter_complete_field_path)
                     filter_complete_node.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.Boolean)))
+                    node = client.get_node(machine_state_field_path)
+                    variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
+                    node.set_value(variant)
 
                 # Update MSSQL database
                 cursor2.execute("""
