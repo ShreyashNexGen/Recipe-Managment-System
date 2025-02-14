@@ -22,8 +22,10 @@
         <form action="/add_recipe" method="POST">
             <label for="recipe_id">Recipe ID:</label>
             <input type="text" id="recipe_id" name="recipe_id" required>
+
             <label for="recipe_name">Recipe Name:</label>
             <input type="text" id="recipe_name" name="recipe_name" required>
+
             <label for="filter_size">Filter Size:</label>
             <input type="text" id="filter_size" name="filter_size" required>
 
@@ -42,7 +44,7 @@
                 {% endfor %}
             </select>
             {% endfor %}
-            
+
             <label for="Alu_coil_width">Alu Coil Width:</label>
             <input type="text" id="Alu_coil_width" name="Alu_coil_width">
 
@@ -51,18 +53,89 @@
 
             <label for="Spacer">Spacer:</label>
             <input type="text" id="Spacer" name="Spacer">
-            <label for="Motor_speed">Motor_speed:</label>
+
+            <label for="Motor_speed">Motor Speed:</label>
             <input type="text" id="Motor_speed" name="Motor_speed">
-            <label for="Motor_stroke">Motor_stroke:</label>
+
+            <label for="Motor_stroke">Motor Stroke:</label>
             <input type="text" id="Motor_stroke" name="Motor_stroke">
-            <label for="Motor_force">Motor_force:</label>
+
+            <label for="Motor_force">Motor Force:</label>
             <input type="text" id="Motor_force" name="Motor_force">
 
-<button type="button" class="submit-button" onclick="loadLastPLCValues()">Upload Settings</button>
+            <!-- New fields added -->
+            <label for="Corr1Feed_length">Corr1 Feed Length:</label>
+            <input type="text" id="Corr1Feed_length" name="Corr1Feed_length">
+
+            <label for="Corr2feed_length">Corr2 Feed Length:</label>
+            <input type="text" id="Corr2feed_length" name="Corr2feed_length">
+
+            <label for="Pleat_Height">Pleat Height:</label>
+            <input type="text" id="Pleat_Height" name="Pleat_Height">
+
+            <label for="Blade_opening">Blade Opening:</label>
+            <input type="text" id="Blade_opening" name="Blade_opening">
+
+            <label for="Left_Blade_MediaTHickness">Left Blade Media Thickness:</label>
+            <input type="text" id="Left_Blade_MediaTHickness" name="Left_Blade_MediaTHickness">
+
+            <label for="Right_Blade_MediaThickness">Right Blade Media Thickness:</label>
+            <input type="text" id="Right_Blade_MediaThickness" name="Right_Blade_MediaThickness">
+
+            <label for="Soft_Touch">Soft Touch:</label>
+            <input type="text" id="Soft_Touch" name="Soft_Touch">
+
+            <label for="Press_Touch">Press Touch:</label>
+            <input type="text" id="Press_Touch" name="Press_Touch">
+
+            <label for="Puller_Start_pos">Puller Start Position:</label>
+            <input type="text" id="Puller_Start_pos" name="Puller_Start_pos">
+
+            <label for="Puller_End_pos">Puller End Position:</label>
+            <input type="text" id="Puller_End_pos" name="Puller_End_pos">
+
+            <label for="Puller2_Feed_Correction">Puller 2 Feed Correction:</label>
+            <input type="text" id="Puller2_Feed_Correction" name="Puller2_Feed_Correction">
+
+            <label for="Filter_Box_Height">Filter Box Height:</label>
+            <input type="text" id="Filter_Box_Height" name="Filter_Box_Height">
+
+            <label for="Filter_Box_Width">Filter Box Width:</label>
+            <input type="text" id="Filter_Box_Width" name="Filter_Box_Width">
+
+            <label for="Filter_Box_Length">Filter Box Length:</label>
+            <input type="text" id="Filter_Box_Length" name="Filter_Box_Length">
+
+            <label for="Set_Pleat_Count">Set Pleat Count:</label>
+            <input type="text" id="Set_Pleat_Count" name="Set_Pleat_Count">
+
+            <label for="Set_Pleat_Pitch">Set Pleat Pitch:</label>
+            <input type="text" id="Set_Pleat_Pitch" name="Set_Pleat_Pitch">
+
+            <label for="Set_Batch_Count">Set Batch Count:</label>
+            <input type="text" id="Set_Batch_Count" name="Set_Batch_Count">
+
+            <label for="Machine_Speed_Ref">Machine Speed Reference:</label>
+            <input type="text" id="Machine_Speed_Ref" name="Machine_Speed_Ref">
+
+            <label for="Decoiler_Set_point">Decoiler Set Point:</label>
+            <input type="text" id="Decoiler_Set_point" name="Decoiler_Set_point">
+
+            <label for="Low_Dia_Set">Low Diameter Set:</label>
+            <input type="text" id="Low_Dia_Set" name="Low_Dia_Set">
+
+            <label for="Cutter_Park_pos">Cutter Park Position:</label>
+            <input type="text" id="Cutter_Park_pos" name="Cutter_Park_pos">
+
+            <label for="Cutter_Fwd_Pos">Cutter Forward Position:</label>
+            <input type="text" id="Cutter_Fwd_Pos" name="Cutter_Fwd_Pos">
+
+            <button type="button" class="submit-button" onclick="loadLastPLCValues()">Upload Settings</button>
             <button type="submit" class="submit-button">Submit Recipe</button>
         </form>
     </div>
 </div>
+
 
 <div id="update-recipe-section" style="display: none;">
     <div id="update-recipe-form">

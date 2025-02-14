@@ -84,15 +84,17 @@
             <thead class="thead-dark">
                 <tr>
                     <th>Batch Code</th>
-                    <th>Timestamp</th>
-                    <th>Recipe ID</th>
-                    <th>Motor Speed</th>
-                    <th>Motor Stroke</th>
-                    <th>Other Speed Force</th>
-                    <th>Alu Coil Width</th>
-                    <th>Quantity</th>
-                    <th>Batch Running Status</th>
-                    <th>Batch Completion Status</th>
+<th>Timestamp</th>
+<th>Recipe Name</th>
+<th>Article No</th>
+<th>Filter Size</th>
+<th>FilterSize</th>
+<th>Ng Status</th>
+<th>Serial No</th>
+<th>Parameter 1</th>
+<th>Parameter 2</th>
+<th>Batch Completion Status</th>
+
                 </tr>
             </thead>
             <tbody id="recipe-log-table">
@@ -106,50 +108,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // // Data for Pie Chart 1
-    // // const data1 = {
-    // //     labels: ['Category A', 'Category B', 'Category C'],
-    // //     datasets: [{
-    // //         label: 'Dataset 1',
-    // //         data: [40, 30, 30], // Static values
-    // //         backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-    // //         hoverOffset: 4
-    // //     }]
-    // // };
-
-    // // Data for Pie Chart 2
-    // const data2 = {
-    //     labels: ['Item 1', 'Item 2', 'Item 3', 'Item 4'],
-    //     datasets: [{
-    //         label: 'Dataset 2',
-    //         data: [25, 25, 30, 20], // Static values
-    //         backgroundColor: ['#4BC0C0', '#FF9F40', '#9966FF', '#FF6384'],
-    //         hoverOffset: 4
-    //     }]
-    // };
-
-    // // // Configuration for Pie Chart 1
-    // // const config1 = {
-    // //     type: 'pie',
-    // //     data: data1,
-    // // };
-
-    // // Configuration for Pie Chart 2
-    // const config2 = {
-    //     type: 'pie',
-    //     data: data2,
-    // };
-
-    // // // Render Pie Charts
-    // // const pieChart1 = new Chart(
-    // //     document.getElementById('pieChart1'),
-    // //     config1
-    // // );
-
-    // const pieChart2 = new Chart(
-    //     document.getElementById('pieChart2'),
-    //     config2
-    // );
     document.getElementById('update-interval-btn').addEventListener('click', () => {
     const intervalTime = document.getElementById('interval-time1').value;
     console.log(intervalTime);
@@ -180,30 +138,37 @@
 
     // Fetch and display the recipe log
     function fetchRecipeLog() {
-            fetch('/api/recipe_log')
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.getElementById('recipe-log-table');
-                    tableBody.innerHTML = ''; // Clear existing rows
-                    data.forEach(row => {
-                        tableBody.innerHTML += `
-                            <tr>
-                                <td>${row.Batch_Code}</td>
-                                <td>${row.Timestamp}</td>
-                                <td>${row.Recipe_ID}</td>
-                                <td>${row.motor_speed}</td>
-                                <td>${row.motor_stroke}</td>
-                                <td>${row.other_speed_force}</td>
-                                <td>${row.alu_coil_width}</td>
-                                <td>${row.Quantity}</td>
-                                <td>${row.Batch_Running_Status}</td>
-                                <td>${row.Batch_Completion_Status}</td>
-                            </tr>
-                        `;
-                    });
-                })
-                .catch(error => console.error('Error fetching recipe log:', error));
-        }
+    fetch('/api/recipe_log')
+        .then(response => response.json())
+        .then(data => {
+            console.log("Received response:", data); // Log the full response
+
+            const tableBody = document.getElementById('recipe-log-table');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            data.forEach(row => {
+                console.log("Processing row:", row); // Log each row for debugging
+
+                tableBody.innerHTML += `
+               <tr>
+    <td>${row.Batch_Code}</td>
+    <td>${row.Timestamp}</td>
+    <td>${row.Recipe_Name}</td>
+    <td>${row.Article_No}</td>
+    <td>${row.Filter_Size}</td>
+    <td>${row.FilterSize}</td>
+    <td>${row.NgStatus}</td>
+    <td>${row.SerialNo}</td>
+    <td>${row.Parameter1}</td>
+    <td>${row.Parameter2}</td>
+    <td>${row.Batch_Completion_Status}</td>
+</tr>
+
+                `;
+            });
+        })
+        .catch(error => console.error('Error fetching recipe log:', error));
+}
 
         // Refresh the table every 5 seconds
         setInterval(fetchRecipeLog, 1000);

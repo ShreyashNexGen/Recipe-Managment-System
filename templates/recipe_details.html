@@ -5,15 +5,16 @@
 {% block content %}
 
 <div class="content-header">
-    <h1>Recipe Details for Recipe ID: {{ recipe_details['Recipe_ID'] }}</h1>
-    <button  id="start-recipe-btn" class="add-button">
-        <i class="fas fa-play"></i> Start Recipe </button>
+    <h1>Recipe Details for Recipe ID: {{ recipe_details[0][13] }}</h1>  <!-- Adjust index as needed -->
+    <button id="start-recipe-btn" class="add-button">
+        <i class="fas fa-play"></i> Start Recipe 
+    </button>
 </div>
 
-<div id="details-section" class="details-section">
+<div id="details-section" class="details-section" >
     <h2>Recipe Details</h2>
-    <table class="details-table">
-        <thead>
+    <table class="details-table" overflow-x: auto; /* Enable horizontal scrolling */ >
+        <thead style="overflow-x: auto; overflow-y: hidden;">
             <tr>
                 <th>Id</th><th>Pos1</th><th>Pos2</th><th>Pos3</th>
                 <th>Pos4</th><th>Pos5</th><th>Pos6</th><th>Pos7</th>
@@ -23,19 +24,19 @@
         </thead>
         <tbody>
             <tr>
-                <td>{{ recipe_details['Id'] }}</td>
-                <td>{{ recipe_details['Pos1'] }}</td>
-                <td>{{ recipe_details['Pos2'] }}</td>
-                <td>{{ recipe_details['Pos3'] }}</td>
-                <td>{{ recipe_details['Pos4'] }}</td>
-                <td>{{ recipe_details['Pos5'] }}</td>
-                <td>{{ recipe_details['Pos6'] }}</td>
-                <td>{{ recipe_details['Pos7'] }}</td>
-                <td>{{ recipe_details['Pos8'] }}</td>
-                <td>{{ recipe_details['Pos9'] }}</td>
-                <td>{{ recipe_details['Alu_Coil_Width'] }}</td>
-                <td>{{ recipe_details['Alu_Roller_Type'] }}</td>
-                <td>{{ recipe_details['Spacer'] }}</td>
+                <td>{{ recipe_details[0][0] }}</td>  <!-- Adjust index as needed -->
+                <td>{{ recipe_details[0][1] }}</td>  <!-- Assuming Pos1 is at index 1 -->
+                <td>{{ recipe_details[0][2] }}</td>  <!-- Pos2 at index 2 -->
+                <td>{{ recipe_details[0][3] }}</td>  <!-- Pos3 at index 3 -->
+                <td>{{ recipe_details[0][4] }}</td>  <!-- Pos4 at index 4 -->
+                <td>{{ recipe_details[0][5] }}</td>  <!-- Pos5 at index 5 -->
+                <td>{{ recipe_details[0][6] }}</td>  <!-- Pos6 at index 6 -->
+                <td>{{ recipe_details[0][7] }}</td>  <!-- Pos7 at index 7 -->
+                <td>{{ recipe_details[0][8] }}</td>  <!-- Pos8 at index 8 -->
+                <td>{{ recipe_details[0][9] }}</td>  <!-- Pos9 at index 9 -->
+                <td>{{ recipe_details[0][11] }}</td> <!-- Alu_Coil_Width at index 11 -->
+                <td>{{ recipe_details[0][12] }}</td> <!-- Alu_Roller_Type at index 12 -->
+                <td>{{ recipe_details[0][13] }}</td> <!-- Spacer at index 13 -->
             </tr>
         </tbody>
     </table>
@@ -46,20 +47,69 @@
     <table class="details-table">
         <thead>
             <tr>
-                <th>Motor Speed</th><th>Motor Stroke</th>
-                <th>Other Speed Force</th><th>Alu Coil Width</th>
+                <th>Motor Speed</th>
+                <th>Motor Stroke</th>
+                <th>Other Speed Force</th>
+                <th>Alu Coil Width</th>
+                <th>Corr1 Feed Length</th>
+                <th>Corr2 Feed Length</th>
+                <th>Pleat Height</th>
+                <th>Blade Opening</th>
+                <th>Left Blade Media Thickness</th>
+                <th>Right Blade Media Thickness</th>
+                <th>Soft Touch</th>
+                <th>Press Touch</th>
+                <th>Puller Start Position</th>
+                <th>Puller End Position</th>
+                <th>Puller2 Feed Correction</th>
+                <th>Filter Box Height</th>
+                <th>Filter Box Width</th>
+                <th>Filter Box Length</th>
+                <th>Set Pleat Count</th>
+                <th>Set Pleat Pitch</th>
+                <th>Set Batch Count</th>
+                <th>Machine Speed Reference</th>
+                <th>Decoiler Set Point</th>
+                <th>Low Dia Set</th>
+                <th>Cutter Park Position</th>
+                <th>Cutter Forward Position</th>
             </tr>
         </thead>
+        
         <tbody>
             <tr>
                 <td>{{ sub_menu['motor_speed'] }}</td>
                 <td>{{ sub_menu['motor_stroke'] }}</td>
                 <td>{{ sub_menu['other_speed_force'] }}</td>
                 <td>{{ sub_menu['alu_coil_width'] }}</td>
+                <td>{{ sub_menu['Corr1Feed_length'] }}</td>
+                <td>{{ sub_menu['Corr2feed_length'] }}</td>
+                <td>{{ sub_menu['Pleat_Height'] }}</td>
+                <td>{{ sub_menu['Blade_opening'] }}</td>
+                <td>{{ sub_menu['Left_Blade_MediaTHickness'] }}</td>
+                <td>{{ sub_menu['Right_Blade_MediaThickness'] }}</td>
+                <td>{{ sub_menu['Soft_Touch'] }}</td>
+                <td>{{ sub_menu['Press_Touch'] }}</td>
+                <td>{{ sub_menu['Puller_Start_pos'] }}</td>
+                <td>{{ sub_menu['Puller_End_pos'] }}</td>
+                <td>{{ sub_menu['Puller2_Feed_Correction'] }}</td>
+                <td>{{ sub_menu['Filter_Box_Height'] }}</td>
+                <td>{{ sub_menu['Filter_Box_Width'] }}</td>
+                <td>{{ sub_menu['Filter_Box_Length'] }}</td>
+                <td>{{ sub_menu['Set_Pleat_Count'] }}</td>
+                <td>{{ sub_menu['Set_Pleat_Pitch'] }}</td>
+                <td>{{ sub_menu['Set_Batch_COunt'] }}</td>
+                <td>{{ sub_menu['Machine_Speed_Ref'] }}</td>
+                <td>{{ sub_menu['Decoiler_Set_point'] }}</td>
+                <td>{{ sub_menu['Low_Dia_Set'] }}</td>
+                <td>{{ sub_menu['Cutter_Park_pos'] }}</td>
+                <td>{{ sub_menu['Cutter_Fwd_Pos'] }}</td>
             </tr>
         </tbody>
+        
     </table>
 </div>
+
 
 <div class="modal fade" id="comparisonModal" tabindex="-1" aria-labelledby="comparisonModalLabel" aria-hidden="true">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
@@ -90,7 +140,7 @@
             <button type="button" class="close-button" onclick="toggleRecipePopup()">X</button>
         </div>
 
-        <div class="popup-body">
+        <div class="popup-body" style="max-height: 400px; overflow-y: auto;">
             <h2>Production Details</h2>
             <table class="details-table1">
                 <tr>
@@ -101,7 +151,8 @@
                     <td>Motor Speed:</td>
                     <td><input type="text" id="motor-speed" value="{{ sub_menu.motor_speed }}" readonly></td>
                 </tr>
-                <td>Motor Stroke:</td>
+                <tr>
+                    <td>Motor Stroke:</td>
                     <td><input type="text" id="motor-stroke" value="{{ sub_menu.motor_stroke }}" readonly></td>
                 </tr>
                 <tr>
@@ -112,7 +163,97 @@
                     <td>Alu Coil Width:</td>
                     <td><input type="text" id="coil-width" value="{{ sub_menu.alu_coil_width }}" readonly></td>
                 </tr>
+                <tr>
+                    <td>Corr1 Feed Length:</td>
+                    <td><input type="text" id="corr1-feed-length" value="{{ sub_menu.Corr1Feed_length }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Corr2 Feed Length:</td>
+                    <td><input type="text" id="corr2-feed-length" value="{{ sub_menu.Corr2feed_length }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Pleat Height:</td>
+                    <td><input type="text" id="pleat-height" value="{{ sub_menu.Pleat_Height }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Blade Opening:</td>
+                    <td><input type="text" id="blade-opening" value="{{ sub_menu.Blade_opening }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Left Blade Media Thickness:</td>
+                    <td><input type="text" id="left-blade-media-thickness" value="{{ sub_menu.Left_Blade_MediaTHickness }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Right Blade Media Thickness:</td>
+                    <td><input type="text" id="right-blade-media-thickness" value="{{ sub_menu.Right_Blade_MediaThickness }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Soft Touch:</td>
+                    <td><input type="text" id="soft-touch" value="{{ sub_menu.Soft_Touch }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Press Touch:</td>
+                    <td><input type="text" id="press-touch" value="{{ sub_menu.Press_Touch }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Puller Start Position:</td>
+                    <td><input type="text" id="puller-start-pos" value="{{ sub_menu.Puller_Start_pos }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Puller End Position:</td>
+                    <td><input type="text" id="puller-end-pos" value="{{ sub_menu.Puller_End_pos }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Puller2 Feed Correction:</td>
+                    <td><input type="text" id="puller2-feed-correction" value="{{ sub_menu.Puller2_Feed_Correction }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Filter Box Height:</td>
+                    <td><input type="text" id="filter-box-height" value="{{ sub_menu.Filter_Box_Height }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Filter Box Width:</td>
+                    <td><input type="text" id="filter-box-width" value="{{ sub_menu.Filter_Box_Width }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Filter Box Length:</td>
+                    <td><input type="text" id="filter-box-length" value="{{ sub_menu.Filter_Box_Length }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Set Pleat Count:</td>
+                    <td><input type="text" id="set-pleat-count" value="{{ sub_menu.Set_Pleat_Count }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Set Pleat Pitch:</td>
+                    <td><input type="text" id="set-pleat-pitch" value="{{ sub_menu.Set_Pleat_Pitch }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Set Batch Count:</td>
+                    <td><input type="text" id="set-batch-count" value="{{ sub_menu.Set_Batch_COunt }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Machine Speed Reference:</td>
+                    <td><input type="text" id="machine-speed-ref" value="{{ sub_menu.Machine_Speed_Ref }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Decoiler Set Point:</td>
+                    <td><input type="text" id="decoiler-set-point" value="{{ sub_menu.Decoiler_Set_point }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Low Dia Set:</td>
+                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Cutter Park Position:</td>
+                    <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Cutter Forward Position:</td>
+                    <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
+                </tr>
             </table>
+            
+            
             <div class="popup-footer">
                 <button id="final_submit" type="button"  class="start-button" onclick="startRecipe('{{ sub_menu.Recipe_ID }}')" >Start</button>
             </div>
@@ -315,10 +456,33 @@ document.querySelector('.close-button').addEventListener('click', function() {
                 alert(data.error);
             } else {
                 document.getElementById("recipeId").value = data.Recipe_ID || "";
-                document.getElementById("motor-speed").value = data.motor_speed || "";
-                document.getElementById("motor-stroke").value = data.motor_stroke || "";
-                document.getElementById("speed-force").value = data.other_speed_force || "";
-                document.getElementById("coil-width").value = data.alu_coil_width || "";
+document.getElementById("motor-speed").value = data.motor_speed || "";
+document.getElementById("motor-stroke").value = data.motor_stroke || "";
+document.getElementById("speed-force").value = data.other_speed_force || "";
+document.getElementById("coil-width").value = data.alu_coil_width || "";
+document.getElementById("corr1-feed-length").value = data.corr1_feed_length || "";
+document.getElementById("corr2-feed-length").value = data.corr2_feed_length || "";
+document.getElementById("pleat-height").value = data.pleat_height || "";
+document.getElementById("blade-opening").value = data.blade_opening || "";
+document.getElementById("left-blade-media-thickness").value = data.left_blade_media_thickness || "";
+document.getElementById("right-blade-media-thickness").value = data.right_blade_media_thickness || "";
+document.getElementById("soft-touch").value = data.soft_touch || "";
+document.getElementById("press-touch").value = data.press_touch || "";
+document.getElementById("puller-start-pos").value = data.puller_start_pos || "";
+document.getElementById("puller-end-pos").value = data.puller_end_pos || "";
+document.getElementById("puller2-feed-correction").value = data.puller2_feed_correction || "";
+document.getElementById("filter-box-height").value = data.filter_box_height || "";
+document.getElementById("filter-box-width").value = data.filter_box_width || "";
+document.getElementById("filter-box-length").value = data.filter_box_length || "";
+document.getElementById("set-pleat-count").value = data.set_pleat_count || "";
+document.getElementById("set-pleat-pitch").value = data.set_pleat_pitch || "";
+document.getElementById("set-batch-count").value = data.set_batch_count || "";
+document.getElementById("machine-speed-ref").value = data.machine_speed_ref || "";
+document.getElementById("decoiler-set-point").value = data.decoiler_set_point || "";
+document.getElementById("low-dia-set").value = data.low_dia_set || "";
+document.getElementById("cutter-park-pos").value = data.cutter_park_pos || "";
+document.getElementById("cutter-fwd-pos").value = data.cutter_fwd_pos || "";
+
             }
         })
         .catch(error => {
@@ -327,13 +491,15 @@ document.querySelector('.close-button').addEventListener('click', function() {
         });
 }
 function startRecipe(recipeId) {
-    const quantity = document.getElementById("quantity").value; // Get the entered quantity
-    if (!quantity || isNaN(quantity)) {
-        alert("Please enter a valid quantity.");
+    const quantity = document.getElementById("quantity").value.trim(); // Trim to remove spaces
+
+    // Validate quantity (should not be empty, NaN, or <= 0)
+    if (!quantity || isNaN(quantity) || Number(quantity) <= 0) {
+        alert("Please enter a valid positive quantity.");
         return;
     }
 
-    // Send data to the backend using a POST request (example with Fetch API)
+    // Send data to the backend using a POST request
     fetch(`/start_recipe/${recipeId}`, {
         method: "POST",
         headers: {
@@ -341,12 +507,13 @@ function startRecipe(recipeId) {
         },
         body: JSON.stringify({ quantity: quantity }),
     })
-    .then((response) => {
-        if (response.ok) {
-            alert("Recipe started successfully!");
-            // Optionally, close the popup or refresh the page
+    .then((response) => response.json()) // Parse JSON response
+    .then((data) => {
+        if (data.error) {
+            alert(`Error by shreyash: ${data.error}`); // Show error from backend
         } else {
-            alert("Error starting recipe.");
+            alert("Recipe started successfully! Batch Code: " + data.batch_code);
+            // toggleRecipePopup(); // Close popup after success
         }
     })
     .catch((error) => {
