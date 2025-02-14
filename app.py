@@ -608,7 +608,7 @@ def get_recipe_log():
 
 # import datetime
 # from opcua import Client, ua
-BASE_NODE = 'ns=3;s="dbRecipe1"."Recipe"'
+BASE_NODE = 'ns=3;s="dbRecipe"."Recipe"'
 def update_batch_status():
     """Fetch and update batch status based on PLC values."""
     while True:
@@ -646,9 +646,12 @@ def update_batch_status():
                 # current_quantity = client.get_node(quantity_field_path).get_value()
                 machine_state = client.get_node(machine_state_field_path).get_value()
                 # total_quantity = client.get_node(total_quantity_path).get_value()
-                filter_complete = client.get_node(filter_complete_field_path).get_value()
-                pack_number = client.get_node(pack_number_field_path).get_value()
-
+                ###
+                filter_complete = 1;
+                pack_number=123;
+                # filter_complete = client.get_node(filter_complete_field_path).get_value()
+                # pack_number = client.get_node(pack_number_field_path).get_value()
+                ###
                 # Generate Serial Number in YYMMDD format
                 today_date = datetime.datetime.now().strftime("%y%m%d")
                 new_serial_number = f"{today_date}{pack_number}"
@@ -682,11 +685,15 @@ def update_batch_status():
                     running_status = "Completed"
 
                     # Reset `filterComplete` in PLC
-                    filter_complete_node = client.get_node(filter_complete_field_path)
-                    filter_complete_node.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.Boolean)))
-                    node = client.get_node(machine_state_field_path)
-                    variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
-                    node.set_value(variant)
+                    # filter_complete_node = client.get_node(filter_complete_field_path)
+                    # filter_complete_node.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.Boolean)))
+                    filter_complete =0;
+                    Machine_state_node = client.get_node(machine_state_field_path)
+                    Machine_state_node.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.Boolean)))
+                    #old machine_satate hich was intger ,,, new machine state for testing it is boolean which 13th value
+                    # node = client.get_node(machine_state_field_path)
+                    # variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
+                    # node.set_value(variant)
 
                 # Update MSSQL database
                 cursor2.execute("""
@@ -1690,10 +1697,10 @@ def extract_submenu_vaues(sub_menu):
     first_row = sub_menu[0]  # Get the first tuple
 
     submenu_values = [
-        first_row[1],  # Assuming `motor_speed` is at index 1
-        first_row[2],  # Assuming `motor_stroke` is at index 2
-        first_row[3],  # Assuming `other_Speed_force` is at index 3
-        first_row[4],  # Assuming `alu_coil_width` is at index 4
+        # first_row[1],  # Assuming `motor_speed` is at index 1
+        # first_row[2],  # Assuming `motor_stroke` is at index 2
+        # first_row[3],  # Assuming `other_Speed_force` is at index 3
+        # first_row[4],  # Assuming `alu_coil_width` is at index 4
         first_row[5],
         first_row[6],
         first_row[7],
@@ -1949,7 +1956,8 @@ def update_plc_with_values(pos_values, submenu_values):
         for i in range(1, 10):
             pos_value = pos_values[i - 1]  # Access by index (0-based for lists)
             # node_id = f'ns=3;s="OpenRecipe"."selectedRoll{i}"'
-            node_id = f'{BASE_NODE}."decoilerSelection{i}"'
+            
+            node_id = f'ns=3;s="dbRecipe"."Recipe"."decoilerSelection{i}"'
 
             try:
                 # Get the node object
@@ -1966,7 +1974,8 @@ def update_plc_with_values(pos_values, submenu_values):
         #     # recipe_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
         # except Exception as recipe_error:
         #     print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
-        submenu_fields = ["servoMotorSpeed", "servoMotorStroke","servoMotorForce", "coilWidth",
+        #"servoMotorSpeed", "servoMotorStroke","servoMotorForce", "coilWidth",
+        submenu_fields = [
             "Corr1Feed_length", "Corr2feed_length", "Pleat_Height", "Blade_opening",
             "Left_Blade_MediaTHickness", "Right_Blade_MediaThickness", "Soft_Touch", "Press_Touch",
             "Puller_Start_pos", "Puller_End_pos", "Puller2_Feed_Correction", "Filter_Box_Height",
@@ -1980,7 +1989,7 @@ def update_plc_with_values(pos_values, submenu_values):
          raise ValueError(f"Error converting submenu values to float: {conversion_error}")
 
         for field_name, submenu_value in zip(submenu_fields, submenu_values):
-            submenu_node_id = f'{BASE_NODE}."{field_name}"'  # Replace with actual node ID pattern
+            submenu_node_id = f'ns=3;s="dbRecipe1"."Recipe".."{field_name}"'  # Replace with actual node ID pattern
             try:
                 # Get the node object
                 node = client.get_node(submenu_node_id)
