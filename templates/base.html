@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style1.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -21,6 +22,7 @@
             <li><a href="/dashboard" class="nav-link"><i class="fa-sharp fa-solid fa-chart-line"></i>Dashboard</a></li>
             <li><a href="/raw-material" class="nav-link"><i class="fa-solid fa-box-open"></i>Raw Material</a></li>
             <li><a href="/recipe" class="nav-link"><i class="fa-solid fa-clipboard-list"></i>Recipe</a></li>
+            <li><a href="/report" class="nav-link"><i class="fa-solid fa-clipboard-list"></i>Report</a></li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-tags"></i>Tags</a>
                 <ul class="dropdown-menu">

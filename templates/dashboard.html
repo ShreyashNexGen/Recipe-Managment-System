@@ -94,6 +94,7 @@
 <th>Parameter 1</th>
 <th>Parameter 2</th>
 <th>Batch Completion Status</th>
+<th>Print</th>
 
                 </tr>
             </thead>
@@ -162,6 +163,9 @@
     <td>${row.Parameter1}</td>
     <td>${row.Parameter2}</td>
     <td>${row.Batch_Completion_Status}</td>
+    <td>
+    <button class="print-btn" onclick="printPage()">Print</button>
+    </td>
 </tr>
 
                 `;
@@ -244,6 +248,19 @@ setInterval(fetchStatusSummary1, 60000);
 
 </script>
 <style>/* Status Overview Section */
+        .print-btn {
+            background-color: orange;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    
+        .print-btn:hover {
+            background-color: darkorange;
+        }
 .status-overview {
     background: #c3caf1;
     border-radius: 10px;

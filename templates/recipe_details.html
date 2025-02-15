@@ -13,7 +13,7 @@
 
 <div id="details-section" class="details-section" >
     <h2>Recipe Details</h2>
-    <table class="details-table" overflow-x: auto; /* Enable horizontal scrolling */ >
+    <table class="details-table" overflow-x: auto; >
         <thead style="overflow-x: auto; overflow-y: hidden;">
             <tr>
                 <th>Id</th><th>Pos1</th><th>Pos2</th><th>Pos3</th>
@@ -53,30 +53,7 @@
                 <th>Alu Coil Width</th>
                 <th>Corr1 Feed Length</th>
                 <th>Corr2 Feed Length</th>
-                <th>Pleat Height</th>
-                <th>Blade Opening</th>
-                <th>Left Blade Media Thickness</th>
-                <th>Right Blade Media Thickness</th>
-                <th>Soft Touch</th>
-                <th>Press Touch</th>
-                <th>Puller Start Position</th>
-                <th>Puller End Position</th>
-                <th>Puller2 Feed Correction</th>
-                <th>Filter Box Height</th>
-                <th>Filter Box Width</th>
-                <th>Filter Box Length</th>
-                <th>Set Pleat Count</th>
-                <th>Set Pleat Pitch</th>
-                <th>Set Batch Count</th>
-                <th>Machine Speed Reference</th>
-                <th>Decoiler Set Point</th>
-                <th>Low Dia Set</th>
-                <th>Cutter Park Position</th>
-                <th>Cutter Forward Position</th>
             </tr>
-        </thead>
-        
-        <tbody>
             <tr>
                 <td>{{ sub_menu['motor_speed'] }}</td>
                 <td>{{ sub_menu['motor_stroke'] }}</td>
@@ -84,170 +61,167 @@
                 <td>{{ sub_menu['alu_coil_width'] }}</td>
                 <td>{{ sub_menu['Corr1Feed_length'] }}</td>
                 <td>{{ sub_menu['Corr2feed_length'] }}</td>
+                
+            </tr>
+            <tr>
+                <th>Pleat Height</th>
+                <th>Blade Opening</th>
+                <th>Left Blade Media Thickness</th>
+                <th>Right Blade Media Thickness</th>
+                <th>Soft Touch</th>
+                <th>Press Touch</th>
+            </tr>
+            <tr>
                 <td>{{ sub_menu['Pleat_Height'] }}</td>
                 <td>{{ sub_menu['Blade_opening'] }}</td>
                 <td>{{ sub_menu['Left_Blade_MediaTHickness'] }}</td>
                 <td>{{ sub_menu['Right_Blade_MediaThickness'] }}</td>
                 <td>{{ sub_menu['Soft_Touch'] }}</td>
                 <td>{{ sub_menu['Press_Touch'] }}</td>
+            </tr>
+            </tr>
+            <tr>
+                <th>Puller Start Position</th>
+                <th>Puller End Position</th>
+                <th>Puller2 Feed Correction</th>
+                <th>Filter Box Height</th>
+                <th>Filter Box Width</th>
+                <th>Filter Box Length</th>
+            </tr>
+            <tr>
+                
                 <td>{{ sub_menu['Puller_Start_pos'] }}</td>
                 <td>{{ sub_menu['Puller_End_pos'] }}</td>
                 <td>{{ sub_menu['Puller2_Feed_Correction'] }}</td>
                 <td>{{ sub_menu['Filter_Box_Height'] }}</td>
                 <td>{{ sub_menu['Filter_Box_Width'] }}</td>
                 <td>{{ sub_menu['Filter_Box_Length'] }}</td>
+            </tr>
+            <tr>
+                <th>Set Pleat Count</th>
+                <th>Set Pleat Pitch</th>
+                <th>Set Batch Count</th>
+                <th>Machine Speed Reference</th>
+                <th>Decoiler Set Point</th>
+                <th>Low Dia Set</th>
+            </tr>
+            <tr>
                 <td>{{ sub_menu['Set_Pleat_Count'] }}</td>
                 <td>{{ sub_menu['Set_Pleat_Pitch'] }}</td>
                 <td>{{ sub_menu['Set_Batch_COunt'] }}</td>
                 <td>{{ sub_menu['Machine_Speed_Ref'] }}</td>
                 <td>{{ sub_menu['Decoiler_Set_point'] }}</td>
                 <td>{{ sub_menu['Low_Dia_Set'] }}</td>
-                <td>{{ sub_menu['Cutter_Park_pos'] }}</td>
+                </tr>
+                <tr>
+                    <th>Cutter Park Position</th>
+                <th>Cutter Forward Position</th>
+                </tr>
+                <tr>
+                    <td>{{ sub_menu['Cutter_Park_pos'] }}</td>
                 <td>{{ sub_menu['Cutter_Fwd_Pos'] }}</td>
-            </tr>
+            
+                </tr>
         </tbody>
         
     </table>
 </div>
 
 
-<div class="modal fade" id="comparisonModal" tabindex="-1" aria-labelledby="comparisonModalLabel" aria-hidden="true">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header " style="background-color: #e7e1e9;">
-          <h5 class="modal-title" id="comparisonModalLabel">POS Value Comparison</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Custom Modal for POS Value Comparison -->
+<div id="comparisonModal" class="custom-modal popup">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h3>POS Value Comparison</h3>
+            <button type="button" class="btn-close" onclick="closeCustomModal()">X</button>
         </div>
-        <div class="modal-body" style="background-color: #e7e1e9;">
-          <ul id="comparisonResults" class="list-group">
-            <!-- Comparison results will be dynamically populated here -->
-          </ul>
+        <div class="custom-modal-body">
+            <ul id="comparisonResults" class="list-group">
+                <!-- Comparison results will be dynamically populated here -->
+            </ul>
         </div>
-        <div class="modal-footer" style="background-color: #e7e1e9;">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button id="next" type="button" class="btn btn-primary" disabled>Next</button>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeCustomModal()">Close</button>
+            <button id="next" type="button" class="btn btn-primary" disabled>Next</button>
         </div>
-      </div>
     </div>
 </div>
 <!-- Submenu Popup for Recipe Settings -->
-<div id="recipe-popup" class="popup" style="display: none;">
+<div id="recipe-popup" class="popup">
     <div class="popup-content">
         <div class="popup-header">
             <h3>Recipe ID: <span id="recipe-Id">{{sub_menu.Recipe_ID}}</span></h3>
             <button type="button" class="close-button" onclick="toggleRecipePopup()">X</button>
         </div>
 
-        <div class="popup-body" style="max-height: 400px; overflow-y: auto;">
+        <div class="popup-body" style="max-height: 600px; overflow-y: auto;">
             <h2>Production Details</h2>
             <table class="details-table1">
                 <tr>
                     <td>Quantity:</td>
                     <td><input type="text" id="quantity" placeholder="Enter Quantity" value=""></td>
-                </tr>
-                <tr>
                     <td>Motor Speed:</td>
                     <td><input type="text" id="motor-speed" value="{{ sub_menu.motor_speed }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Motor Stroke:</td>
                     <td><input type="text" id="motor-stroke" value="{{ sub_menu.motor_stroke }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Other Speed Force:</td>
                     <td><input type="text" id="speed-force" value="{{ sub_menu.other_speed_force }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Alu Coil Width:</td>
                     <td><input type="text" id="coil-width" value="{{ sub_menu.alu_coil_width }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Corr1 Feed Length:</td>
                     <td><input type="text" id="corr1-feed-length" value="{{ sub_menu.Corr1Feed_length }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Corr2 Feed Length:</td>
                     <td><input type="text" id="corr2-feed-length" value="{{ sub_menu.Corr2feed_length }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Pleat Height:</td>
                     <td><input type="text" id="pleat-height" value="{{ sub_menu.Pleat_Height }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Blade Opening:</td>
                     <td><input type="text" id="blade-opening" value="{{ sub_menu.Blade_opening }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Left Blade Media Thickness:</td>
                     <td><input type="text" id="left-blade-media-thickness" value="{{ sub_menu.Left_Blade_MediaTHickness }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Right Blade Media Thickness:</td>
                     <td><input type="text" id="right-blade-media-thickness" value="{{ sub_menu.Right_Blade_MediaThickness }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Soft Touch:</td>
                     <td><input type="text" id="soft-touch" value="{{ sub_menu.Soft_Touch }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Press Touch:</td>
                     <td><input type="text" id="press-touch" value="{{ sub_menu.Press_Touch }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Puller Start Position:</td>
                     <td><input type="text" id="puller-start-pos" value="{{ sub_menu.Puller_Start_pos }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Puller End Position:</td>
                     <td><input type="text" id="puller-end-pos" value="{{ sub_menu.Puller_End_pos }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Puller2 Feed Correction:</td>
                     <td><input type="text" id="puller2-feed-correction" value="{{ sub_menu.Puller2_Feed_Correction }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Filter Box Height:</td>
                     <td><input type="text" id="filter-box-height" value="{{ sub_menu.Filter_Box_Height }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Filter Box Width:</td>
                     <td><input type="text" id="filter-box-width" value="{{ sub_menu.Filter_Box_Width }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Filter Box Length:</td>
                     <td><input type="text" id="filter-box-length" value="{{ sub_menu.Filter_Box_Length }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Set Pleat Count:</td>
                     <td><input type="text" id="set-pleat-count" value="{{ sub_menu.Set_Pleat_Count }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Set Pleat Pitch:</td>
                     <td><input type="text" id="set-pleat-pitch" value="{{ sub_menu.Set_Pleat_Pitch }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Set Batch Count:</td>
                     <td><input type="text" id="set-batch-count" value="{{ sub_menu.Set_Batch_COunt }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Machine Speed Reference:</td>
                     <td><input type="text" id="machine-speed-ref" value="{{ sub_menu.Machine_Speed_Ref }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Decoiler Set Point:</td>
                     <td><input type="text" id="decoiler-set-point" value="{{ sub_menu.Decoiler_Set_point }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Low Dia Set:</td>
                     <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Cutter Park Position:</td>
                     <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Cutter Forward Position:</td>
                     <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
                 </tr>
@@ -269,45 +243,53 @@
         const posValues = JSON.parse('{{ pos_values | tojson | safe }}');
         const comparisonResults = document.getElementById('comparisonResults');
         const next = document.getElementById('next');
-
+    
         let matchedPosCount = 0;
-
+    
+        // Function to open the custom modal
         function openComparisonModal() {
             // Clear previous results
             comparisonResults.innerHTML = '';
             matchedPosCount = 0; // Reset the matched count
-
+    
             // Create comparison option for each POS value
             posValues.forEach((posValue, index) => {
                 const li = document.createElement('li');
                 li.className = 'list-group-item d-flex justify-content-between align-items-center';
-
+    
                 // Add index (POS1, POS2, ...) and value to each POS
                 const posText = `POS${index + 1} : ${posValue !== null ? posValue : "Unavailable"} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Received Value: ${barcodeValue}`;
-
+    
                 // Add text content
                 const textSpan = document.createElement('span');
                 textSpan.innerHTML = posText;
                 li.appendChild(textSpan);
-
+    
                 // Only add compare button for non-null values
                 if (posValue !== null) {
                     const compareButton = document.createElement('button');
                     compareButton.className = 'btn btn-primary btn-sm';
                     compareButton.textContent = 'Compare';
                     compareButton.addEventListener('click', () => comparePosValue(posValue, index));
-
+    
                     li.appendChild(compareButton);
                 }
-
+    
                 comparisonResults.appendChild(li);
             });
-
+    
             // Show the modal
-            const modal = new bootstrap.Modal(document.getElementById('comparisonModal'));
-            modal.show();
+            const modal = document.getElementById('comparisonModal');
+            modal.style.display = 'block'; // Show the modal
         }
-
+    
+        // Function to close the custom modal
+        function closeCustomModal() {
+            const modal = document.getElementById('comparisonModal');
+            modal.style.display = 'none'; // Hide the modal
+        }
+    
+        // Function to compare POS value with barcode
         function comparePosValue(posValue, index) {
             // Compare the POS value with the barcode
             fetch('/compare-pos', {
@@ -320,7 +302,7 @@
                 const li = comparisonResults.children[index];
                 const compareButton = li.querySelector('button');
                 const isMatch = result.match;
-
+    
                 if (isMatch) {
                     li.classList.add('list-group-item-success');
                     li.classList.remove('list-group-item-danger');
@@ -331,11 +313,11 @@
                     li.classList.remove('list-group-item-success');
                     li.querySelector('span').innerHTML = `POS${index + 1} : ${posValue} ✘ Mismatch &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Received Value: ${barcodeValue}`;
                 }
-
+    
                 // Disable the button after comparison
                 compareButton.disabled = true;
-
-                // Enable the "Start Recipe" button only if all available POS values are matched
+    
+                // Enable the "Next" button only if all available POS values are matched
                 if (matchedPosCount === posValues.filter(posValue => posValue !== null).length) {
                     next.disabled = false;
                 } else {
@@ -347,222 +329,231 @@
                 alert('An error occurred during the comparison.');
             });
         }
-
+    
         // Attach openComparisonModal to the start recipe button
         document.getElementById('start-recipe-btn').addEventListener('click', openComparisonModal);
-        document.getElementById('comparisonModal').addEventListener('hidden.bs.modal', function () {
-            matchedPosCount = 0; // Reset the matched count
-            next.disabled = true; // Disable the Start Recipe button
-        });
-       next.addEventListener("click", function () {
-        // Check if all conditions are matched
-        const allMatched = matchedPosCount === posValues.filter(posValue => posValue !== null).length;
-        if (allMatched) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('comparisonModal'));
-            modal.hide(); // Close the modal
-            proceedToRecipeSettings(); // Open submenu for recipe settings
-        } else {
-            alert("Please match all POS values first.");
-        }
-    });
-
-    function toggleRecipePopup() {
-        const popup = document.getElementById("recipe-popup");
-        popup.style.display = popup.style.display === "block" ? "none" : "block";
-    }
-    // Function to close the popup when clicking outside or on the close button
-function closePopup(event) {
-    const popup = document.getElementById("recipe-popup");
-    const popupContent = document.querySelector(".popup-content");
-
-    // If the clicked target is the popup background (not the content), close the popup
-    if (event.target === popup) {
-        popup.style.display = "none";
-    }
-}
-// Attach event listener to the document to detect clicks outside the popup content
-document.addEventListener('click', closePopup);
-
-// Close popup when the close button is clicked
-document.querySelector('.close-button').addEventListener('click', function() {
-    toggleRecipePopup();
-});
-    function proceedToRecipeSettings() {
-        toggleRecipePopup();
-    }
-  
-   document.getElementById("final_submit").addEventListener('click', function () {
-    // Node ID and value for starting the recipe
-    const recipeNodeId = 'ns=3;s="OpenRecipe"."machineState"'; // Replace with actual node ID
-    const recipeValue = 1; // Value to write to the recipe start node
-
-    // Node ID and value for quantity
-    const quantityNodeId = 'ns=3;s="OpenRecipe"."BatchQty"'; // Replace with actual quantity node ID
-    let quantityValue = document.getElementById("quantity").value; // Get user input for quantity
-    quantityValue = parseInt(quantityValue, 10); // Convert to integer
-    if (!quantityValue || isNaN(quantityValue) || quantityValue <= 0) {
-        alert('Please enter a valid quantity.');
-        return;
-    }
-   
-    // Send both write requests to the server
-    const requests = [
-        fetch('/writeValue', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nodeId: recipeNodeId, value: recipeValue }),
-        }),
-        fetch('/writeValue', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nodeId: quantityNodeId, value: quantityValue }),
-        }),
-    ];
-
-    // Handle the responses
-    Promise.all(requests)
-        .then(responses => Promise.all(responses.map(res => res.json())))
-        .then(dataArray => {
-            const recipeResponse = dataArray[0];
-            const quantityResponse = dataArray[1];
-
-            if (recipeResponse.success && quantityResponse.success) {
-                alert('Recipe started successfully and quantity set!');
-                // Close the popup if everything is set properly
-                toggleRecipePopup();
+    
+        // Attach closeCustomModal to the cross button
+        document.querySelector('.btn-close').addEventListener('click', closeCustomModal);
+    
+        // Handle the "Next" button click
+        next.addEventListener("click", function () {
+            // Check if all conditions are matched
+            const allMatched = matchedPosCount === posValues.filter(posValue => posValue !== null).length;
+            if (allMatched) {
+                closeCustomModal(); // Close the modal
+                proceedToRecipeSettings(); // Open submenu for recipe settings
             } else {
-                let errorMessage = 'Errors occurred:\n';
-                if (!recipeResponse.success) {
-                    errorMessage += `- Starting recipe: ${recipeResponse.error}\n`;
-                }
-                if (!quantityResponse.success) {
-                    errorMessage += `- Setting quantity: ${quantityResponse.error}\n`;
-                }
-                alert(errorMessage);
+                alert("Please match all POS values first.");
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while starting the recipe or setting the quantity.');
         });
-});
-
-    });
-    function loadRecipeSettings(recipeId) {
-    fetch(`/api/sub_menu/${recipeId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-            } else {
-                document.getElementById("recipeId").value = data.Recipe_ID || "";
-document.getElementById("motor-speed").value = data.motor_speed || "";
-document.getElementById("motor-stroke").value = data.motor_stroke || "";
-document.getElementById("speed-force").value = data.other_speed_force || "";
-document.getElementById("coil-width").value = data.alu_coil_width || "";
-document.getElementById("corr1-feed-length").value = data.corr1_feed_length || "";
-document.getElementById("corr2-feed-length").value = data.corr2_feed_length || "";
-document.getElementById("pleat-height").value = data.pleat_height || "";
-document.getElementById("blade-opening").value = data.blade_opening || "";
-document.getElementById("left-blade-media-thickness").value = data.left_blade_media_thickness || "";
-document.getElementById("right-blade-media-thickness").value = data.right_blade_media_thickness || "";
-document.getElementById("soft-touch").value = data.soft_touch || "";
-document.getElementById("press-touch").value = data.press_touch || "";
-document.getElementById("puller-start-pos").value = data.puller_start_pos || "";
-document.getElementById("puller-end-pos").value = data.puller_end_pos || "";
-document.getElementById("puller2-feed-correction").value = data.puller2_feed_correction || "";
-document.getElementById("filter-box-height").value = data.filter_box_height || "";
-document.getElementById("filter-box-width").value = data.filter_box_width || "";
-document.getElementById("filter-box-length").value = data.filter_box_length || "";
-document.getElementById("set-pleat-count").value = data.set_pleat_count || "";
-document.getElementById("set-pleat-pitch").value = data.set_pleat_pitch || "";
-document.getElementById("set-batch-count").value = data.set_batch_count || "";
-document.getElementById("machine-speed-ref").value = data.machine_speed_ref || "";
-document.getElementById("decoiler-set-point").value = data.decoiler_set_point || "";
-document.getElementById("low-dia-set").value = data.low_dia_set || "";
-document.getElementById("cutter-park-pos").value = data.cutter_park_pos || "";
-document.getElementById("cutter-fwd-pos").value = data.cutter_fwd_pos || "";
-
-            }
-        })
-        .catch(error => {
-            console.error("Error fetching submenu data:", error);
-            alert("Failed to load submenu data.");
-        });
-}
-function startRecipe(recipeId) {
-    const quantity = document.getElementById("quantity").value.trim(); // Trim to remove spaces
-
-    // Validate quantity (should not be empty, NaN, or <= 0)
-    if (!quantity || isNaN(quantity) || Number(quantity) <= 0) {
-        alert("Please enter a valid positive quantity.");
-        return;
-    }
-
-    // Send data to the backend using a POST request
-    fetch(`/start_recipe/${recipeId}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ quantity: quantity }),
-    })
-    .then((response) => response.json()) // Parse JSON response
-    .then((data) => {
-        if (data.error) {
-            alert(`Error by shreyash: ${data.error}`); // Show error from backend
-        } else {
-            alert("Recipe started successfully! Batch Code: " + data.batch_code);
-            // toggleRecipePopup(); // Close popup after success
+    
+        // Function to toggle the recipe popup
+        function toggleRecipePopup() {
+            const popup = document.getElementById("recipe-popup");
+            popup.style.display = popup.style.display === "block" ? "none" : "block";
         }
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-        alert("An unexpected error occurred.");
+    
+        // Function to close the popup when clicking outside or on the close button
+        function closePopup(event) {
+            const popup = document.getElementById("recipe-popup");
+            const popupContent = document.querySelector(".popup-content");
+    
+            // If the clicked target is the popup background (not the content), close the popup
+            if (event.target === popup) {
+                popup.style.display = "none";
+            }
+        }
+    
+        // Attach event listener to the document to detect clicks outside the popup content
+        document.addEventListener('click', closePopup);
+    
+        // Close popup when the close button is clicked
+        document.querySelector('.close-button').addEventListener('click', function () {
+            toggleRecipePopup();
+        });
+    
+        // Function to proceed to recipe settings after comparison
+        function proceedToRecipeSettings() {
+            toggleRecipePopup();
+        }
+    
+        // Handle the "Start" button click in the recipe popup
+        document.getElementById("final_submit").addEventListener('click', function () {
+            // Node ID and value for starting the recipe
+            const recipeNodeId = 'ns=3;s="OpenRecipe"."machineState"'; // Replace with actual node ID
+            const recipeValue = 1; // Value to write to the recipe start node
+    
+            // Node ID and value for quantity
+            const quantityNodeId = 'ns=3;s="OpenRecipe"."BatchQty"'; // Replace with actual quantity node ID
+            let quantityValue = document.getElementById("quantity").value; // Get user input for quantity
+            quantityValue = parseInt(quantityValue, 10); // Convert to integer
+            if (!quantityValue || isNaN(quantityValue) || quantityValue <= 0) {
+                alert('Please enter a valid quantity.');
+                return;
+            }
+    
+            // Send both write requests to the server
+            const requests = [
+                fetch('/writeValue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nodeId: recipeNodeId, value: recipeValue }),
+                }),
+                fetch('/writeValue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nodeId: quantityNodeId, value: quantityValue }),
+                }),
+            ];
+    
+            // Handle the responses
+            Promise.all(requests)
+                .then(responses => Promise.all(responses.map(res => res.json())))
+                .then(dataArray => {
+                    const recipeResponse = dataArray[0];
+                    const quantityResponse = dataArray[1];
+    
+                    if (recipeResponse.success && quantityResponse.success) {
+                        alert('Recipe started successfully and quantity set!');
+                        // Close the popup if everything is set properly
+                        toggleRecipePopup();
+                    } else {
+                        let errorMessage = 'Errors occurred:\n';
+                        if (!recipeResponse.success) {
+                            errorMessage += `- Starting recipe: ${recipeResponse.error}\n`;
+                        }
+                        if (!quantityResponse.success) {
+                            errorMessage += `- Setting quantity: ${quantityResponse.error}\n`;
+                        }
+                        alert(errorMessage);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while starting the recipe or setting the quantity.');
+                });
+        });
     });
-}
-
-
 </script>
 <style>
 
-.popup {
-    display: block;
+/* Custom Modal Styles */
+.custom-modal {
+    display: none; /* Hidden by default */
     position: fixed;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    width: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    top: 0;
+    left: 190;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    backdrop-filter: blur(5px); /* Blur effect for the background */
     z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.custom-modal-content {
+    background-color: #e7e1e9;
+    border-radius: 10px;
+    margin-left: 38%;
+    margin-top: 2%;
+    width: 400px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.custom-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.custom-modal-body {
+    margin-bottom: 15px;
+}
+
+.list-group {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.list-group li {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-secondary,
+.btn-primary {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Popup Styles */
+.popup {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    backdrop-filter: blur(5px); /* Blur effect for the background */
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
 }
 
 .popup-content {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
-    background: #e7e1e9;
+    background-color: #e7e1e9;
     border-radius: 10px;
+    width: 1000px;
+    padding: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    padding: 20px;
-    text-align: center;
-    z-index: 1001;
+    position: relative;
 }
 
-/* Header Styling */
 .popup-header {
     display: flex;
     justify-content: space-between;
@@ -571,58 +562,43 @@ function startRecipe(recipeId) {
 }
 
 .popup-header h3 {
-    font-size: 18px;
     margin: 0;
+    font-size: 18px;
 }
-
-.popup-header .close-button {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-/* Table Styling */
-.details-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
-    text-align: left;
-}
-
-.details-table1 td {
-    padding: 8px;
-    font-size: 14px;
-}
-
-.details-table1 td:first-child {
-    font-weight: bold;
-    width: 50%;
-}
-
-.details-table1 input {
-    width: 100%;
-    padding: 5px;
-    border: 1px solid #814196;
-    border-radius: 4px;
-}
-
-/* Footer Styling */
-.popup-footer {
-    margin-top: 20px;
-}
-
 .start-button {
+    background-color: #28a745; /* Green background */
+    color: white; /* White text */
+    font-size: 16px;
+    font-weight: bold;
     padding: 10px 20px;
-    background-color: #28a745;
-    color: #fff;
     border: none;
-    border-radius: 5px;
+    margin-top: 1%;
+    border-radius: 8px;
     cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .start-button:hover {
-    background-color: #218838;
+    background-color: #218838; /* Darker green on hover */
+    transform: scale(1.05); /* Slight zoom effect */
+}
+
+.start-button:active {
+    background-color: #1e7e34; /* Even darker green when clicked */
+    transform: scale(0.95); /* Button press effect */
+}
+.details-table {
+    border-collapse: collapse;
+    width: 100%;
+    text-align: center; /* Centers text horizontally */
+}
+
+.details-table th, .details-table td {
+    padding: 4px; /* Reduces spacing */
+    white-space: nowrap; /* Prevents text from wrapping */
+    text-align: center; /* Centers text horizontally */
+    vertical-align: middle; /* Centers text vertically */
+    border: 1px solid black; /* Adds border for clarity */
 }
 </style>
 {% endblock %}

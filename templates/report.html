@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Recipe Report{% endblock %}
+{% block content %}
+<h1>Report</h1>
+<div class="report-filters">
+    <form method="POST">
+        <div class="date-filter">
+            <label for="report-start-date">From:</label>
+            <input type="text" id="report-start-date" name="start_date" placeholder="Select start date">
+        </div>
+        <div class="date-filter">
+            <label for="report-end-date">To:</label>
+            <input type="text" id="report-end-date" name="end_date" placeholder="Select end date">
+        </div>
+        <button type="submit">Filter</button>
+    </form>
+</div>
+
+<div class="report-download-buttons">
+    <form method="POST" action="/download">
+        <button type="submit" name="format" value="excel">Download as Excel</button>
+        <button type="submit" name="format" value="pdf">Download as PDF</button>
+    </form>
+</div>
+
+<table class="report-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in data %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.date }}</td>
+            <td>{{ row.amount }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Flatpickr JS for date picker -->
+
+<script>
+    // Initialize Flatpickr for date inputs
+    flatpickr("#report-start-date", {
+        dateFormat: "Y-m-d",
+        allowInput: true, // Allow direct input
+    });
+    flatpickr("#report-end-date", {
+        dateFormat: "Y-m-d",
+        allowInput: true, // Allow direct input
+    });
+</script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+    }
+     /*.report-filters { margin-bottom: 20px;    }*/
+    .report-filters .date-filter {
+        margin-bottom: 10px; /* Space between date filters */
+    }
+    .report-filters label {
+        display: block; /* Make labels appear above inputs */
+        margin-bottom: 5px; /* Space between label and input */
+    }
+    .report-filters input[type="text"] {
+        padding: 8px;
+        width: 200px; /* Fixed width for inputs */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .report-filters button {
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 30%;
+        height: 50%;
+        margin-top: 20px;
+    }
+    .report-filters button:hover {
+        background-color: #0056b3;
+    }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    .report-table, .report-table th, .report-table td {
+        border: 1px solid #ddd;
+    }
+    .report-table th, .report-table td {
+        padding: 8px;
+        text-align: left;
+    }
+    .report-table th {
+        background-color: #f2f2f2;
+    }
+    .report-download-buttons {
+        margin-bottom: 20px; /* Move download buttons above the table */
+    }
+    .report-download-buttons button {
+        padding: 8px 16px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 50%;
+        margin-right: 10px;
+    }
+    .report-download-buttons button:hover {
+        background-color: #218838;
+    }
+</style>
+{% endblock %}
