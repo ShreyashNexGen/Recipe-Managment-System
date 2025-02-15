@@ -1,4 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session, flash
+import pandas as pd
+from io import BytesIO
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import json
@@ -2987,7 +2989,56 @@ def get_recipe():
 
     finally:
         conn.close()  # Ensure the connection is closed
+#report aap.py code
+# Sample data for the report
+data = [
+    {"id": 1, "name": "John", "date": "2023-10-01", "amount": 100},
+    {"id": 2, "name": "Jane", "date": "2023-10-05", "amount": 200},
+    {"id": 3, "name": "Doe", "date": "2023-10-10", "amount": 300},
+]
 
+@app.route("/report", methods=["GET", "POST"])
+def report():
+    if request.method == "POST":
+        # Get date range from the form
+        start_date = request.form.get("start_date")
+        end_date = request.form.get("end_date")
+
+        # Filter data based on the date range
+        filtered_data = [
+            row for row in data
+            if start_date <= row["date"] <= end_date
+        ]
+    else:
+        # Show all data by default
+        filtered_data = data
+
+    return render_template("report.html", data=filtered_data)
+
+@app.route("/download", methods=["POST"])
+def download():
+    # Get the selected format (Excel or PDF)
+    format = request.form.get("format")
+
+    # Convert data to a DataFrame
+    df = pd.DataFrame(data)
+
+    if format == "excel":
+        # Create an Excel file in memory
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False)
+        output.seek(0)
+        return send_file(output, download_name="report.xlsx", as_attachment=True)
+
+    elif format == "pdf":
+        output = BytesIO()
+        html_string = df.to_html()
+        output.write(html_string.encode("utf-8"))  # ✅ Encode to bytes
+        output.seek(0)
+        return send_file(output, download_name="report.pdf", as_attachment=True)
+
+    return "Invalid format", 400
 @app.route('/get_last_plc_values', methods=['GET'])
 def get_last_plc_values():
     client = Client(ENDPOINT_URL)  # OPC UA client
