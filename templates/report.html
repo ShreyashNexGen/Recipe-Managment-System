@@ -18,30 +18,45 @@
 
 <div class="report-download-buttons">
     <form method="POST" action="/download">
-        <button type="submit" name="format" value="excel">Download as Excel</button>
+        <!-- <button type="submit" name="format" value="excel">Download as Excel</button> -->
         <button type="submit" name="format" value="pdf">Download as PDF</button>
     </form>
 </div>
 
-<table class="report-table">
-    <thead>
+<table class="table table-bordered table-striped">
+    <thead class="thead-dark">
         <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Date</th>
-            <th>Amount</th>
+            <th>Batch Code</th>
+            <th>Timestamp</th>
+            <th>Recipe Name</th>
+            <th>Article No</th>
+            <th>Filter Size</th>
+            <th>FilterSize</th>
+            <th>Ng Status</th>
+            <th>Serial No</th>
+            <th>Parameter 1</th>
+            <th>Parameter 2</th>
+            <th>Batch Completion Status</th>
         </tr>
     </thead>
     <tbody>
         {% for row in data %}
         <tr>
-            <td>{{ row.id }}</td>
-            <td>{{ row.name }}</td>
-            <td>{{ row.date }}</td>
-            <td>{{ row.amount }}</td>
+            <td>{{ row.Batch_Code }}</td>
+            <td>{{ row.Timestamp }}</td>
+            <td>{{ row.Recipe_Name }}</td>
+            <td>{{ row.Article_No }}</td>
+            <td>{{ row.Filter_Size }}</td>
+            <td>{{ row.FilterSize }}</td>
+            <td>{{ row.NgStatus }}</td>
+            <td>{{ row.SerialNo }}</td>
+            <td>{{ row.Parameter1 }}</td>
+            <td>{{ row.Parameter2 }}</td>
+            <td>{{ row.Batch_Completion_Status }}</td>
         </tr>
         {% endfor %}
     </tbody>
+    
 </table>
 
 <!-- Flatpickr JS for date picker -->
@@ -62,7 +77,6 @@
         font-family: Arial, sans-serif;
         margin: 20px;
     }
-     /*.report-filters { margin-bottom: 20px;    }*/
     .report-filters .date-filter {
         margin-bottom: 10px; /* Space between date filters */
     }
@@ -120,6 +134,22 @@
     }
     .report-download-buttons button:hover {
         background-color: #218838;
+    }
+    .details-table {
+        border-collapse: collapse;
+        width: 100%;
+        text-align: center; /* Centers text horizontally */
+    }
+    .table {
+        table-layout: fixed;
+    }
+    
+    .details-table th, .details-table td {
+        padding: 4px; /* Reduces spacing */
+        white-space: nowrap; /* Prevents text from wrapping */
+        text-align: center; /* Centers text horizontally */
+        vertical-align: middle; /* Centers text vertically */
+        border: 1px solid black; /* Adds border for clarity */
     }
 </style>
 {% endblock %}

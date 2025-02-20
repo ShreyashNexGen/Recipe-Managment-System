@@ -6,6 +6,7 @@ import sqlite3
 import json
 import logging
 import datetime
+import webbrowser
 from datetime import datetime
 from datetime import timedelta
 from flask_socketio import SocketIO, emit
@@ -284,6 +285,17 @@ USER_DATA = {
     'username': 'admin',
     'password_hash': generate_password_hash('password123')  # Secure hashed password
 }
+def get_opcua_client():
+    """Create and return an OPC UA client."""
+    client = Client(ENDPOINT_URL)
+    try:
+        client.connect()
+        print("Connected to OPC UA Server")
+    except Exception as e:
+        print(f"Failed to connect to OPC UA Server: {e}")
+        return None
+    return client
+
 @app.route('/status', methods=['GET'])
 def get_status():
     try:
@@ -315,6 +327,18 @@ def get_status():
         internet_connected = check_internet_connection()
         plc_connected = check_plc_connection(plc_ip)
 
+        # Fetch Recipe Name from PLC
+        client = get_opcua_client()
+        if client:
+            recipe_name_field_path = 'ns=3;s="dbRecipe1"."Recipe"."RecipeName"'  # Example path, adjust as per your actual path
+            try:
+                recipe_name = client.get_node(recipe_name_field_path).get_value()
+            except Exception as e:
+                recipe_name = f"Error fetching Recipe Name: {e}"
+            client.disconnect()
+        else:
+            recipe_name = "Not Connected to OPC UA Server"
+
         # Return the statuses
         return jsonify({
             "Plc_IP": plc_ip,
@@ -323,7 +347,8 @@ def get_status():
             "No_Of_Tags_Created": tags_count,
             "No_Of_Logs_Created": logs_count,
             "Interval_Time_Of_Log_Entry": interval_time,
-            "Serial_Key": serial_key
+            "Serial_Key": serial_key,
+            "Recipe_Name": recipe_name
         })
     except pyodbc.Error as e:
         return jsonify({"error": f"Database error: {str(e)}"})
@@ -331,6 +356,7 @@ def get_status():
         return jsonify({"error": str(e)})
     finally:
         cursor.close()
+
 def check_internet_connection():
     """Check if the server has internet connectivity."""
     try:
@@ -610,204 +636,395 @@ def get_recipe_log():
 
 # import datetime
 # from opcua import Client, ua
-BASE_NODE = 'ns=3;s="dbRecipe"."Recipe"'
-def update_batch_status():
-    """Fetch and update batch status based on PLC values."""
-    while True:
-        conn = get_db_connection()
-        if not conn:
-            continue  # Skip iteration if DB connection fails
+BASE_NODE = 'ns=3;s="dbRecipe1"."Recipe"'
+# def update_batch_status():
+#     """Fetch and update batch status based on PLC values."""
+#     while True:
+#         conn = get_db_connection()
+#         if not conn:
+#             continue  # Skip iteration if DB connection fails
 
-        cursor1 = conn.cursor()
-        cursor2 = conn.cursor()
+#         cursor1 = conn.cursor()
+#         cursor2 = conn.cursor()
         
-        cursor1.execute("""
-            SELECT Batch_Code, Recipe_Name, Article_No, SerialNo, Parameter1, Parameter2 
-            FROM Recipe_Log 
-            WHERE Batch_Completion_Status IN ('Pending')
-        """)
-        recipe_logs = cursor1.fetchall()
+#         cursor1.execute("""
+#             SELECT Batch_Code, Recipe_Name, Article_No, SerialNo, Parameter1, Parameter2 
+#             FROM Recipe_Log 
+#             WHERE Batch_Completion_Status IN ('Pending')
+#         """)
+#         recipe_logs = cursor1.fetchall()
 
-        client = Client(ENDPOINT_URL)
-        client.session_timeout = 30000  # Adjust timeout as needed
+#         client = Client(ENDPOINT_URL)
+#         client.session_timeout = 30000  # Adjust timeout as needed
 
-        try:
-            client.connect()
+#         try:
+#             client.connect()
             
-            for log in recipe_logs:
-                batch_code, recipe_name, article_no, serial_no, param1, param2 = log
+#             for log in recipe_logs:
+#                 batch_code, recipe_name, article_no, serial_no, param1, param2 = log
 
-                # PLC field paths (replace with actual paths)
-                # quantity_field_path = f'{BASE_NODE}."actBatchQty"'
-                machine_state_field_path = f'{BASE_NODE}."decoilerSelection"[13]"'
-                # total_quantity_path = f'{BASE_NODE}."BatchQty"'
-                filter_complete_field_path = f'{BASE_NODE}."filterComplete"'
-                pack_number_field_path =f'{BASE_NODE}."packNumber"'                                       
+#                 # PLC field paths (replace with actual paths)
+#                 # quantity_field_path = f'{BASE_NODE}."actBatchQty"'
+#                 machine_state_field_path = f'ns=3;s="dbRecipe"."Recipe"."decoilerSelection"[13]'
+#                 # total_quantity_path = f'{BASE_NODE}."BatchQty"'
+#                 filter_complete_field_path = f'ns=3;s="dbReport"."filterComplete"'
+#                 pack_number_field_path =f'ns=3;s="dbReport"."packNumber"'                                       
+
+#                 # Fetch values from PLC
+#                 # current_quantity = client.get_node(quantity_field_path).get_value()
+#                 # machine_state = client.get_node(machine_state_field_path).get_value()
+#                 # total_quantity = client.get_node(total_quantity_path).get_value()
+#                 ###
+#                 # filter_complete = 1;
+#                 # pack_number=123;
+#                 filter_complete = client.get_node(filter_complete_field_path).get_value()
+#                 pack_number = client.get_node(pack_number_field_path).get_value()
+#                 ###
+#                 # Generate Serial Number in YYMMDD format
+#                 today_date = datetime.now().strftime("%y%m%d")
+#                 new_serial_number = f"{today_date}{pack_number}"
+
+#                 # Calculate completion percentage
+#                 # completion_percentage = (current_quantity / total_quantity) * 100
+
+#                 # Determine running status
+#                 # running_status = "Pending" if machine_state == 0 else "Running"
+                
+#                 # Determine completion status
+#                 # if completion_percentage < 100:
+#                 #     completion_status = "Pending"
+#                 # elif 60 <= completion_percentage < 100:
+#                 #     completion_status = "Partially Completed"
+#                 # else:
+#                     # completion_status = "Completed"
+#                     # running_status = "Completed"
+
+#                     # Set `machineState` to `0` in PLC
+#                     # node = client.get_node(machine_state_field_path)
+#                     # variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
+#                     # node.set_value(variant)
+
+#                 # **If `filterComplete` is `1`, call `printData()` and update status**
+#                 print("filter_complete",filter_complete)
+#                 if filter_complete == True:
+#                     printdata(recipe_name, article_no, new_serial_number)  # Call function
+                    
+#                     # Mark batch as completed
+#                     completion_status = "Completed"
+#                     running_status = "Completed"
+
+#                     #Reset `filterComplete` in PLC
+#                     filter_complete_node = client.get_node(filter_complete_field_path)
+#                     filter_complete_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+#                     # Machine_state_node = client.get_node(machine_state_field_path)
+#                     # Machine_state_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+#                     #old machine_satate hich was intger ,,, new machine state for testing it is boolean which 13th value
+#                     # node = client.get_node(machine_state_field_path)
+#                     # variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
+#                     # node.set_value(variant)
+#                     cursor2.execute("""
+#                     UPDATE Recipe_Log
+#                     SET Batch_Completion_Status = ?, SerialNo = ?
+#                     WHERE Batch_Code = ?
+#                 """, ( completion_status, new_serial_number, batch_code))
+
+#                 conn.commit()
+                 
+#                 # Update MSSQL database
+                
+
+#         except Exception as e:
+#             print(f"Error updating batch status: {e}")
+#         finally:
+#             client.disconnect()
+#             cursor1.close()
+#             cursor2.close()
+#             conn.close()
+
+def update_batch_status():
+    """Continuously reads OPC UA values and inserts data into recipe_log."""
+    client = Client(ENDPOINT_URL)
+
+    try:
+        client.connect()
+        print("Connected to OPC UA Server")
+
+        while True:  # Continuous loop
+            try:
+                filter_complete_field_path = f'ns=3;s="dbReport"."filterComplete"'
+                pack_number_field_path =f'ns=3;s="dbReport"."packNumber"'  
+                NODE_RECIPE_ID=f'ns=3;s="dbRecipe1"."Recipe"."RecipeID"'   
+                NODE_RECIPE_NAME=f'ns=3;s="dbRecipe1"."Recipe"."RecipeName"'                                
 
                 # Fetch values from PLC
                 # current_quantity = client.get_node(quantity_field_path).get_value()
-                machine_state = client.get_node(machine_state_field_path).get_value()
+                # machine_state = client.get_node(machine_state_field_path).get_value()
                 # total_quantity = client.get_node(total_quantity_path).get_value()
                 ###
-                filter_complete = 1;
-                pack_number=123;
-                # filter_complete = client.get_node(filter_complete_field_path).get_value()
-                # pack_number = client.get_node(pack_number_field_path).get_value()
-                ###
-                # Generate Serial Number in YYMMDD format
-                today_date = datetime.datetime.now().strftime("%y%m%d")
-                new_serial_number = f"{today_date}{pack_number}"
-
-                # Calculate completion percentage
-                # completion_percentage = (current_quantity / total_quantity) * 100
-
-                # Determine running status
-                # running_status = "Pending" if machine_state == 0 else "Running"
+                # filter_complete = 1;
+                # pack_number=123;
+                filter_complete = client.get_node(filter_complete_field_path).get_value()
                 
-                # Determine completion status
-                # if completion_percentage < 100:
-                #     completion_status = "Pending"
-                # elif 60 <= completion_percentage < 100:
-                #     completion_status = "Partially Completed"
-                # else:
-                    # completion_status = "Completed"
-                    # running_status = "Completed"
 
-                    # Set `machineState` to `0` in PLC
-                    # node = client.get_node(machine_state_field_path)
-                    # variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
-                    # node.set_value(variant)
+                if filter_complete == True:  # When filterComplete is True
+                    recipe_id = client.get_node(NODE_RECIPE_ID).get_value()
+                    recipe_name = client.get_node(NODE_RECIPE_NAME).get_value()
+                    pack_number = client.get_node(pack_number_field_path).get_value()
+                    filter_complete_node = client.get_node(filter_complete_field_path)
+                    filter_complete_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
 
-                # **If `filterComplete` is `1`, call `printData()` and update status**
-                if filter_complete == 1:
-                    printdata(recipe_name, article_no, new_serial_number)  # Call function
+
+                    # Generate Serial Number
+                    today_date = datetime.now().strftime("%y%m%d")
+                    serial_no = f"{today_date}{pack_number}"
+                    batch_code = f"BATCH-{recipe_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    # printdata(recipe_name, article_no, serial_no)  # Call function
+
+                    # Fetch additional data from `recipe` table
+                    conn = get_db_connection()
+                    if conn:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT Filter_size, Filter_Code, Art_No FROM Recipe WHERE Recipe_Id = ?", (recipe_id,))
+                        recipe_data = cursor.fetchone()
+
+                        if recipe_data:
+                            filter_size, filter_code, article_number = recipe_data
+
+                            # Insert data into `recipe_log`
+                            cursor.execute("""
+                            INSERT INTO Recipe_Log(Batch_Code, Timestamp, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+                               (batch_code,timestamp, recipe_name, article_number, filter_size, filter_code,"NA",serial_no, "NA", "NA", "Completed"))
+
+                            conn.commit()
+                            printdata(recipe_name, article_number, serial_no)
+                            print(f"Inserted into Recipe_Log: {recipe_id}, {recipe_name}, {serial_no}")
+
+                        else:
+                            print(f"Recipe ID {recipe_id} not found in database.")
+
+                        cursor.close()
+                        conn.close()
+
+                    # Reset filterComplete node in OPC UA
                     
-                    # Mark batch as completed
-                    completion_status = "Completed"
-                    running_status = "Completed"
 
-                    # Reset `filterComplete` in PLC
-                    # filter_complete_node = client.get_node(filter_complete_field_path)
-                    # filter_complete_node.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.Boolean)))
-                    filter_complete =0;
-                    Machine_state_node = client.get_node(machine_state_field_path)
-                    Machine_state_node.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.Boolean)))
-                    #old machine_satate hich was intger ,,, new machine state for testing it is boolean which 13th value
-                    # node = client.get_node(machine_state_field_path)
-                    # variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
-                    # node.set_value(variant)
+                time.sleep(1)  # Wait 1 second before checking again
 
-                # Update MSSQL database
-                cursor2.execute("""
-                    UPDATE Recipe_Log
-                    SET Batch_Completion_Status = ?, SerialNo = ?
-                    WHERE Batch_Code = ?
-                """, ( completion_status, new_serial_number, batch_code))
+            except Exception as e:
+                print(f"Error in OPC UA read: {e}")
+                time.sleep(2)  # Retry after delay
 
-                conn.commit()
+    except Exception as e:
+        print(f"OPC UA Connection Error: {e}")
 
-        except Exception as e:
-            print(f"Error updating batch status: {e}")
-        finally:
-            client.disconnect()
-            cursor1.close()
-            cursor2.close()
-            conn.close()
+    finally:
+        client.disconnect()
+        print("Disconnected from OPC UA Server")
 
+
+Test_Complete='ns=3;s="dbReport"."airDropTestData".'
+def opcua_monitoring():
+    """Continuously reads OPC UA values and updates MSSQL."""
+    client = Client(ENDPOINT_URL)
+    
+    try:
+        client.connect()
+        print("Connected to OPC UA Server")
+
+        while True:  # Continuous loop
+            try:
+                testComplete = client.get_node(f'{Test_Complete}"testComplete"').get_value()
+                
+                if testComplete == True:
+                    serial_no = client.get_node(f'{Test_Complete}"qrCodeDropAir"').get_value()
+                    avgAirFlow = client.get_node(f'{Test_Complete}"avgAirFlow"').get_value()
+                    avgResult = client.get_node(f'{Test_Complete}"avgResult"').get_value()
+                    testResult = client.get_node(f'{Test_Complete}"testResult"').get_value()
+                    if testResult==0:
+                        ng_status='no_Result'
+                    if testResult==1:
+                        ng_status='Ok'
+                    else:
+                        ng_status='Not Ok'
+
+                    test_complete_node = client.get_node(f'{Test_Complete}"testComplete"')
+                    test_complete_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+                    update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status)
+                   
+
+                time.sleep(1)  # Wait 1 second before next read
+
+            except Exception as e:
+                print(f"Error reading OPC UA: {e}")
+                time.sleep(2)  # Wait before retrying
+
+    except Exception as e:
+        print(f"OPC UA Connection Error: {e}")
+
+    finally:
+        client.disconnect()
+        print("Disconnected from OPC UA Server")
+from datetime import datetime
+
+def update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status):
+    """Updates the MSSQL recipe_log table and triggers printing. If serial number is not found, inserts a new record."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check if serial number exists
+        cursor.execute("SELECT * FROM Recipe_Log WHERE SerialNo = ?", (serial_no,))
+        row = cursor.fetchone()
+
+        if row:
+            # Update the record for the given SerialNo
+            cursor.execute("""
+                UPDATE Recipe_Log
+                SET Parameter1 = ?, Parameter2 = ?, NgStatus = ?
+                WHERE SerialNo = ?
+            """, (avgAirFlow, avgResult, ng_status, serial_no))
+            conn.commit()
+            print(f"Updated record for Serial No: {serial_no}")
+        else:
+            # Generate batch_code
+            
+            
+            # Insert a new record with default values
+            cursor.execute("""
+                INSERT INTO Recipe_Log (Batch_Code, Timestamp, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, ('NA', datetime.now(), 'NA', 'NA', 'NA', 'NA', ng_status, serial_no, avgAirFlow, avgResult, 'Completed'))
+            conn.commit()
+            print(f"Inserted new record for Serial No: {serial_no}")
+
+        # Fetch RecipeName and ArticleNo after update/insert
+        cursor.execute("""
+            SELECT Recipe_Name, Article_No FROM Recipe_Log WHERE SerialNo = ?
+        """, (serial_no,))
+        recipe_data = cursor.fetchone()
+
+        if recipe_data:
+            recipe_name, article_number = recipe_data
+            recipe_name_with_status = f"{recipe_name} ,Test: {ng_status}"
+            printdata(recipe_name_with_status, article_number, serial_no)
+        else:
+            print(f"Recipe data for Serial No {serial_no} not found in the table.")
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Database error: {e}")
 
 # Printer Configuration
 PRINTER_HOST = '192.168.0.61'
 PRINTER_PORT = 6101
 
+
+@app.route('/api/print_recipe/<serial_no>', methods=['POST'])
+def print_recipe(serial_no):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch RecipeName and ArticleNo from Recipe_Log based on SerialNo
+        cursor.execute("""
+            SELECT Recipe_Name, Article_No 
+            FROM Recipe_Log
+            WHERE SerialNo = ?
+        """, (serial_no,))
+        recipe_data = cursor.fetchone()
+
+        if recipe_data:
+            recipe_name, article_number = recipe_data
+            printdata(recipe_name, article_number, serial_no)  # Call your print function
+
+            # Respond with success message
+            return jsonify({"success": True, "message": "Printing initiated successfully."})
+        else:
+            return jsonify({"success": False, "message": "Serial number not found in the recipe log."})
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"success": False, "message": "Error occurred while processing print."})
+    finally:
+        cursor.close()
+        conn.close()
 def send_to_printer(data):
     """Function to send data to the printer via a TCP socket."""
+    client = None
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            client.connect((PRINTER_HOST, PRINTER_PORT))
-            client.sendall(data.encode('utf-8'))  # Send data to printer
-            response = client.recv(1024).decode('utf-8')
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.settimeout(5)  # Prevent hanging
+        client.connect((PRINTER_HOST, PRINTER_PORT))
+        
+        print("Sending data to printer...")  # Debugging
+        
+        client.sendall(data.encode('utf-8'))  # Send data
+        
+        try:
+            response = client.recv(1024).decode('utf-8')  # Get response
             print(f'Response from printer: {response}')
+        except socket.timeout:
+            print("Printer did not send a response (this is normal for some printers).")
+
     except Exception as e:
         print(f'Error sending data to printer: {e}')
+    finally:
+        if client:
+            client.close()
+        print("Printer connection closed.")
 
-def generate_pdf(recipe_name, article_no, serial_no):
-    """Generate a PDF receipt and return its file path."""
-    filename = f"receipt_{article_no}_{serial_no}.pdf"
-    filepath = os.path.join(os.getcwd(), 'static', filename)
-
-    c = canvas.Canvas(filepath, pagesize=letter)
-    width, height = letter
-
-    # Title
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(100, height - 100, "Production Slip")
-
-    # Recipe Name
-    c.setFont("Helvetica", 12)
-    c.drawString(100, height - 130, f"Recipe Name: {recipe_name}")
-
-    # Article No
-    c.drawString(100, height - 160, f"Article No: {article_no}")
-
-    # Serial No
-    c.drawString(100, height - 190, f"Serial No: {serial_no}")
-
-    # Footer Text
-    c.setFont("Helvetica", 10)
-    c.drawString(100, height - 230, "Thank you for using our service.")
-
-    c.save()
-    return filepath
 
 def printdata(recipe_name, article_no, serial_no):
     """Function to print the slip and generate a PDF."""
-    print_data = f"""
-    ^XA
-    ~TA000
-    ~JSN
-    ^LT0
-    ^MNW
-    ^MTD
-    ^PON
-    ^PMN
-    ^LH0,0
-    ^JMA
-    ^PR4,4
-    ~SD15
-    ^JUS
-    ^LRN
-    ^CI27
-    ^PA0,1,1,0
-    ^XZ
-    ^XA
-    ^MMT
-    ^PW900
-    ^LL600
-    ^LS0
-    ^FT301,54^A0I,103,91^FH\\^CI28^FDV^FS^CI27
-    ^FT301,143^A0N,85,86^FH\\^CI28^FD{recipe_name}^FS^CI27
-    ^FT360,82^A0N,76,109^FH\\^CI28^FD>^FS^CI27
-    ^FT606,116^A0N,21,20^FH\\^CI28^FDManufactured Item^FS^CI27
-    ^FT606,142^A0N,21,20^FH\\^CI28^FDAir Care Group^FS^CI27
-    ^FT13,247^A0N,44,53^FH\\^CI28^FDRecipe :^FS^CI27
-    ^FT280,312^A0N,54,43^FH\\^CI28^FD{recipe_name}^FS^CI27
-    ^FT13,372^A0N,39,56^FH\\^CI28^FDArticle No :^FS^CI27
-    ^FT13,461^A0N,67,74^FH\\^CI28^FD{article_no}^FS^CI27
-    ^FT13,556^A0N,34,38^FH\\^CI28^FDSerial No :^FS^CI27
-    ^FT196,567^A0N,53,20^FH\\^CI28^FD{serial_no}^FS^CI27
-    ^FT537,563^BQN,2,8^FH\\^FDLA,http://www.absolent.com/contact-qr^FS
-    ^PQ1,0,1,Y
-    ^XZ
+    print_data = f"""  
+^XA
+~TA000
+~JSN
+^LT0
+^MNW
+^MTD
+^PON
+^PMN
+^LH0,0
+^JMA
+^PR4,4
+~SD15
+^JUS
+^LRN
+^CI27
+^PA0,1,1,0
+^XZ
+^XA
+^MMT
+^PW900
+^LL600
+^LS0
+^FT301,54^A0I,103,91^FH\\^CI28^FDV^FS^CI27
+^FT301,143^A0N,85,86^FH\\^CI28^FDbsolent^FS^CI27
+^FT360,82^A0N,76,109^FH\\^CI28^FD>^FS^CI27
+^FT606,116^A0N,21,20^FH\\^CI28^FDpart of Abosent^FS^CI27
+^FT606,142^A0N,21,20^FH\\^CI28^FDAir Care Group^FS^CI27
+^FT13,247^A0N,44,53^FH\\^CI28^FDType :^FS^CI27
+^FT13,314^A0N,49,38^FH\\^CI28^FDAbsolent filter ^FS^CI27
+^FT280,312^A0N,54,43^FH\\^CI28^FD{recipe_name}^FS^CI27
+^FT13,372^A0N,39,56^FH\\^CI28^FDArt.no : ^FS^CI27
+^FT13,461^A0N,67,74^FH\\^CI28^FD{article_no}^FS^CI27
+^FT13,556^A0N,34,38^FH\\^CI28^FDSerial no :^FS^CI27
+^FT196,567^A0N,53,20^FH\\^CI28^FD{serial_no}^FS^CI27
+^FT537,563^BQN,2,8
+^FH\\^FDLA,{serial_no}^FS
+^FT859,557^A0B,65,109^FH\\^CI28^FDAirflow^FS^CI27
+^FO838,175^GB0,58,4^FS
+^FT824,214^A0N,71,71^FH\\^CI28^FD\\5E^FS^CI27
+^PQ1,0,0,N
+^XZ`
     """
 
     # Send the formatted data to the printer
     send_to_printer(print_data)
-
-    # Generate the PDF receipt
-    receipt_path = generate_pdf(recipe_name, article_no, serial_no)
-
-    # Return the PDF file for download
-    return send_file(receipt_path, as_attachment=True)
 
 @app.route('/role', methods=['GET', 'POST'])
 def role():
@@ -1652,7 +1869,7 @@ def recipe_details(recipe_id):
             'recipe_details.html',
             recipe_details=recipe_details,
             sub_menu=sub_menu[0],
-            pos_values=pos_values[:-1],  # Assuming last value should be removed
+            pos_values=pos_values,  # Assuming last value should be removed
             barcode_value=barcode_value
         )
 
@@ -1687,7 +1904,7 @@ def extract_pos_values(recipe_details):
         first_row[7],  # Assuming `pos7` is at index 7
         first_row[8],  # Assuming `pos8` is at index 8
         first_row[9],  # Assuming `pos9` is at index 9
-        first_row[10],  # Assuming `recipe_id` is at index 10
+        # first_row[10],  # Assuming `recipe_id` is at index 10
     ]
    
     return pos_values
@@ -1730,14 +1947,31 @@ def extract_submenu_vaues(sub_menu):
     ]
     return submenu_values
 
+BARCODE_NODE_ID=f'ns=3;s="dbRecipe1"."qrCodeDecoilder"'
+def fetch_barcode_from_opcua():
+    try:
+        client = Client(ENDPOINT_URL)
+        client.connect()
+        barcode_value = client.get_node(BARCODE_NODE_ID).get_value()
+        client.disconnect()
+        return barcode_value
+    except Exception as e:
+        return None  # Handle errors gracefully
+
 @app.route('/compare-pos', methods=['POST'])
 def compare_pos():
     data = request.json  # Receive data from frontend
     pos_value = data.get('posValue')
-    barcode_value = data.get('barcodeValue')
 
-    if pos_value is None or barcode_value is None:
+    if pos_value is None:
         return jsonify({"error": "Invalid data"}), 400
+
+    # Fetch barcode value from OPC UA server fetch_barcode_from_opcua()
+    barcode_value = fetch_barcode_from_opcua()
+    print("Barcode_value",barcode_value)
+    print("Pos_Value",pos_value)
+    if barcode_value is None:
+        return jsonify({"error": "Failed to fetch barcode from OPC UA"}), 500
 
     # Comparison logic
     match = pos_value == barcode_value
@@ -1933,10 +2167,9 @@ def add_recipe():
 
     return redirect(url_for('recipe_list'))
 
-def update_plc_with_values(pos_values, submenu_values):
+def update_plc_with_values(pos_values, submenu_values, recipe_info):
     """
-    Update PLC with POS values, Recipe ID (assumed as the last element in pos_values), 
-    and submenu values.
+ Update PLC with POS values, Recipe Name, Recipe ID, and submenu values.
     """
     from opcua import Client, ua
 
@@ -1946,64 +2179,79 @@ def update_plc_with_values(pos_values, submenu_values):
     try:
         client.connect()
 
-        # Ensure pos_values is a list with at least 10 elements (9 POS values + 1 Recipe ID)
-        if not isinstance(pos_values, list) or len(pos_values) < 10:
-            raise ValueError("pos_values must be a list with at least 10 elements (including Recipe ID).")
+        # Extract Recipe Name and Recipe ID from recipe_info
+        recipe_name = recipe_info[3]  # 'Recipe6'
+        recipe_id = recipe_info[4]    # 6
 
-        # Extract Recipe ID (last element)
-        recipe_id = int(pos_values[-1])
-        pos_values = pos_values[:-1]  # Remove Recipe ID from the list, keeping only POS values
-
-        # Write POS values (1 to 9) to PLC nodes
+    
         for i in range(1, 10):
-            pos_value = pos_values[i - 1]  # Access by index (0-based for lists)
-            # node_id = f'ns=3;s="OpenRecipe"."selectedRoll{i}"'
-            
-            node_id = f'ns=3;s="dbRecipe"."Recipe"."decoilerSelection{i}"'
+            pos_value = pos_values[i-1]  # Access by index (0-based for lists)
+            node_id1 = f'ns=3;s="dbRecipe1"."Recipe"."decoilerSelection"[{i}]'
+            node_id2 = f'ns=3;s="dbRecipe1"."Recipe"."decolerRoll"[{i}]'
 
             try:
-                # Get the node object
-                node = client.get_node(node_id)
-                # Determine the value to set
-                node.set_value(ua.DataValue(ua.Variant(bool(pos_value), ua.VariantType.Boolean)))
+                
+                node1 = client.get_node(node_id1)
+                node1.set_value(ua.DataValue(ua.Variant(bool(pos_value), ua.VariantType.Boolean)))
+                node2 = client.get_node(node_id2)
+                node2.set_value(ua.DataValue(ua.Variant(pos_value, ua.VariantType.String)))
+                
+                print(f"Skipping update for index {i} due to None value in pos_values")
             except Exception as node_error:
-                print(f"Error processing Node ID {node_id}: {node_error}")
+                print(f"Error processing Node ID {node_id1}: {node_error}")
 
-        # Write the Recipe ID to a specific OPC UA node
-        # try:
-        #     recipe_node_id = 'ns=3;s="OpenRecipe"."recipeId"'  # Replace with actual node ID for Recipe ID
-        #     # recipe_node = client.get_node(recipe_node_id)
-        #     # recipe_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
-        # except Exception as recipe_error:
-        #     print(f"Error writing Recipe ID to Node ID {recipe_node_id}: {recipe_error}")
-        #"servoMotorSpeed", "servoMotorStroke","servoMotorForce", "coilWidth",
+        # Write Recipe Name and Recipe ID to PLC
+        try:
+            recipe_name_node = client.get_node('ns=3;s="dbRecipe1"."Recipe"."RecipeName"')
+            recipe_id_node = client.get_node('ns=3;s="dbRecipe1"."Recipe"."RecipeID"')
+
+            recipe_name_node.set_value(ua.DataValue(ua.Variant(recipe_name, ua.VariantType.String)))
+            recipe_id_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
+
+            print(f"Recipe Name ({recipe_name}) and Recipe ID ({recipe_id}) written to PLC.")
+        except Exception as recipe_error:
+            print(f"Error writing Recipe Name and Recipe ID: {recipe_error}")
+
+        # Submenu fields
         submenu_fields = [
             "Corr1Feed_length", "Corr2feed_length", "Pleat_Height", "Blade_opening",
             "Left_Blade_MediaTHickness", "Right_Blade_MediaThickness", "Soft_Touch", "Press_Touch",
             "Puller_Start_pos", "Puller_End_pos", "Puller2_Feed_Correction", "Filter_Box_Height",
             "Filter_Box_Width", "Filter_Box_Length", "Set_Pleat_Count", "Set_Pleat_Pitch",
             "Set_Batch_COunt", "Machine_Speed_Ref", "Decoiler_Set_point", "Low_Dia_Set",
-            "Cutter_Park_pos", "Cutter_Fwd_Pos"]
-        # Write submenu values to specific nodes
-        try:
-         submenu_values = [float(value) for value in submenu_values] 
-        except ValueError as conversion_error:
-         raise ValueError(f"Error converting submenu values to float: {conversion_error}")
+            "Cutter_Park_pos", "Cutter_Fwd_Pos"
+        ]
 
+        # Write submenu values to PLC nodes
         for field_name, submenu_value in zip(submenu_fields, submenu_values):
-            submenu_node_id = f'ns=3;s="dbRecipe1"."Recipe".."{field_name}"'  # Replace with actual node ID pattern
+            submenu_node_id = f'ns=3;s="dbRecipe1"."Recipe"."{field_name}"'
+
             try:
-                # Get the node object
                 node = client.get_node(submenu_node_id)
-                node.set_value(ua.DataValue(ua.Variant(submenu_value, ua.VariantType.Float)))
+                data_type = node.get_data_type_as_variant_type()
+                
+                # Convert value based on data type
+                if data_type == ua.VariantType.Float:
+                    value = float(submenu_value)
+                elif data_type == ua.VariantType.Int32:
+                    value = int(submenu_value)
+                elif data_type == ua.VariantType.Boolean:
+                    value = bool(submenu_value)
+                else:
+                    raise ValueError(f"Unsupported data type for {field_name}: {data_type}")
+
+                node.set_value(ua.DataValue(ua.Variant(value, data_type)))
             except Exception as submenu_error:
                 print(f"Error processing Submenu Node ID {submenu_node_id}: {submenu_error}")
 
-        print("POS values, Recipe ID, and Submenu values written successfully to PLC.")
+        print("POS values, Recipe Name, Recipe ID, and Submenu values written successfully to PLC.")
+    
     except Exception as e:
         print(f"Error updating PLC: {e}")
+    
     finally:
-        client.disconnect() 
+        client.disconnect()
+
 
 from datetime import datetime
 @app.route('/start_recipe/<int:recipe_id>', methods=['POST'])
@@ -2025,7 +2273,7 @@ def start_recipe(recipe_id):
         print("1")
         # Fetch Recipe Details
         # Fetch Recipe Details from Recipe Table
-        cursor.execute("SELECT Filter_Size, Filter_Code, Art_No, Recipe_Name FROM Recipe WHERE Recipe_ID = ?", (recipe_id,))
+        cursor.execute("SELECT Filter_Size, Filter_Code, Art_No, Recipe_Name,Recipe_ID FROM Recipe WHERE Recipe_ID = ?", (recipe_id,))
         recipe_info = cursor.fetchone()
         print(r"recipe_info",recipe_info)
         cursor.execute("SELECT * FROM Recipe_Details1 WHERE Recipe_ID = ?", (recipe_id,))
@@ -2039,9 +2287,10 @@ def start_recipe(recipe_id):
         # Extract Position and Submenu Values
         pos_values = extract_pos_values([recipe_details])
         submenu_values = extract_submenu_vaues([sub_menu])
+        
         print("pos_valuues: ",pos_values)
         print("submenu_valuess: ",submenu_values)
-        update_plc_with_values(pos_values, submenu_values)
+        update_plc_with_values(pos_values, submenu_values,recipe_info)
         # Get JSON Payload
         data = request.get_json()
         if not data:
@@ -2056,31 +2305,31 @@ def start_recipe(recipe_id):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print("7")
         # Insert into `Recipe_Log` Table
-        cursor.execute(
-    '''
-    INSERT INTO Recipe_Log 
-    (Batch_Code, Timestamp, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''',
-    (
-        batch_code,
-        timestamp,
-        recipe_info[3],
-        recipe_info[2],
-        recipe_info[0], 
-        sub_menu[1],  
-        'NA',  
-        'NA',
-        'NA',
-        'NA',
-        'Pending'
-    )
-)
+#         cursor.execute(
+#     '''
+#     INSERT INTO Recipe_Log 
+#     (Batch_Code, Timestamp, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
+#     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+#     ''',
+#     (
+#         batch_code,
+#         timestamp,
+#         recipe_info[3],
+#         recipe_info[2],
+#         recipe_info[0], 
+#         recipe_info[1],  
+#         'NA',  
+#         'NA',
+#         'NA',
+#         'NA',
+#         'Pending'
+#     )
+# )
 
        
-        print("8")
-        conn.commit()
-        flash(f"Recipe batch started successfully! Batch Code: {batch_code}", "success")
+#         print("8")
+#         conn.commit()
+        flash(f"Recipe batch started successfully!", "success")
         print("9")
     except pyodbc.Error as e:
         conn.rollback()  # Rollback changes on error
@@ -2492,155 +2741,155 @@ def fetch_plc_info():
     finally:
         conn.close()  # Ensure the connection is closed
 
-def upload_live_log_to_mongodb():
-    """
-    Fetch records from MSSQL, format them, send them to Flask API, and clean up MSSQL.
-    """
-    try:
-        # Fetch plcId and serialKey from Plc_Table
-        plc_id, serial_key = fetch_plc_info()
-        if plc_id is None or serial_key is None:
-            print("❌ Error: plcId or serialKey not found in Plc_Table.")
-            return
+# def upload_live_log_to_mongodb():
+#     """
+#     Fetch records from MSSQL, format them, send them to Flask API, and clean up MSSQL.
+#     """
+#     try:
+#         # Fetch plcId and serialKey from Plc_Table
+#         plc_id, serial_key = fetch_plc_info()
+#         if plc_id is None or serial_key is None:
+#             print("❌ Error: plcId or serialKey not found in Plc_Table.")
+#             return
 
-        # Connect to MSSQL
-        conn = get_db_connection()
-        if not conn:
-            return
+#         # Connect to MSSQL
+#         conn = get_db_connection()
+#         if not conn:
+#             return
 
-        try:
-            cursor = conn.cursor()
+#         try:
+#             cursor = conn.cursor()
 
-            # Fetch all records grouped by timestamp
-            cursor.execute('''
-                SELECT id, tagName, value, timestamp
-                FROM Live_Log
-                ORDER BY timestamp ASC, id ASC
-            ''')
-            records = cursor.fetchall()
+#             # Fetch all records grouped by timestamp
+#             cursor.execute('''
+#                 SELECT id, tagName, value, timestamp
+#                 FROM Live_Log
+#                 ORDER BY timestamp ASC, id ASC
+#             ''')
+#             records = cursor.fetchall()
 
-            if not records:
-                print("✅ No records to upload.")
-                return
+#             if not records:
+#                 print("✅ No records to upload.")
+#                 return
 
-            # Group records by timestamp
-            grouped_data = {}
-            record_ids = []
+#             # Group records by timestamp
+#             grouped_data = {}
+#             record_ids = []
 
-            for record in records:
-                record_id, tag_name, value, timestamp = record
+#             for record in records:
+#                 record_id, tag_name, value, timestamp = record
 
-                # Convert timestamp to epoch format
-                epoch_timestamp = timestamp_to_epoch(timestamp)
-                if epoch_timestamp is None:
-                    continue  # Skip if timestamp conversion failed
+#                 # Convert timestamp to epoch format
+#                 epoch_timestamp = timestamp_to_epoch(timestamp)
+#                 if epoch_timestamp is None:
+#                     continue  # Skip if timestamp conversion failed
 
-                # Parse value if it's JSON
-                parsed_value = json.loads(value) if is_json(value) else value
+#                 # Parse value if it's JSON
+#                 parsed_value = json.loads(value) if is_json(value) else value
 
-                # Process value to split arrays into separate fields
-                processed_data = process_value(tag_name, parsed_value)
+#                 # Process value to split arrays into separate fields
+#                 processed_data = process_value(tag_name, parsed_value)
 
-                if epoch_timestamp not in grouped_data:
-                    grouped_data[epoch_timestamp] = []
-                grouped_data[epoch_timestamp].append(processed_data)
+#                 if epoch_timestamp not in grouped_data:
+#                     grouped_data[epoch_timestamp] = []
+#                 grouped_data[epoch_timestamp].append(processed_data)
 
-                # Collect record IDs for cleanup
-                record_ids.append(record_id)
+#                 # Collect record IDs for cleanup
+#                 record_ids.append(record_id)
 
-            # Prepare the batch format
-            batches = []
-            for epoch_timestamp, tags in grouped_data.items():
-                # Combine all tags for the same timestamp into one dictionary
-                combined_tags = {}
-                for tag in tags:
-                    combined_tags.update(tag)
+#             # Prepare the batch format
+#             batches = []
+#             for epoch_timestamp, tags in grouped_data.items():
+#                 # Combine all tags for the same timestamp into one dictionary
+#                 combined_tags = {}
+#                 for tag in tags:
+#                     combined_tags.update(tag)
 
-                batch = {
-                    "plcId": plc_id,
-                    "serialNo": serial_key,
-                    "values": [{
-                        "dbId": 3,
-                        "dbNo": 1001,
-                        "dbName": "dbCloud",
-                        "data": [{
-                            "temp": 1,
-                            "timeStamp": epoch_timestamp * 1000,
-                            **combined_tags
-                        }]
-                    }]
-                }
-                batches.append(batch)
+#                 batch = {
+#                     "plcId": plc_id,
+#                     "serialNo": serial_key,
+#                     "values": [{
+#                         "dbId": 3,
+#                         "dbNo": 1001,
+#                         "dbName": "dbCloud",
+#                         "data": [{
+#                             "temp": 1,
+#                             "timeStamp": epoch_timestamp * 1000,
+#                             **combined_tags
+#                         }]
+#                     }]
+#                 }
+#                 batches.append(batch)
 
-            successful_batches = 0
+#             successful_batches = 0
 
-            # Send data in batches of 10
-            for i in range(0, len(batches), BATCH_SIZE):
-                batch_to_send = batches[i:i + BATCH_SIZE]
+#             # Send data in batches of 10
+#             for i in range(0, len(batches), BATCH_SIZE):
+#                 batch_to_send = batches[i:i + BATCH_SIZE]
 
-                response = requests.post(API_URL, json=batch_to_send)
+#                 response = requests.post(API_URL, json=batch_to_send)
 
-                if response.status_code in [200, 201]:
-                    print(f"✅ Batch {i // BATCH_SIZE + 1} uploaded successfully.")
-                    successful_batches += 1
+#                 if response.status_code in [200, 201]:
+#                     print(f"✅ Batch {i // BATCH_SIZE + 1} uploaded successfully.")
+#                     successful_batches += 1
 
-                    # Clean up uploaded records
-                    clean_live_log_last_batch(record_ids, chunk_size=500)
-                else:
-                    print(f"❌ Failed to upload batch {i // BATCH_SIZE + 1}. Status code: {response.status_code}")
-                    print(f"Response: {response.text}")
+#                     # Clean up uploaded records
+#                     clean_live_log_last_batch(record_ids, chunk_size=500)
+#                 else:
+#                     print(f"❌ Failed to upload batch {i // BATCH_SIZE + 1}. Status code: {response.status_code}")
+#                     print(f"Response: {response.text}")
 
-            # Update batch count in MSSQL
-            update_batch_count(successful_batches)
-            print("✅ Process completed.")
+#             # Update batch count in MSSQL
+#             update_batch_count(successful_batches)
+#             print("✅ Process completed.")
 
-        except pyodbc.Error as e:
-            print(f"❌ Database query error: {e}")
+#         except pyodbc.Error as e:
+#             print(f"❌ Database query error: {e}")
 
-        finally:
-            conn.close()  # Ensure the connection is closed
+#         finally:
+#             conn.close()  # Ensure the connection is closed
 
-    except Exception as e:
-        print(f"❌ Error: {e}")
+#     except Exception as e:
+#         print(f"❌ Error: {e}")
 
-def schedule_live_log_upload_background(interval=100000):
-    """
-    Run the upload function in a background thread every `interval` milliseconds.
-    """
-    def background_task():
-        while True:
-            try:
-                conn = get_db_connection()
-                if not conn:
-                    print("❌ Skipping task due to DB connection failure.")
-                    time.sleep(interval / 1000)
-                    continue
+# def schedule_live_log_upload_background(interval=100000):
+#     """
+#     Run the upload function in a background thread every `interval` milliseconds.
+#     """
+#     def background_task():
+#         while True:
+#             try:
+#                 conn = get_db_connection()
+#                 if not conn:
+#                     print("❌ Skipping task due to DB connection failure.")
+#                     time.sleep(interval / 1000)
+#                     continue
 
-                try:
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT COUNT(*) FROM Live_Log")
-                    count = cursor.fetchone()[0]
+#                 try:
+#                     cursor = conn.cursor()
+#                     cursor.execute("SELECT COUNT(*) FROM Live_Log")
+#                     count = cursor.fetchone()[0]
 
-                    if count > 1000:
-                        print("📢 More than 1000 records found. Uploading...")
-                        upload_live_log_to_mongodb()
-                    else:
-                        print("ℹ️ Less than 1000 records in Live_Log. Skipping upload...")
+#                     if count > 1000:
+#                         print("📢 More than 1000 records found. Uploading...")
+#                         upload_live_log_to_mongodb()
+#                     else:
+#                         print("ℹ️ Less than 1000 records in Live_Log. Skipping upload...")
 
-                except pyodbc.Error as e:
-                    print(f"❌ Error executing query: {e}")
+#                 except pyodbc.Error as e:
+#                     print(f"❌ Error executing query: {e}")
 
-                finally:
-                    conn.close()  # Ensure connection is closed properly
+#                 finally:
+#                     conn.close()  # Ensure connection is closed properly
 
-            except Exception as e:
-                print(f"❌ Error in background task: {e}")
+#             except Exception as e:
+#                 print(f"❌ Error in background task: {e}")
 
-            time.sleep(interval / 1000)  # Wait before the next check
+#             time.sleep(interval / 1000)  # Wait before the next check
 
-    # Start the background task in a separate daemon thread
-    thread = threading.Thread(target=background_task, daemon=True)
-    thread.start()
+#     # Start the background task in a separate daemon thread
+#     thread = threading.Thread(target=background_task, daemon=True)
+#     thread.start()
 
 # Call this function to start the background thread
 # schedule_live_log_upload_background(interval=15000)
@@ -2732,7 +2981,8 @@ def write_value():
         client.session_timeout = 30000  # Adjust timeout as needed
         client.connect()
 
-        # Get the node object
+        # Get the node object 'ns=3;db.recipe
+
         node = client.get_node(node_id)
         print("Received node:", node)  # This will print the data to the console
 
@@ -2884,7 +3134,24 @@ def start_live_read():
     thread.start()
 
     return jsonify({"success": True, "message": "Live data reading started"})
+@app.route('/get_all_recipes', methods=['GET'])
+def get_all_recipes():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"success": False, "message": "Database connection failed"})
 
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT Recipe_ID, Recipe_Name FROM Recipe")
+        recipes = [{"recipe_id": row[0], "recipe_name": row[1]} for row in cursor.fetchall()]
+
+        return jsonify({"success": True, "recipes": recipes})
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+    finally:
+        conn.close()
 @app.route('/get_recipe', methods=['GET'])
 def get_recipe():
     conn = get_db_connection()
@@ -2892,17 +3159,21 @@ def get_recipe():
         return jsonify({"success": False, "message": "Database connection failed"})
 
     recipe_id = request.args.get('recipe_id')
+    recipe_name = request.args.get('recipe_name')
 
-    print("📌 Recipe ID received:", recipe_id)  # Debug log
+    print("📌 Recipe ID received:", recipe_id, "Recipe Name:", recipe_name)  # Debug log
 
-    if not recipe_id:
-        return jsonify({"success": False, "message": "Recipe ID is required"})
+    if not recipe_id and not recipe_name:
+        return jsonify({"success": False, "message": "Recipe ID or Recipe Name is required"})
 
     try:
         cursor = conn.cursor()
 
-        # Fetch data from the Recipe table
-        cursor.execute("SELECT * FROM Recipe WHERE recipe_id = ?", (recipe_id,))
+        # Fetch data from Recipe table by ID or Name
+        if recipe_id:
+            cursor.execute("SELECT * FROM Recipe WHERE recipe_id = ?", (recipe_id,))
+        else:
+            cursor.execute("SELECT * FROM Recipe WHERE recipe_name = ?", (recipe_name,))
         recipe_main = cursor.fetchone()
         # print("recipe_main: ",recipe_main)
         if not recipe_main:
@@ -2911,21 +3182,23 @@ def get_recipe():
                # Extract column names
         columns = [column[0] for column in cursor.description]
 
-        # Convert `recipe_main` tuple to a dictionary
+        # Convert recipe_main tuple to a dictionary
         recipe_main_dict = dict(zip(columns, recipe_main))
         print("recipe_main_dict: ",recipe_main_dict)
 
         # Fetch data from Recipe_Details1 (contains Spacer & Alu_roller_type)
-        cursor.execute("SELECT * FROM Recipe_Details1 WHERE recipe_id = ?", (recipe_id,))
+        cursor.execute("SELECT * FROM Recipe_Details1 WHERE recipe_id = ?", (recipe_main_dict["Recipe_ID"],))
         recipe_pos = cursor.fetchall()
         recipe_pos_list = [{column[0]: value for column, value in zip(cursor.description, row)} for row in recipe_pos]
         print("📌 Fetched Recipe Positions:", recipe_pos_list)  # Debug log
 
         # Fetch data from Sub_Menu (contains motor-related details)
-        cursor.execute("SELECT * FROM Sub_Menu WHERE recipe_id = ?", (recipe_id,))
+        cursor.execute("SELECT * FROM Sub_Menu WHERE recipe_id = ?", (recipe_main_dict["Recipe_ID"],))
         recipe_motor = cursor.fetchone()
         recipe_motor_dict = {column[0]: value for column, value in zip(cursor.description, recipe_motor)} if recipe_motor else {}
         print
+
+        # Build the response data
 
         # Build the response data
         data = {
@@ -2991,54 +3264,107 @@ def get_recipe():
         conn.close()  # Ensure the connection is closed
 #report aap.py code
 # Sample data for the report
-data = [
-    {"id": 1, "name": "John", "date": "2023-10-01", "amount": 100},
-    {"id": 2, "name": "Jane", "date": "2023-10-05", "amount": 200},
-    {"id": 3, "name": "Doe", "date": "2023-10-10", "amount": 300},
-]
-
 @app.route("/report", methods=["GET", "POST"])
 def report():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Query to fetch all data initially
+    query = "SELECT * FROM Recipe_Log"
     if request.method == "POST":
-        # Get date range from the form
         start_date = request.form.get("start_date")
         end_date = request.form.get("end_date")
+        
+        if start_date and end_date:
+            query = f"SELECT * FROM Recipe_Log WHERE Timestamp BETWEEN '{start_date}' AND '{end_date}'"
 
-        # Filter data based on the date range
-        filtered_data = [
-            row for row in data
-            if start_date <= row["date"] <= end_date
-        ]
-    else:
-        # Show all data by default
-        filtered_data = data
+    cursor.execute(query)
+    columns = [column[0] for column in cursor.description]
+    data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
+    conn.close()
 
-    return render_template("report.html", data=filtered_data)
+    return render_template("report.html", data=data)
+from flask import Flask, request, send_file
+import pandas as pd
+import io
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+import pandas as pd
 
 @app.route("/download", methods=["POST"])
 def download():
-    # Get the selected format (Excel or PDF)
-    format = request.form.get("format")
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    # Convert data to a DataFrame
+    # Updated query to select specific columns
+    query = """SELECT   
+                [Batch_No],
+                [Timestamp],
+                [Recipe_Name],
+                [Article_No],
+                [Filter_Size],
+                [FilterSize],
+                [NgStatus],
+                [SerialNo]
+              FROM [Shreyash].[dbo].[Recipe_Log]"""
+              
+    cursor.execute(query)
+    columns = [column[0] for column in cursor.description]
+    data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    conn.close()
+
     df = pd.DataFrame(data)
+    file_format = request.form.get("format")
 
-    if format == "excel":
-        # Create an Excel file in memory
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            df.to_excel(writer, index=False)
-        output.seek(0)
-        return send_file(output, download_name="report.xlsx", as_attachment=True)
+    if file_format == "pdf":
+        output = io.BytesIO()
+        doc = SimpleDocTemplate(output, pagesize=landscape(letter))  # Landscape mode to fit more data
 
-    elif format == "pdf":
-        output = BytesIO()
-        html_string = df.to_html()
-        output.write(html_string.encode("utf-8"))  # ✅ Encode to bytes
+        elements = []
+        heading = Paragraph("Filter Data Table", style=ParagraphStyle(name='Heading1', fontSize=18, alignment=1))
+        elements.append(heading)
+
+        # Add some space before the table
+        elements.append(Spacer(1, 12))
+
+        # Convert DataFrame to a list with headers
+        headers = list(df.columns)
+        table_data = [headers] + df.values.tolist()
+
+        # Auto-adjust column widths (prevents cutting)
+        num_cols = len(headers)
+        column_widths = [760 / num_cols] * num_cols  # Distributes width evenly
+
+        # Create table
+        table = Table(table_data, colWidths=column_widths)
+
+        # Apply styles
+        style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),  # Blue header background
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Header text color
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center align all text
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold font for headers
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),  # Padding for headers
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # White background for all rows
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),  # Grid for table
+        ])
+        table.setStyle(style)
+
+        elements.append(table)
+        doc.build(elements)
+
         output.seek(0)
-        return send_file(output, download_name="report.pdf", as_attachment=True)
+        return send_file(output, download_name="report.pdf", as_attachment=True, mimetype="application/pdf")
 
     return "Invalid format", 400
+
+
 @app.route('/get_last_plc_values', methods=['GET'])
 def get_last_plc_values():
     client = Client(ENDPOINT_URL)  # OPC UA client
@@ -3049,14 +3375,15 @@ def get_last_plc_values():
 
         # Base node for fetching values
         base_node = 'ns=3;s="dbRecipe1"."Recipe".'
+        # base_node2='ns=3;s="dbRecipe"."Recipe".'
         
 
         # Fetch values from OPC UA
         last_plc_values = {
-            "Motor_speed": str(client.get_node(f'{base_node}"decoilerSelection"[14]"').get_value()),
-            "Motor_stroke": str(client.get_node(f'{base_node}"decoilerSelection"[14]"').get_value()),
-            "Motor_force": str(client.get_node(f'{base_node}"decoilerSelection"[14]"').get_value()),
-            "coil_Width": str(client.get_node(f'{base_node}"decoilerSelection"[14]"').get_value()),
+            "Motor_speed": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
+            "Motor_stroke": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
+            "Motor_force": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
+            "coil_Width": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
             "Corr1Feed_length": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
             "Corr2feed_length": str(client.get_node(f'{base_node}"Corr2feed_length"').get_value()),
             "Pleat_Height": str(client.get_node(f'{base_node}"Pleat_Height"').get_value()),
@@ -3149,19 +3476,30 @@ def run_periodic_update3():
         time.sleep(sleep_time)  # Sleep for the specified interval
  # Sleep for the specified interval 
 def run_periodic_update2():
+    count=1;
     while True:
-        
+
         update_batch_status()
-        
+          
+           
         time.sleep(1)  # Update every 1 seconds
-        
+
+thread_running = False
+
+def start_periodic_update():
+    global thread_running
+    if not thread_running:
+        thread_running = True
+        threading.Thread(target=run_periodic_update2, daemon=True).start()    
 if __name__ == '__main__':
     print("Starting Flask app...")
-    schedule_live_log_upload_background(interval=10000)
+    # schedule_live_log_upload_background(interval=10000)
     threading.Thread(target=run_periodic_update1, daemon=True).start()
-    threading.Thread(target=run_periodic_update2, daemon=True).start()
     threading.Thread(target=run_periodic_update3, daemon=True).start()
+    thread = threading.Thread(target=opcua_monitoring, daemon=True).start()
     threading.Thread(target=log_status, daemon=True).start()
     # socketio.run(app, host='0.0.0.0', port=5000)
-    app.run(debug=True)
+    start_periodic_update()
+    webbrowser.open("http://127.0.0.1:5000")
+    app.run(host='127.0.0.1', port=5000, debug=False)
 

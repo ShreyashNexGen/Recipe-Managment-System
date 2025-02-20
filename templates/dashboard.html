@@ -5,7 +5,7 @@
     <h1 style="font-size: 30px; color: #3d2758; text-align: center; font-weight: bold;">Dashboard</h1>
     
     <!-- <h2 style="font-size: 20px; color: #333;text-align: center; font-weight: 500;">Current Running Recipe No.: 1234</h2> -->
-
+     
      <!-- Status Overview Section -->
      <div class="status-overview mt-5">
         <h2 style="font-size: 20px; color: #0056b3; text-align: center; font-weight: bold;">System Status</h2>
@@ -22,10 +22,14 @@
                 <p><strong>No. of Logs Created:</strong> <span id="logs-count">Loading...</span></p>
                 <p><strong>Interval Time of Log Entry:</strong> <span id="interval-time">Loading...</span></p>
             </div>
+            <div class="col-md-4">
+                <p><strong>Serial Key:</strong> <span id="serial-key">Loading...</span></p>
+                <p><strong>Running Recipe:</strong> <span id="recipe-name">Loading...</span></p>
+            </div>
         </div>
-        <div class="text-center mt-3">
+        <!-- <div class="text-center mt-3">
             <p><strong>Serial Key:</strong> <span id="serial-key">Loading...</span></p>
-        </div>
+        </div> -->
         <div class="container mt-4">
             <div class="update-interval-container">
                 <label for="interval-time" class="form-label">Set Interval Time:</label>
@@ -57,13 +61,13 @@
     <div class="pie-chart-container">
         <!-- Pie Chart 1 -->
         <div class="pie-chart">
-            <h2 style="text-align: center;">Internet Status</h2>
+            <h2 style="text-align: center;">Internet Connection</h2>
             <canvas id="internetChart"></canvas>
         </div>
 
         <!-- Pie Chart 2 -->
         <div class="pie-chart">
-            <h2 style="text-align: center;">Plc Status</h2>
+            <h2 style="text-align: center;">Plc Connection</h2>
             <canvas  id="plcChart"></canvas>
         </div>
     </div>
@@ -79,11 +83,11 @@
         </thead>
     </table> -->
     <div class="container mt-5">
-        <h1 class="text-center">Recipe Log</h1>
+        <h1 class="text-center">Filter Log</h1>
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
                 <tr>
-                    <th>Batch Code</th>
+                    <th>Filter Code</th>
 <th>Timestamp</th>
 <th>Recipe Name</th>
 <th>Article No</th>
@@ -91,9 +95,9 @@
 <th>FilterSize</th>
 <th>Ng Status</th>
 <th>Serial No</th>
-<th>Parameter 1</th>
-<th>Parameter 2</th>
-<th>Batch Completion Status</th>
+<th>AvgAirFlow</th>
+<th>AvgResult</th>
+<th>Filter Completion Status</th>
 <th>Print</th>
 
                 </tr>
@@ -164,7 +168,7 @@
     <td>${row.Parameter2}</td>
     <td>${row.Batch_Completion_Status}</td>
     <td>
-    <button class="print-btn" onclick="printPage()">Print</button>
+    <button class="print-btn" onclick="rePrint(${row.SerialNo})">Re-Print</button>           
     </td>
 </tr>
 
@@ -189,6 +193,7 @@
                 document.getElementById('logs-count').innerText = data.No_Of_Logs_Created;
                 document.getElementById('interval-time').innerText = data.Interval_Time_Of_Log_Entry;
                 document.getElementById('serial-key').innerText = data.Serial_Key;
+                document.getElementById('recipe-name').innerText = data.Recipe_Name;
             })
             .catch(error => console.error('Error fetching system status:', error));
     }
@@ -242,7 +247,24 @@
         .catch(error => console.error('Error fetching status summary:', error));
 }
 
+// Function to handle Re-Print button click
+function rePrint(serialNo) {
+    console.log("Re-Printing for SerialNo:", serialNo);
 
+    fetch(`/api/print_recipe/${serialNo}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Print Response:", data);
+        if (data.success) {
+            alert('Printing successfully initiated!');
+        } else {
+            alert('Failed to initiate printing.');
+        }
+    })
+    .catch(error => console.error('Error during re-print:', error));
+}
 fetchStatusSummary1();
 setInterval(fetchStatusSummary1, 60000);
 

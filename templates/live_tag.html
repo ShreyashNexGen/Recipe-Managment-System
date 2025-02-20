@@ -76,81 +76,85 @@
             cell.innerHTML = cell.dataset.fullValue; // Expand to full value
         }
     }
-
     function fetchLiveData() {
-        fetch('http://localhost:5000/getLiveValues')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const tableBody = document.getElementById('liveDataTable').getElementsByTagName('tbody')[0];
-                    tableBody.innerHTML = ''; // Clear previous rows
+    fetch('http://localhost:5000/getLiveValues')
+        .then(response => response.json())
+        .then(data => {
+            console.log("Live Data API Response:", data); // Debugging log
+            if (data.success) {
+                const tableBody = document.getElementById('liveDataTable').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = ''; // Clear previous rows
 
-                    data.data.forEach((row, index) => {
-                        const tr = document.createElement('tr');
-                        const cellKey = `liveDataTable-${index}`; // Unique key for each cell
-                        const truncatedValue = row.value.slice(0, 50) + '...'; // Adjust truncation as needed
+                data.data.forEach((row, index) => {
+                    console.log("Row Data:", row); // Debugging each row
+                    const tr = document.createElement('tr');
+                    const cellKey = `liveDataTable-${index}`;
+                    const truncatedValue = row.value ? row.value.slice(0, 50) + '...' : 'N/A';
 
-                        const isExpanded = expandedCells.has(cellKey); // Check expanded state
-                        tr.innerHTML = `
-                            <td>${row.tagName}</td>
-                            <td class="value-cell" 
-                                data-cell-key="${cellKey}" 
-                                data-full-value="${row.value}" 
-                                data-truncated-value="${truncatedValue}" 
-                                onclick="toggleExpand(this)" 
-                                title="${isExpanded ? 'Click to collapse' : 'Click to expand'}">
-                                ${isExpanded ? row.value : truncatedValue}
-                            </td>
-                            <td>${row.timestamp}</td>
-                        `;
+                    const isExpanded = expandedCells.has(cellKey);
+                    tr.innerHTML = `
+                        <td>${row.tagName}</td>
+                        <td class="value-cell" 
+                            data-cell-key="${cellKey}" 
+                            data-full-value="${row.value}" 
+                            data-truncated-value="${truncatedValue}" 
+                            onclick="toggleExpand(this)" 
+                            title="${isExpanded ? 'Click to collapse' : 'Click to expand'}">
+                            ${isExpanded ? row.value : truncatedValue}
+                        </td>
+                        <td>${row.timestamp}</td>
+                    `;
 
-                        tableBody.appendChild(tr);
-                    });
-                } else {
-                    console.error('Failed to fetch live data:', data.error);
-                }
-            })
-            .catch(error => console.error('Error fetching live data:', error));
-    }
+                    tableBody.appendChild(tr);
+                });
+            } else {
+                console.error('Failed to fetch live data:', data.error);
+            }
+        })
+        .catch(error => console.error('Error fetching live data:', error));
+}
 
-    function fetchLivePLCData() {
-        fetch('http://localhost:5000/readValues')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const tableBody = document.getElementById('liveDataTable1').getElementsByTagName('tbody')[0];
-                    tableBody.innerHTML = ''; // Clear previous rows
+function fetchLivePLCData() {
+    fetch('http://localhost:5000/readValues')
+        .then(response => response.json())
+        .then(data => {
+            console.log("Live PLC Data API Response:", data); // Debugging log
+            if (data.success) {
+                const tableBody = document.getElementById('liveDataTable1').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = ''; // Clear previous rows
 
-                    data.results.forEach((item, index) => {
-                        const row = document.createElement('tr');
-                        const cellKey = `liveDataTable1-${index}`; // Unique key for each cell
-                        truncatedValue=item.value
-                        if (typeof item.value === 'string' || Array.isArray(item.value)) {
-                        truncatedValue = item.value.slice(0, 50) + '...'; // Adjust truncation as needed
-                        }
+                data.results.forEach((item, index) => {
+                    console.log("PLC Data Row:", item); // Debugging each row
+                    const row = document.createElement('tr');
+                    const cellKey = `liveDataTable1-${index}`;
+                    let truncatedValue = item.value;
+                    
+                    if (typeof item.value === 'string' || Array.isArray(item.value)) {
+                        truncatedValue = item.value.slice(0, 50) + '...';
+                    }
 
-                        const isExpanded = expandedCells.has(cellKey); // Check expanded state
-                        row.innerHTML = `
-                            <td>${item.tagName}</td>
-                            <td class="value-cell" 
-                                data-cell-key="${cellKey}" 
-                                data-full-value="${item.value}" 
-                                data-truncated-value="${truncatedValue}" 
-                                onclick="toggleExpand(this)" 
-                                title="${isExpanded ? 'Click to collapse' : 'Click to expand'}">
-                                ${isExpanded ? item.value : truncatedValue}
-                            </td>
-                            <td>${item.timestamp}</td>
-                        `;
+                    const isExpanded = expandedCells.has(cellKey);
+                    row.innerHTML = `
+                        <td>${item.tagName}</td>
+                        <td class="value-cell" 
+                            data-cell-key="${cellKey}" 
+                            data-full-value="${item.value}" 
+                            data-truncated-value="${truncatedValue}" 
+                            onclick="toggleExpand(this)" 
+                            title="${isExpanded ? 'Click to collapse' : 'Click to expand'}">
+                            ${isExpanded ? item.value : truncatedValue}
+                        </td>
+                        <td>${item.timestamp}</td>
+                    `;
 
-                        tableBody.appendChild(row);
-                    });
-                } else {
-                    console.error('Error fetching live PLC data:', data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    }
+                    tableBody.appendChild(row);
+                });
+            } else {
+                console.error('Error fetching live PLC data:', data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
 
     // Fetch live data every 5 seconds
     setInterval(fetchLiveData, 5000);

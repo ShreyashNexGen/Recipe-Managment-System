@@ -15,7 +15,23 @@
             <button type="button" class="close-button" onclick="toggleRecipeForm()">X</button>
             <div>
                 <label for="load_recipe_id">Load Existing Recipe:</label>
-                <input type="text" id="load_recipe_id" placeholder="Enter Recipe ID">
+                <div class="recipe-container">
+                    <!-- Recipe ID -->
+                    <div class="dropdown-container">
+                        <input type="text" id="load_recipe_id" placeholder="Select Recipe ID" readonly>
+                        <span class="dropdown-icon"><i class="fa-solid fa-caret-down"></i></span>
+                        <div class="dropdown-list" id="dropdown_recipe_id"></div>
+                    </div>
+                
+                    <!-- Recipe Name -->
+                    <div class="dropdown-container">
+                        <input type="text" id="load_recipe_name" placeholder="Select Recipe Name" readonly>
+                        <span class="dropdown-icon"><i class="fa-solid fa-caret-down"></i></span>
+                        <div class="dropdown-list" id="dropdown_recipe_name"></div>
+                    </div>
+                </div>
+                
+                
                 <button type="button" onclick="loadRecipe()">Load Recipe</button>
             </div>
         </div>
@@ -198,7 +214,24 @@
 
 
 <style>
-    
+    /* Styling for table header */
+    .highlighted-tag{
+        font-weight: bold;
+        font-size: 20px;
+    }
+.highlighted-header {
+    background-color: #007bff; /* Corporate blue */
+    color: white; /* White text */
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
     /* Center align all table cells */
     #recipetable th, #recipetable td {
         text-align: center; /* Center-align text */
@@ -210,6 +243,77 @@
         padding: 8px;
     }
     
+    /* Flexbox container for side-by-side layout */
+.recipe-container {
+    display: flex;
+    gap: 10px; /* Space between fields */
+    align-items: center;
+    justify-content: center; /* Center horizontally */
+    height: 10vh; /* Full height to center vertically */
+}
+
+/* Dropdown wrapper */
+.dropdown-container {
+    min-width: 150px; /* Decrease width */
+    padding: 3px; /* Reduce padding */
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    padding: 5px;
+    margin-bottom: 10px;
+    min-width: 150px;
+}
+
+/* Input field */
+.dropdown-container input {
+    font-size: small;
+    border-radius: 20px;
+    padding: 5px; /* Adjust padding */
+    outline: none;
+    background-color: #a3c5e9;
+    flex: 1;
+    padding: 8px;
+    cursor: pointer;
+}
+
+/* Dropdown arrow */
+.dropdown-icon {
+    cursor: pointer;
+    padding: 5px;
+    margin-bottom: 20px;
+}
+
+/* Dropdown list */
+.dropdown-list {
+    font-size: 12px; /* Smaller font size */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    border-radius: 5px;
+}
+
+/* Dropdown items */
+.dropdown-item {
+    padding: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease-in-out;
+}
+
+/* Hover effect */
+.dropdown-item:hover {
+    background: #f5f5f5;
+}
+
+    
     
 </style>
 <div class="table-container">
@@ -217,7 +321,7 @@
         <thead>
             <tr>
                 <th>Serial No.</th>
-                <th>Recipe ID</th>
+                <th >Recipe ID</th>
                 <th>Recipe Name</th>
                 <th>Filter Size</th>
                 <th>Filter Code</th>
@@ -230,7 +334,7 @@
             {% for recipe in recipes %}
             <tr id="row-{{ recipe.Recipe_ID }}">
                 <td>{{ loop.index }}</td>
-                <td><a href="{{ url_for('recipe_details', recipe_id=recipe.Recipe_ID) }}">{{ recipe.Recipe_ID }}</a></td>
+                <td class="highlighted-header" style="font-style: white;"><a href="{{ url_for('recipe_details', recipe_id=recipe.Recipe_ID) }}">{{ recipe.Recipe_ID }}</a></td>
                 <td>{{recipe.Recipe_Name}}</td>
                 <td>{{ recipe.Filter_Size }}</td>
                 <td>{{ recipe.Filter_Code }}</td>
@@ -273,15 +377,17 @@
 <script>
 function loadRecipe() {
     const recipeId = document.getElementById("load_recipe_id").value;
+    const recipeName = document.getElementById("load_recipe_name").value;
 
-    if (!recipeId) {
-        alert("Please enter a Recipe ID to load!");
+    if (!recipeId && !recipeName) {
+        alert("Please enter either a Recipe ID or a Recipe Name to load!");
         return;
     }
+    
 
-    console.log("Sending recipe ID:", recipeId); // Debug log
+    console.log("Sending recipe ID:", recipeId,"and Recipe Name",recipeName); // Debug log
 
-    fetch(`/get_recipe?recipe_id=${recipeId}`, {
+    fetch(`/get_recipe?recipe_id=${recipeId}&recipe_name=${encodeURIComponent(recipeName)}`, {
         method: "GET",
     })
         .then((response) => response.json())
@@ -433,5 +539,59 @@ function toggleUpdatePopup() {
     document.getElementById('update-recipe-section').style.display = 'none';
 }
 
+//code for the dropdown
+document.addEventListener("DOMContentLoaded", function () {
+    fetchRecipes();
+});
+
+function fetchRecipes() {
+    fetch("/get_all_recipes")
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                populateDropdown("load_recipe_id", "dropdown_recipe_id", data.recipes, "recipe_id");
+                populateDropdown("load_recipe_name", "dropdown_recipe_name", data.recipes, "recipe_name");
+            } else {
+                console.error("Error fetching recipes:", data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error fetching recipe list:", error);
+        });
+}
+
+function populateDropdown(inputId, dropdownId, recipes, key) {
+    const inputField = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    const container = inputField.parentNode;
+
+    recipes.forEach((recipe) => {
+        const item = document.createElement("div");
+        item.textContent = recipe[key];
+        item.classList.add("dropdown-item");
+
+        item.addEventListener("click", function () {
+            inputField.value = recipe[key];
+            dropdown.style.display = "none";
+        });
+
+        dropdown.appendChild(item);
+    });
+
+    // Show dropdown when clicking input or icon
+    container.addEventListener("click", function () {
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener("click", function (event) {
+        if (!container.contains(event.target)) {
+            dropdown.style.display = "none";
+        }
+    });
+}
+
+
 </script>
 {% endblock %}
+
