@@ -122,14 +122,49 @@
                 <td>{{ sub_menu['Cutter_Fwd_Pos'] }}</td>
             
                 </tr>
+        </tbody> 
+    </table>
+    <h2>Air Inspection Settings</h2>
+    <table class="details-table">
+        <thead>
+            <tr>
+                <th>DataBase available</th>
+                <th>Width</th>
+                <th>Height</th>
+                <th>Depth</th>
+                <th>Art No.</th>
+                <th>Air Flow Set</th>
+            </tr>
+            <tr>
+                <td>{{ sub_menu['motor_speed'] }}</td>
+                <td>{{ sub_menu['motor_stroke'] }}</td>
+                <td>{{ sub_menu['other_speed_force'] }}</td>
+                <td>{{ sub_menu['alu_coil_width'] }}</td>
+                <td>{{ sub_menu['Corr1Feed_length'] }}</td>
+                <td>{{ sub_menu['Corr2feed_length'] }}</td>
+                
+            </tr>
+            <tr>
+                <th>Pressure Drop Setpoint</th>
+                <th>Lower Tolerance 1</th>
+                <th>Lower Tolerance 2</th>
+                <th>Upper Tolerance 1</th>
+                <th>Upper Tolerance 2</th>
+            </tr>
+            <tr>
+                <td>{{ sub_menu['Pleat_Height'] }}</td>
+                <td>{{ sub_menu['Blade_opening'] }}</td>
+                <td>{{ sub_menu['Left_Blade_MediaTHickness'] }}</td>
+                <td>{{ sub_menu['Right_Blade_MediaThickness'] }}</td>
+                <td>{{ sub_menu['Soft_Touch'] }}</td>
+            </tr>            
         </tbody>
-        
     </table>
 </div>
 
 
 <!-- Custom Modal for POS Value Comparison -->
-<div id="comparisonModal" class="custom-modal popup">
+<!-- <div id="comparisonModal" class="custom-modal popup">
     <div class="custom-modal-content">
         <div class="custom-modal-header">
             <h3>POS Value Comparison</h3>
@@ -137,7 +172,7 @@
         </div>
         <div class="custom-modal-body">
             <ul id="comparisonResults" class="list-group">
-                <!-- Comparison results will be dynamically populated here -->
+                
             </ul>
         </div>
         <div class="custom-modal-footer">
@@ -145,7 +180,7 @@
             <button id="next" type="button" class="btn btn-primary" disabled>Next</button>
         </div>
     </div>
-</div>
+</div> -->
 <!-- Submenu Popup for Recipe Settings -->
 <div id="recipe-popup" class="popup">
     <div class="popup-content">
@@ -166,38 +201,37 @@
                     <td><input type="text" id="motor-stroke" value="{{ sub_menu.motor_stroke }}" readonly></td>
                     <td>Other Speed Force:</td>
                     <td><input type="text" id="speed-force" value="{{ sub_menu.other_speed_force }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Alu Coil Width:</td>
                     <td><input type="text" id="coil-width" value="{{ sub_menu.alu_coil_width }}" readonly></td>
+                    
+                </tr>
+                <tr>
                     <td>Corr1 Feed Length:</td>
                     <td><input type="text" id="corr1-feed-length" value="{{ sub_menu.Corr1Feed_length }}" readonly></td>
                     <td>Corr2 Feed Length:</td>
                     <td><input type="text" id="corr2-feed-length" value="{{ sub_menu.Corr2feed_length }}" readonly></td>
                     <td>Pleat Height:</td>
                     <td><input type="text" id="pleat-height" value="{{ sub_menu.Pleat_Height }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Blade Opening:</td>
                     <td><input type="text" id="blade-opening" value="{{ sub_menu.Blade_opening }}" readonly></td>
                     <td>Left Blade Media Thickness:</td>
                     <td><input type="text" id="left-blade-media-thickness" value="{{ sub_menu.Left_Blade_MediaTHickness }}" readonly></td>
+                </tr>
+                <tr>    
                     <td>Right Blade Media Thickness:</td>
                     <td><input type="text" id="right-blade-media-thickness" value="{{ sub_menu.Right_Blade_MediaThickness }}" readonly></td>
                     <td>Soft Touch:</td>
                     <td><input type="text" id="soft-touch" value="{{ sub_menu.Soft_Touch }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Press Touch:</td>
                     <td><input type="text" id="press-touch" value="{{ sub_menu.Press_Touch }}" readonly></td>
                     <td>Puller Start Position:</td>
                     <td><input type="text" id="puller-start-pos" value="{{ sub_menu.Puller_Start_pos }}" readonly></td>
                     <td>Puller End Position:</td>
                     <td><input type="text" id="puller-end-pos" value="{{ sub_menu.Puller_End_pos }}" readonly></td>
+                </tr>
+                <tr>    
                     <td>Puller2 Feed Correction:</td>
                     <td><input type="text" id="puller2-feed-correction" value="{{ sub_menu.Puller2_Feed_Correction }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Filter Box Height:</td>
                     <td><input type="text" id="filter-box-height" value="{{ sub_menu.Filter_Box_Height }}" readonly></td>
                     <td>Filter Box Width:</td>
@@ -216,14 +250,40 @@
                     <td><input type="text" id="machine-speed-ref" value="{{ sub_menu.Machine_Speed_Ref }}" readonly></td>
                     <td>Decoiler Set Point:</td>
                     <td><input type="text" id="decoiler-set-point" value="{{ sub_menu.Decoiler_Set_point }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Low Dia Set:</td>
                     <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
+                </tr>
+                <tr>    
                     <td>Cutter Park Position:</td>
                     <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
                     <td>Cutter Forward Position:</td>
                     <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
+                    <td>DataBase :</td>
+                    <td><input type="text" id="set-pleat-pitch" value="{{ sub_menu.Set_Pleat_Pitch }}" readonly></td>
+                    <td>Width:</td>
+                    <td><input type="text" id="set-batch-count" value="{{ sub_menu.Set_Batch_COunt }}" readonly></td>
+                    <td>Height:</td>
+                    <td><input type="text" id="machine-speed-ref" value="{{ sub_menu.Machine_Speed_Ref }}" readonly></td>
+                </tr>
+                <tr>    
+                    <td>Depth:</td>
+                    <td><input type="text" id="decoiler-set-point" value="{{ sub_menu.Decoiler_Set_point }}" readonly></td>
+                    <td>Art No.:</td>
+                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
+                    <td>Air Flow set:</td>
+                    <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
+                    <td>Pressure Drop Setpoint:</td>
+                    <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
+                    <td>Lower Tolerance1:</td>
+                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
+                </tr>
+                <tr>    
+                    <td>Lower Tolerance2:</td>
+                    <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
+                    <td>Upper Tolerance1:</td>
+                    <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
+                    <td>Upper Tolerance2:</td>
+                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
                 </tr>
             </table>
             
@@ -238,115 +298,117 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {    
+        // Directly open the recipe popup when "Start Recipe" is clicked
+        document.getElementById('start-recipe-btn').addEventListener('click', toggleRecipePopup);
         // const barcodeValue = "{{ barcode_value }}"; // Pass barcode value from Flask
-        const posValues = JSON.parse('{{ pos_values | tojson | safe }}');
-        const comparisonResults = document.getElementById('comparisonResults');
-        const next = document.getElementById('next');
+        //const posValues = JSON.parse('{{ pos_values | tojson | safe }}');
+        //const comparisonResults = document.getElementById('comparisonResults');
+        //const next = document.getElementById('next');
 
-        let matchedPosCount = 0;
+       // let matchedPosCount = 0;
 
-        function openComparisonModal() {
+       // function openComparisonModal() {
             // Clear previous results
-            comparisonResults.innerHTML = '';
-            matchedPosCount = 0; // Reset the matched count
+        //    comparisonResults.innerHTML = '';
+         //   matchedPosCount = 0; // Reset the matched count
 
             // Create comparison option for each POS value
-            posValues.forEach((posValue, index) => {
-                const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+           // posValues.forEach((posValue, index) => {
+             //   const li = document.createElement('li');
+               // li.className = 'list-group-item d-flex justify-content-between align-items-center';
 
                 // Add index (POS1, POS2, ...) and value to each POS
                 //  Received Value: ${barcodeValue}
-                const posText = `POS${index + 1} : ${posValue !== null ? posValue : "Unavailable"} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+                //const posText = `POS${index + 1} : ${posValue !== null ? posValue : "Unavailable"} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
 
                 // Add text content
-                const textSpan = document.createElement('span');
-                textSpan.innerHTML = posText;
-                li.appendChild(textSpan);
+            //    const textSpan = document.createElement('span');
+              //  textSpan.innerHTML = posText;
+                //li.appendChild(textSpan);
 
                 // Only add compare button for non-null values
-                if (posValue !== null) {
-                    const compareButton = document.createElement('button');
-                    compareButton.className = 'btn btn-primary btn-sm';
-                    compareButton.textContent = 'Compare';
-                    compareButton.addEventListener('click', () => comparePosValue(posValue, index));
+          //      if (posValue !== null) {
+            //        const compareButton = document.createElement('button');
+              ///      compareButton.className = 'btn btn-primary btn-sm';
+             //       compareButton.textContent = 'Compare';
+             //       compareButton.addEventListener('click', () => comparePosValue(posValue, index));
 
-                    li.appendChild(compareButton);
-                }
+              //      li.appendChild(compareButton);
+                //}
 
-                comparisonResults.appendChild(li);
-            });
+                //comparisonResults.appendChild(li);
+           // });
 
              // Show the modal
-             const modal = document.getElementById('comparisonModal');
-            modal.style.display = 'block'; // Show the modal
-        }
+             //const modal = document.getElementById('comparisonModal');
+            //modal.style.display = 'block'; // Show the modal
+       // }
     // Function to close the custom modal
-    function closeCustomModal() {
-            const modal = document.getElementById('comparisonModal');
-            modal.style.display = 'none'; // Hide the modal
-        }
-        function comparePosValue(posValue, index) {
+   // function closeCustomModal() {
+      //      const modal = document.getElementById('comparisonModal');
+        //    modal.style.display = 'none'; // Hide the modal
+      //  }
+     //  function comparePosValue(posValue, index) {
             // Compare the POS value with the barcode
-            fetch('/compare-pos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ posValue})
-            })
-            .then(response => response.json())
-            .then(result => {
-                const li = comparisonResults.children[index];
-                const compareButton = li.querySelector('button');
-                const isMatch = result.match;
+            //fetch('/compare-pos', {
+           //     method: 'POST',
+           //     headers: { 'Content-Type': 'application/json' },
+           //     body: JSON.stringify({ posValue})
+          //  })
+          //  .then(response => response.json())
+          //  .then(result => {
+           //     const li = comparisonResults.children[index];
+          //      const compareButton = li.querySelector('button');
+           ///     const isMatch = result.match;
 
-                if (isMatch) {
-                    li.classList.add('list-group-item-success');
-                    li.classList.remove('list-group-item-danger');
-                    li.querySelector('span').innerHTML = `POS${index + 1} : ${posValue} ✔ Match &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
-                    matchedPosCount++;
-                } else {
-                    li.classList.add('list-group-item-danger');
-                    li.classList.remove('list-group-item-success');
-                    li.querySelector('span').innerHTML = `POS${index + 1} : ${posValue} ✘ Mismatch &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
-                }
+              //  if (isMatch) {
+              //      li.classList.add('list-group-item-success');
+              //      li.classList.remove('list-group-item-danger');
+              //      li.querySelector('span').innerHTML = `POS${index + 1} : ${posValue} ✔ Match &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+             //       matchedPosCount++;
+              //  } else {
+               //     li.classList.add('list-group-item-danger');
+               //     li.classList.remove('list-group-item-success');
+               //     li.querySelector('span').innerHTML = `POS${index + 1} : ${posValue} ✘ Mismatch &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+              //  }
 
                 // Disable the button after comparison
-                compareButton.disabled = true;
+             //   compareButton.disabled = true;
 
                 // Enable the "Start Recipe" button only if all available POS values are matched
-                if (matchedPosCount === posValues.filter(posValue => posValue !== null).length) {
-                    next.disabled = false;
-                } else {
-                    next.disabled = true;
-                }
-            })
-            .catch(error => {
-                console.error('Error comparing POS value:', error);
-                alert('An error occurred during the comparison.');
-            });
-        }
+             //   if (matchedPosCount === posValues.filter(posValue => posValue !== null).length) {
+               ///     next.disabled = false;
+              //  } else {
+               //     next.disabled = true;
+           //     }
+            //})
+          //  .catch(error => {
+          ///      console.error('Error comparing POS value:', error);
+         //       alert('An error occurred during the comparison.');
+          ///  });
+    //    }
 
         // Attach openComparisonModal to the start recipe button
-        document.getElementById('start-recipe-btn').addEventListener('click', openComparisonModal);
-        document.getElementById('comparisonModal').addEventListener('hidden.bs.modal', function () {
-            matchedPosCount = 0; // Reset the matched count
-            next.disabled = true; // Disable the Start Recipe button
-        });
+        //document.getElementById('start-recipe-btn').addEventListener('click', openComparisonModal);
+       //document.getElementById('comparisonModal').addEventListener('hidden.bs.modal', function () {
+       //     matchedPosCount = 0; // Reset the matched count
+        //     next.disabled = true; // Disable the Start Recipe button
+      //  });
  // Attach closeCustomModal to the cross button
- document.querySelector('.btn-close').addEventListener('click', closeCustomModal);
+// document.querySelector('.btn-close').addEventListener('click', closeCustomModal);
     
     // Handle the "Next" button click
-    next.addEventListener("click", function () {
+  //  next.addEventListener("click", function () {
         // Check if all conditions are matched
-        const allMatched = matchedPosCount === posValues.filter(posValue => posValue !== null).length;
-        if (allMatched) {
-            closeCustomModal(); // Close the modal
-            proceedToRecipeSettings(); // Open submenu for recipe settings
-        } else {
-            alert("Please match all POS values first.");
-        }
-    });
+      //  const allMatched = matchedPosCount === posValues.filter(posValue => posValue !== null).length;
+      //  if (allMatched) {
+     //       closeCustomModal(); // Close the modal
+      //      proceedToRecipeSettings(); // Open submenu for recipe settings
+    //    } else {
+    //        alert("Please match all POS values first.");
+      //  }
+  //  });
 
     function toggleRecipePopup() {
         const popup = document.getElementById("recipe-popup");
@@ -429,7 +491,7 @@ document.querySelector('.close-button').addEventListener('click', function() {
         });
 });
 
-    });
+        });
     function loadRecipeSettings(recipeId) {
     fetch(`/api/sub_menu/${recipeId}`)
         .then(response => response.json())

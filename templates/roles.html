@@ -26,26 +26,46 @@
             <h5 id="role-header" class="section-heading text-muted">Select a user to assign roles</h5>
             <form method="POST" id="role-form" class="mt-3">
                 <input type="hidden" id="selected-username" name="username">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="create" name="roles" value="create">
-                    <label class="form-check-label" for="create">Create</label>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="read" name="roles" value="read">
-                    <label class="form-check-label" for="read">Read</label>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="update" name="roles" value="update">
-                    <label class="form-check-label" for="update">Update</label>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="delete" name="roles" value="delete">
-                    <label class="form-check-label" for="delete">Delete</label>
-                </div>
-                <button type="submit" class="btn btn-primary mt-3 w-50"  id="save-button">Save Roles</button>
+                
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Role</th>
+                            <th>Permission</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>DashBoard</td>
+                            <td><input type="checkbox" class="form-check-input" id="dashboard" name="roles" value="dashboard"></td>
+                        </tr>
+                        <tr>
+                            <td>Raw Material</td>
+                            <td><input type="checkbox" class="form-check-input" id="raw_material" name="roles" value="raw_material"></td>
+                        </tr>
+                        <tr>
+                            <td>Recipe</td>
+                            <td><input type="checkbox" class="form-check-input" id="recipe" name="roles" value="recipe"></td>
+                        </tr>
+                        <tr>
+                            <td>Report</td>
+                            <td><input type="checkbox" class="form-check-input" id="report" name="roles" value="report"></td>
+                        </tr>
+                        <tr>
+                            <td>Tag</td>
+                            <td><input type="checkbox" class="form-check-input" id="tag" name="roles" value="tag"></td>
+                        </tr>
+                        <tr>
+                            <td>Admin</td>
+                            <td><input type="checkbox" class="form-check-input" id="admin" name="roles" value="admin"></td>
+                        </tr>
+                    </tbody>
+                </table>
+        
+                <button type="submit" class="btn btn-primary mt-3 w-50" id="save-button">Save Roles</button>
             </form>
-            
         </div>
+        
     </div>
 
 
