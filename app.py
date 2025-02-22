@@ -172,6 +172,25 @@ def init_db():
     Cutter_Fwd_Pos NVARCHAR(255)
 );
 
+            """,
+            "Inspection_Settings": """
+
+                 CREATE TABLE Inspection_Settings (
+                     Inspection_ID INT PRIMARY KEY IDENTITY(1,1),
+    Recipe_ID INT FOREIGN KEY REFERENCES Recipe(Recipe_ID),
+    databaseAvailable NVARCHAR(255),
+    Width NVARCHAR(255),
+    Height NVARCHAR(255),
+    Depth NVARCHAR(255),
+    Art_No NVARCHAR(255),
+    Air_Flow_Set NVARCHAR(255),
+    Pressure_Drop_Setpoint NVARCHAR(255),
+    Lower_Tolerance1 NVARCHAR(255),
+    Lower_Tolerance2 NVARCHAR(255),
+          Upper_Tolerance1 NVARCHAR(255),
+    Upper_Tolerance2 NVARCHAR(255)
+    );
+
                 """,
             "Live_Tags": """
                 CREATE TABLE Live_Tags (
@@ -567,8 +586,8 @@ def recipe_list():
         return redirect(url_for('login'))
 
     # Pagination logic
-    page = max(1, request.args.get('page', 1, type=int))
-    per_page = 10
+    page = request.args.get('page', 1, type=int)
+    per_page = 5
     offset = (page - 1) * per_page
 
     conn = get_db_connection()
@@ -604,7 +623,6 @@ def recipe_list():
         page=page,
         total_pages=total_pages
     )
-
 @app.route('/api/recipe_log', methods=['GET'])
 def get_recipe_log():
     conn = get_db_connection()
@@ -1853,6 +1871,10 @@ def recipe_details(recipe_id):
         sub_menu = cursor2.fetchall()
         print("sub_menu:",sub_menu)
 
+        cursor3 = conn.cursor()
+        cursor3.execute("SELECT * FROM Insection_Settings WHERE Recipe_ID = ?", (recipe_id,))
+        inspection_menu = cursor3.fetchall()
+
 
         if not recipe_details:
             flash("Recipe not found!", "danger")
@@ -1869,6 +1891,7 @@ def recipe_details(recipe_id):
             'recipe_details.html',
             recipe_details=recipe_details,
             sub_menu=sub_menu[0],
+            inspection_menu=inspection_menu[0],
             pos_values=pos_values,  # Assuming last value should be removed
             barcode_value=barcode_value
         )
@@ -2096,21 +2119,35 @@ def add_recipe():
     filter_box_length = request.form.get('Filter_Box_Length')
     set_pleat_count = request.form.get('Set_Pleat_Count')
     set_pleat_pitch = request.form.get('Set_Pleat_Pitch')
-    set_batch_count = request.form.get('Set_Batch_COunt')
+    set_batch_count = request.form.get('Set_Batch_Count')
     machine_speed_ref = request.form.get('Machine_Speed_Ref')
     decoiler_set_point = request.form.get('Decoiler_Set_point')
     low_dia_set = request.form.get('Low_Dia_Set')
     cutter_park_pos = request.form.get('Cutter_Park_pos')
     cutter_fwd_pos = request.form.get('Cutter_Fwd_Pos')
+    databaseAvailable = request.form.get('databaseAvailable')
+    Width = request.form.get('Width')
+    Height = request.form.get('Height')
+    Depth = request.form.get('Depth')
+    Art_Num = request.form.get('Art_Num')
+    Air_Flow_Set = request.form.get('Air_Flow_Set')
+    Pressure_Drop_Setpoint = request.form.get('Pressure_Drop_Setpoint')
+    Lower_Tolerance1 = request.form.get('Lower_Tolerance1')
+    Lower_Tolerance2 = request.form.get('Lower_Tolerance2')
+    Upper_Tolerance1 = request.form.get('Upper_Tolerance1')
+    Upper_Tolerance2 = request.form.get('Upper_Tolerance2')
 
+    print("Received Form Data:", recipe_id, databaseAvailable, Width, Height, Depth)
+    
     # Extract POS values (1-9)
     pos_values = [request.form.get(f'pos{i}', None) for i in range(1, 10)]
+    
 
     # Validate required fields
-    required_fields = [recipe_id, recipe_name, filter_size, filter_code, art_no, alu_coil_width, motor_speed, motor_stroke, motor_force]
-    if any(field is None or field.strip() == "" for field in required_fields):
-        flash("All required fields must be filled!", "danger")
-        return redirect(url_for('recipe_list'))
+    # required_fields = [recipe_id, recipe_name, filter_size, filter_code, art_no, alu_coil_width, motor_speed, motor_stroke, motor_force]
+    # if any(field is None or field.strip() == "" for field in required_fields):
+    #     flash("All required fields must be filled!", "danger")
+    #     return redirect(url_for('recipe_list'))
 
     conn = get_db_connection()
     print("Got Connection")
@@ -2148,9 +2185,18 @@ def add_recipe():
              filter_box_length, set_pleat_count, set_pleat_pitch, set_batch_count, machine_speed_ref, 
              decoiler_set_point, low_dia_set, cutter_park_pos, cutter_fwd_pos)
         )
+        cursor.execute(
+              '''INSERT INTO Inspection_Settings 
+               (Recipe_ID, databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, Pressure_Drop_Setpoint, 
+                 Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (recipe_id, databaseAvailable, Width, Height, Depth, Art_Num, Air_Flow_Set, Pressure_Drop_Setpoint, 
+                  Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2)
+        )
 
         # Commit changes
         conn.commit()
+        print("Recipe added successfully!")
         flash("Recipe added successfully!", "success")
 
     except pyodbc.Error as e:
@@ -3196,7 +3242,11 @@ def get_recipe():
         cursor.execute("SELECT * FROM Sub_Menu WHERE recipe_id = ?", (recipe_main_dict["Recipe_ID"],))
         recipe_motor = cursor.fetchone()
         recipe_motor_dict = {column[0]: value for column, value in zip(cursor.description, recipe_motor)} if recipe_motor else {}
-        print
+        
+        # Fetch data from Inspection_Settings
+        cursor.execute("SELECT * FROM Inspection_Settings WHERE Recipe_ID = ?", (recipe_main_dict["Recipe_ID"],))
+        inspection_data = cursor.fetchone()
+        inspection_data_dict = {column[0]: value for column, value in zip(cursor.description, inspection_data)} if inspection_data else {}
 
         # Build the response data
 
@@ -3234,7 +3284,18 @@ def get_recipe():
     "Decoiler_Set_point": recipe_motor_dict.get("Decoiler_Set_point", ""),
     "Low_Dia_Set": recipe_motor_dict.get("Low_Dia_Set", ""),
     "Cutter_Park_pos": recipe_motor_dict.get("Cutter_Park_pos", ""),
-    "Cutter_Fwd_Pos": recipe_motor_dict.get("Cutter_Fwd_Pos", "")
+    "Cutter_Fwd_Pos": recipe_motor_dict.get("Cutter_Fwd_Pos", ""),
+    "databaseAvailable": inspection_data_dict.get("databaseAvailable", ""),
+    "Width": inspection_data_dict.get("Width", ""),
+    "Height": inspection_data_dict.get("Height", ""),
+    "Depth": inspection_data_dict.get("Depth", ""),
+    "Art_Num": inspection_data_dict.get("Art_No", ""),
+    "Air_Flow_Set": inspection_data_dict.get("Air_Flow_Set", ""),
+    "Pressure_Drop_Setpoint": inspection_data_dict.get("Pressure_Drop_Setpoint", ""),
+    "Lower_Tolerance1": inspection_data_dict.get("Lower_Tolerance1", ""),
+    "Lower_Tolerance2": inspection_data_dict.get("Lower_Tolerance2", ""),
+    "Upper_Tolerance1": inspection_data_dict.get("Upper_Tolerance1", ""),
+    "Upper_Tolerance2": inspection_data_dict.get("Upper_Tolerance2", ""),
 };
 
         # Overwrite Alu_roller_type and Spacer from `recipe_pos` table

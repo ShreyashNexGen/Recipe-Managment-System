@@ -146,6 +146,41 @@
             <label for="Cutter_Fwd_Pos">Cutter Forward Position:</label>
             <input type="text" id="Cutter_Fwd_Pos" name="Cutter_Fwd_Pos">
 
+            <label for="databaseAvailable">Database Available:</label>
+            <input type="text" id="databaseAvailable" name="databaseAvailable">
+
+            <label for="Width">Width:</label>
+            <input type="text" id="Width" name="Width">
+
+            <label for="Height">Height:</label>
+            <input type="text" id="Height" name="Height">
+
+            <label for="Depth">Depth:</label>
+            <input type="text" id="Depth" name="Depth">
+
+            <label for="Art_Num">Art Number.:</label>
+            <input type="text" id="Art_Num" name="Art_Num">
+
+            <label for="Air_Flow_Set">Air Flow Set:</label>
+            <input type="text" id="Air_Flow_Set" name="Air_Flow_Set">
+
+            <label for="Pressure_Drop_Setpoint">Pressure_Drop_Setpoint:</label>
+            <input type="text" id="Pressure_Drop_Setpoint" name="Pressure_Drop_Setpoint">
+
+            <label for="Lower_Tolerance1">Lower_Tolerance1:</label>
+            <input type="text" id="Lower_Tolerance1" name="Lower_Tolerance1">
+
+            <label for="Lower_Tolerance2">Lower_Tolerance2:</label>
+            <input type="text" id="Lower_Tolerance2" name="Lower_Tolerance2">
+
+            <label for="Upper_Tolerance1">Upper_Tolerance1:</label>
+            <input type="text" id="Upper_Tolerance1" name="Upper_Tolerance1">
+
+            <label for="Upper_Tolerance2">Upper_Tolerance2:</label>
+            <input type="text" id="Upper_Tolerance2" name="Upper_Tolerance2">
+
+
+
             <button type="button" class="submit-button" onclick="loadLastPLCValues()">Upload Settings</button>
             <button type="submit" class="submit-button">Submit Recipe</button>
         </form>
@@ -359,17 +394,17 @@
 
 <div class="pagination-container">
     {% if page > 1 %}
-      <a href="{{ url_for('index', page=page - 1) }}" class="pagination-btn">Previous</a>
+      <a href="{{ url_for('recipe_list', page=page - 1) }}" class="pagination-btn">Previous</a>
     {% else %}
       <span class="pagination-btn disabled">Previous</span>
     {% endif %}
     
     {% for p in range(1, total_pages + 1) %}
-      <a href="{{ url_for('index', page=p) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+      <a href="{{ url_for('recipe_list', page=p) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
     {% endfor %}
     
     {% if page < total_pages %}
-      <a href="{{ url_for('index', page=page + 1) }}" class="pagination-btn">Next</a>
+      <a href="{{ url_for('recipe_list', page=page + 1) }}" class="pagination-btn">Next</a>
     {% else %}
       <span class="pagination-btn disabled">Next</span>
     {% endif %}
@@ -408,27 +443,39 @@ function loadRecipe() {
                 document.getElementById("Motor_stroke").value = data.Motor_stroke;
                 document.getElementById("Motor_force").value = data.Motor_force;
                 document.getElementById("Corr1Feed_length").value = data.Corr1Feed_length;
-document.getElementById("Corr2feed_length").value = data.Corr2feed_length;
-document.getElementById("Pleat_Height").value = data.Pleat_Height;
-document.getElementById("Blade_opening").value = data.Blade_opening;
-document.getElementById("Left_Blade_MediaTHickness").value = data.Left_Blade_MediaTHickness;
-document.getElementById("Right_Blade_MediaThickness").value = data.Right_Blade_MediaThickness;
-document.getElementById("Soft_Touch").value = data.Soft_Touch;
-document.getElementById("Press_Touch").value = data.Press_Touch;
-document.getElementById("Puller_Start_pos").value = data.Puller_Start_pos;
-document.getElementById("Puller_End_pos").value = data.Puller_End_pos;
-document.getElementById("Puller2_Feed_Correction").value = data.Puller2_Feed_Correction;
-document.getElementById("Filter_Box_Height").value = data.Filter_Box_Height;
-document.getElementById("Filter_Box_Width").value = data.Filter_Box_Width;
-document.getElementById("Filter_Box_Length").value = data.Filter_Box_Length;
-document.getElementById("Set_Pleat_Count").value = data.Set_Pleat_Count;
-document.getElementById("Set_Pleat_Pitch").value = data.Set_Pleat_Pitch;
-document.getElementById("Set_Batch_Count").value = data.Set_Batch_Count;
-document.getElementById("Machine_Speed_Ref").value = data.Machine_Speed_Ref;
-document.getElementById("Decoiler_Set_point").value = data.Decoiler_Set_point;
-document.getElementById("Low_Dia_Set").value = data.Low_Dia_Set;
-document.getElementById("Cutter_Park_pos").value = data.Cutter_Park_pos;
-document.getElementById("Cutter_Fwd_Pos").value = data.Cutter_Fwd_Pos;
+                document.getElementById("Corr2feed_length").value = data.Corr2feed_length;
+                document.getElementById("Pleat_Height").value = data.Pleat_Height;
+                document.getElementById("Blade_opening").value = data.Blade_opening;
+                document.getElementById("Left_Blade_MediaTHickness").value = data.Left_Blade_MediaTHickness;
+                document.getElementById("Right_Blade_MediaThickness").value = data.Right_Blade_MediaThickness;
+                document.getElementById("Soft_Touch").value = data.Soft_Touch;
+                document.getElementById("Press_Touch").value = data.Press_Touch;
+                document.getElementById("Puller_Start_pos").value = data.Puller_Start_pos;
+                document.getElementById("Puller_End_pos").value = data.Puller_End_pos;
+                document.getElementById("Puller2_Feed_Correction").value = data.Puller2_Feed_Correction;
+                document.getElementById("Filter_Box_Height").value = data.Filter_Box_Height;
+                document.getElementById("Filter_Box_Width").value = data.Filter_Box_Width;
+                document.getElementById("Filter_Box_Length").value = data.Filter_Box_Length;
+                document.getElementById("Set_Pleat_Count").value = data.Set_Pleat_Count;
+                document.getElementById("Set_Pleat_Pitch").value = data.Set_Pleat_Pitch;
+                document.getElementById("Set_Batch_Count").value = data.Set_Batch_Count;
+                document.getElementById("Machine_Speed_Ref").value = data.Machine_Speed_Ref;
+                document.getElementById("Decoiler_Set_point").value = data.Decoiler_Set_point;
+                document.getElementById("Low_Dia_Set").value = data.Low_Dia_Set;
+                document.getElementById("Cutter_Park_pos").value = data.Cutter_Park_pos;
+                document.getElementById("Cutter_Fwd_Pos").value = data.Cutter_Fwd_Pos;
+                document.getElementById("databaseAvailable").value = data.databaseAvailable;
+                document.getElementById("Width").value = data.Width;
+                document.getElementById("Height").value = data.Height;
+                document.getElementById("Depth").value = data.Depth;
+                document.getElementById("Art_Num").value = data.Art_Num;
+                document.getElementById("Air_Flow_Set").value = data.Air_Flow_Set;
+                document.getElementById("Pressure_Drop_Setpoint").value = data.Pressure_Drop_Setpoint;
+                document.getElementById("Lower_Tolerance1").value = data.Lower_Tolerance1;
+                document.getElementById("Lower_Tolerance2").value = data.Lower_Tolerance2;
+                document.getElementById("Upper_Tolerance1").value = data.Upper_Tolerance1;
+                document.getElementById("Upper_Tolerance2").value = data.Upper_Tolerance2;
+
                  // Loop through pos fields (pos1, pos2, ..., pos10)
     // Loop through pos fields (Pos1, Pos2, ..., Pos9)
    
