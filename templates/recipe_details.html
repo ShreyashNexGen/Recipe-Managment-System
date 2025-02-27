@@ -136,28 +136,50 @@
                 <th>Air Flow Set</th>
             </tr>
             <tr>
-                <td>{{ sub_menu['motor_speed'] }}</td>
-                <td>{{ sub_menu['motor_stroke'] }}</td>
-                <td>{{ sub_menu['other_speed_force'] }}</td>
-                <td>{{ sub_menu['alu_coil_width'] }}</td>
-                <td>{{ sub_menu['Corr1Feed_length'] }}</td>
-                <td>{{ sub_menu['Corr2feed_length'] }}</td>
+
+                <td>{{ inspection_menu['databaseAvailable'] }}</td>
+
+                <td>{{ inspection_menu['Width'] }}</td>
+
+                <td>{{ inspection_menu['Height'] }}</td>
+
+                <td>{{ inspection_menu['Depth'] }}</td>
+
+                <td>{{ inspection_menu['Art_No'] }}</td>
+
+                <td>{{ inspection_menu['Air_Flow_Set'] }}</td>
+
                 
+
             </tr>
+
             <tr>
+
                 <th>Pressure Drop Setpoint</th>
+
                 <th>Lower Tolerance 1</th>
+
                 <th>Lower Tolerance 2</th>
+
                 <th>Upper Tolerance 1</th>
+
                 <th>Upper Tolerance 2</th>
+
             </tr>
+
             <tr>
-                <td>{{ sub_menu['Pleat_Height'] }}</td>
-                <td>{{ sub_menu['Blade_opening'] }}</td>
-                <td>{{ sub_menu['Left_Blade_MediaTHickness'] }}</td>
-                <td>{{ sub_menu['Right_Blade_MediaThickness'] }}</td>
-                <td>{{ sub_menu['Soft_Touch'] }}</td>
-            </tr>            
+
+                <td>{{ inspection_menu['Pressure_Drop_Setpoint'] }}</td>
+
+                <td>{{inspection_menu['Lower_Tolerance1'] }}</td>
+
+                <td>{{ inspection_menu['Lower_Tolerance2'] }}</td>
+
+                <td>{{ inspection_menu['Upper_Tolerance1'] }}</td>
+
+                <td>{{ inspection_menu['Upper_Tolerance2'] }}</td>
+
+            </tr>           
         </tbody>
     </table>
 </div>
@@ -186,11 +208,11 @@
     <div class="popup-content">
         <div class="popup-header">
             <h3>Recipe ID: <span id="recipe-Id">{{sub_menu.Recipe_ID}}</span></h3>
+            <h2>Production Details</h2>
             <button type="button" class="close-button" onclick="toggleRecipePopup()">X</button>
         </div>
 
-        <div class="popup-body" style="max-height: 600px; overflow-y: auto;">
-            <h2>Production Details</h2>
+        <div class="popup-body" style="max-height: 650px;">
             <table class="details-table1">
                 <tr>
                     <td>Quantity:</td>
@@ -203,11 +225,10 @@
                     <td><input type="text" id="speed-force" value="{{ sub_menu.other_speed_force }}" readonly></td>
                     <td>Alu Coil Width:</td>
                     <td><input type="text" id="coil-width" value="{{ sub_menu.alu_coil_width }}" readonly></td>
-                    
-                </tr>
-                <tr>
                     <td>Corr1 Feed Length:</td>
                     <td><input type="text" id="corr1-feed-length" value="{{ sub_menu.Corr1Feed_length }}" readonly></td>
+                </tr>
+                <tr>    
                     <td>Corr2 Feed Length:</td>
                     <td><input type="text" id="corr2-feed-length" value="{{ sub_menu.Corr2feed_length }}" readonly></td>
                     <td>Pleat Height:</td>
@@ -216,32 +237,30 @@
                     <td><input type="text" id="blade-opening" value="{{ sub_menu.Blade_opening }}" readonly></td>
                     <td>Left Blade Media Thickness:</td>
                     <td><input type="text" id="left-blade-media-thickness" value="{{ sub_menu.Left_Blade_MediaTHickness }}" readonly></td>
-                </tr>
-                <tr>    
                     <td>Right Blade Media Thickness:</td>
                     <td><input type="text" id="right-blade-media-thickness" value="{{ sub_menu.Right_Blade_MediaThickness }}" readonly></td>
                     <td>Soft Touch:</td>
                     <td><input type="text" id="soft-touch" value="{{ sub_menu.Soft_Touch }}" readonly></td>
+                </tr>
+                <tr>    
                     <td>Press Touch:</td>
                     <td><input type="text" id="press-touch" value="{{ sub_menu.Press_Touch }}" readonly></td>
                     <td>Puller Start Position:</td>
                     <td><input type="text" id="puller-start-pos" value="{{ sub_menu.Puller_Start_pos }}" readonly></td>
                     <td>Puller End Position:</td>
                     <td><input type="text" id="puller-end-pos" value="{{ sub_menu.Puller_End_pos }}" readonly></td>
-                </tr>
-                <tr>    
                     <td>Puller2 Feed Correction:</td>
                     <td><input type="text" id="puller2-feed-correction" value="{{ sub_menu.Puller2_Feed_Correction }}" readonly></td>
                     <td>Filter Box Height:</td>
                     <td><input type="text" id="filter-box-height" value="{{ sub_menu.Filter_Box_Height }}" readonly></td>
                     <td>Filter Box Width:</td>
                     <td><input type="text" id="filter-box-width" value="{{ sub_menu.Filter_Box_Width }}" readonly></td>
+                </tr>
+                <tr>    
                     <td>Filter Box Length:</td>
                     <td><input type="text" id="filter-box-length" value="{{ sub_menu.Filter_Box_Length }}" readonly></td>
                     <td>Set Pleat Count:</td>
                     <td><input type="text" id="set-pleat-count" value="{{ sub_menu.Set_Pleat_Count }}" readonly></td>
-                </tr>
-                <tr>
                     <td>Set Pleat Pitch:</td>
                     <td><input type="text" id="set-pleat-pitch" value="{{ sub_menu.Set_Pleat_Pitch }}" readonly></td>
                     <td>Set Batch Count:</td>
@@ -250,10 +269,10 @@
                     <td><input type="text" id="machine-speed-ref" value="{{ sub_menu.Machine_Speed_Ref }}" readonly></td>
                     <td>Decoiler Set Point:</td>
                     <td><input type="text" id="decoiler-set-point" value="{{ sub_menu.Decoiler_Set_point }}" readonly></td>
-                    <td>Low Dia Set:</td>
-                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
                 </tr>
                 <tr>    
+                    <td>Low Dia Set:</td>
+                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
                     <td>Cutter Park Position:</td>
                     <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
                     <td>Cutter Forward Position:</td>
@@ -276,18 +295,16 @@
                     <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
                     <td>Lower Tolerance1:</td>
                     <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
-                </tr>
-                <tr>    
                     <td>Lower Tolerance2:</td>
                     <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
+                </tr>
+                <tr>    
                     <td>Upper Tolerance1:</td>
                     <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
                     <td>Upper Tolerance2:</td>
                     <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
                 </tr>
             </table>
-            
-            
             <div class="popup-footer">
                 <button id="final_submit" type="button"  class="start-button" onclick="startRecipe('{{ sub_menu.Recipe_ID }}')" >Start</button>
             </div>
@@ -678,9 +695,9 @@ function startRecipe(recipeId) {
     }
     
     .popup-content {
-        background-color: #e7e1e9;
+        background-color: #aed6ed;
         border-radius: 10px;
-        width: 1000px;
+        width: 1111px;
         padding: 10px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         position: relative;
@@ -688,9 +705,9 @@ function startRecipe(recipeId) {
     
     .popup-header {
         display: flex;
+        flex-direction: column;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 15px;
     }
     
     .popup-header h3 {
@@ -704,7 +721,7 @@ function startRecipe(recipeId) {
         font-weight: bold;
         padding: 10px 20px;
         border: none;
-        margin-top: 1%;
+        margin-top: 0.4%;
         border-radius: 8px;
         cursor: pointer;
         transition: background-color 0.3s ease, transform 0.2s ease;

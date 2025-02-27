@@ -1,29 +1,57 @@
 {% extends "base.html" %}
 {% block title %}Recipe Report{% endblock %}
 {% block content %}
-<h1>Report</h1>
+<h1 style="margin-left: 450px;">Report</h1>
 <div class="report-filters">
-    <form method="POST">
-        <div class="date-filter">
-            <label for="report-start-date">From:</label>
-            <input type="text" id="report-start-date" name="start_date" placeholder="Select start date">
-        </div>
-        <div class="date-filter">
-            <label for="report-end-date">To:</label>
-            <input type="text" id="report-end-date" name="end_date" placeholder="Select end date">
-        </div>
-        <button type="submit">Filter</button>
-    </form>
+    <div class="filter-container">
+        <form method="POST" action="/report" id="filter-form">
+            <div class="date-filter">
+                <label for="report-start-date">From:</label>
+                <input type="text" id="report-start-date" name="start_date" placeholder="Select start date"
+                    value="{{ start_date if start_date else '' }}">
+            </div>
+            <div class="date-filter">
+                <label for="report-end-date">To:</label>
+                <input type="text" id="report-end-date" name="end_date" placeholder="Select end date"
+                    value="{{ end_date if end_date else '' }}">
+            </div>
+            <button type="submit" class="filter-btn">Filter</button>
+            <button type="button" class="refresh-btn" id="reset-filters">Refresh</button>
+        </form>
+        
+            <!-- PDF Download Button -->
+        <form method="POST" action="/download" id="download-form">
+            <input type="hidden" name="filtered_data" id="filtered-data">
+            <button type="submit" name="format" value="pdf" class="download-btn">Download as PDF</button>
+        </form>  
+    </div>  
 </div>
 
-<div class="report-download-buttons">
-    <form method="POST" action="/download">
-        <!-- <button type="submit" name="format" value="excel">Download as Excel</button> -->
-        <button type="submit" name="format" value="pdf">Download as PDF</button>
-    </form>
-</div>
 
-<table class="table table-bordered table-striped">
+<!-- Action Button -->
+<div class="table-options-container">
+    <button id="toggle-options" class="btn btn-toggle"><i class="fa-sharp fa-solid fa-plus"></i></button>
+    <div id="options-menu" class="options-menu">
+        <input type="text" id="search-input" class="form-control" placeholder="Search...">
+        <select id="category-filter" class="form-control" >
+            <option value="all" selected>All Columns</option>
+            <option value="0">Batch Code</option>
+            <option value="1">Timestamp</option>
+            <option value="2">Recipe Name</option>
+            <option value="3">Article No</option>
+            <option value="4">Filter Size</option>
+            <option value="5">FilterSize</option>
+            <option value="6">Ng Status</option>
+            <option value="7">Serial No</option>
+            <option value="8">Parameter 1</option>
+            <option value="9">Parameter 2</option>
+            <option value="10">Batch Completion Status</option>
+        </select>
+        <button id="apply-filter" class="btn btn-filter">Filter</button>
+        <button id="refresh-table" class="btn btn-refresh">Refresh</button>
+    </div>
+</div>
+<table class="table table-bordered table-striped" id="report-table">
     <thead class="thead-dark">
         <tr>
             <th>Batch Code</th>
@@ -58,25 +86,287 @@
     </tbody>
     
 </table>
+<!-- Showing Entries Info -->
+<div class="entries-info">
+    Showing {{ (page - 1) * 5 + 1 }} to {{ ((page * 5) if (page * 5) < total_count else total_count) }} of {{ total_count }} entries
+
+</div>
+<!-- Pagination Controls -->
+<div class="pagination-container">
+    {% if page > 1 %}
+        <a href="{{ url_for('report', page=page-1) }}" class="pagination-btn">Previous</a>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('report', page=p) }}" class="pagination-btn {% if p == page %} active {% endif %}">{{ p }}</a>
+    {% endfor %}
+
+    {% if page < total_pages %}
+        <a href="{{ url_for('report', page=page+1) }}" class="pagination-btn">Next</a>
+    {% endif %}
+</div>
+
+<style>
+    .entries-info {
+        text-align: center;
+        
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 5px;
+    }
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination-btn {
+        /*margin: 0 5px;*/
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .pagination-btn.active {
+        background-color: #0056b3;
+        font-weight: bold;
+    }
+
+    .pagination-btn:hover {
+        background-color: #0056b3;
+    }
+</style>
 
 <!-- Flatpickr JS for date picker -->
 
 <script>
-    // Initialize Flatpickr for date inputs
+    document.querySelector("form").addEventListener("submit", function(event) {
+        let startDate = document.getElementById("report-start-date").value;
+        let endDate = document.getElementById("report-end-date").value;
+
+        console.log("📌 Debugging Form Submission:");
+        console.log("Start Date:", startDate);
+        console.log("End Date:", endDate);
+
+        if (!startDate || !endDate) {
+            alert("❌ Please select both start and end dates.");
+            event.preventDefault(); // Stop form submission if empty
+        }
+    });
+    document.getElementById("reset-filters").addEventListener("click", function () {
+        document.getElementById("report-start-date").value = "";
+        document.getElementById("report-end-date").value = "";
+        document.getElementById("filter-form").submit(); // Refresh table by submitting empty form
+    });
+
+    // Initialize Flatpickr for date selection
     flatpickr("#report-start-date", {
         dateFormat: "Y-m-d",
-        allowInput: true, // Allow direct input
+        allowInput: true
     });
     flatpickr("#report-end-date", {
         dateFormat: "Y-m-d",
-        allowInput: true, // Allow direct input
+        allowInput: true
     });
+    document.getElementById("toggle-options").addEventListener("click", function() {
+        var menu = document.getElementById("options-menu");
+        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    });
+    
+    document.getElementById("search-input").addEventListener("keyup", function () {
+        var searchText = this.value.toLowerCase();
+        var selectedCategory = document.getElementById("category-filter").value;
+        var rows = document.querySelectorAll("table tbody tr");
+
+        rows.forEach(function (row) {
+            var cells = row.getElementsByTagName("td");
+            var found = false;
+
+            if (selectedCategory === "all") {
+                for (var i = 0; i < cells.length; i++) {
+                    if (cells[i].textContent.toLowerCase().includes(searchText)) {
+                        found = true;
+                        break;
+                    }
+                }
+            } else {
+                var colIndex = parseInt(selectedCategory);
+                if (cells[colIndex] && cells[colIndex].textContent.toLowerCase().includes(searchText)) {
+                    found = true;
+                }
+            }
+
+            row.style.display = found ? "" : "none";
+        });
+    });
+    
+    
+
+    document.getElementById("apply-filter").addEventListener("click", function() {
+        var selectedCategory = document.getElementById("category-filter").value.toLowerCase();
+        var rows = document.querySelectorAll("table tbody tr");
+        rows.forEach(function(row) {
+            var category = row.cells[2].textContent.toLowerCase();
+            row.style.display = selectedCategory === "" || category === selectedCategory ? "" : "none";
+        });
+    });
+
+    document.getElementById("refresh-table").addEventListener("click", function() {
+        document.getElementById("search-input").value = "";
+        document.getElementById("category-filter").value = "all";
+        var rows = document.querySelectorAll("table tbody tr");
+        rows.forEach(function(row) {
+            row.style.display = "";
+        });
+    });
+    document.getElementById("download-form").addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevent default form submission
+    
+        var rows = document.querySelectorAll("table tbody tr");
+        var filteredData = [];
+    
+        rows.forEach(function (row) {
+            if (row.style.display !== "none") { // Only include visible rows
+                var rowData = [];
+                row.querySelectorAll("td").forEach(function (cell) {
+                    rowData.push(cell.textContent.trim());
+                });
+                filteredData.push(rowData);
+            }
+        });
+    
+        document.getElementById("filtered-data").value = JSON.stringify(filteredData); // Store in hidden input
+        this.submit(); // Submit form
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        const rowsPerPage = 10; // Number of rows per page
+        const table = document.getElementById("reportTable");
+        const rows = Array.from(table.querySelectorAll("tbody tr"));
+        let currentPage = 1;
+        let totalPages = Math.ceil(rows.length / rowsPerPage);
+
+        document.getElementById("totalPages").innerText = totalPages;
+
+        function showPage(page) {
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = index >= start && index < end ? "" : "none";
+            });
+
+            document.getElementById("currentPage").innerText = page;
+            document.getElementById("prevPage").disabled = page === 1;
+            document.getElementById("nextPage").disabled = page === totalPages;
+        }
+
+        document.getElementById("prevPage").addEventListener("click", function () {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        });
+
+        document.getElementById("nextPage").addEventListener("click", function () {
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage);
+            }
+        });
+
+        showPage(currentPage);
+    });
+   
 </script>
 <style>
     body {
         font-family: Arial, sans-serif;
         margin: 20px;
     }
+    .report-filters {
+        display: flex;
+    align-items: center;
+    gap: 15px; /* Adds space between elements */
+    justify-content: center; /* Centers content */
+    background: #f8f9fa;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    }
+    
+    .filter-container {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+         /* Ensures responsiveness */
+    }
+    
+    .date-filter {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .date-filter label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .date-filter input {
+        width: 180px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    
+    .filter-btn,
+    .download-btn {
+        padding: 10px 15px;
+        font-weight: bold;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .report-filters form {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* Adds spacing between elements */
+        justify-content: center;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 8px;
+        flex-wrap: wrap; /* Ensures responsiveness */
+    }
+    .filter-btn {
+        padding: 10px 15px;
+        font-weight: bold;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    .filter-btn:hover {
+        background-color: #0056b3;
+    }
+    
+    .download-btn {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .download-btn:hover {
+        background-color: #218838;
+    }
+    
+    
     .report-filters .date-filter {
         margin-bottom: 10px; /* Space between date filters */
     }
@@ -97,9 +387,7 @@
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        width: 30%;
-        height: 50%;
-        margin-top: 20px;
+        margin-top: 10px;
     }
     .report-filters button:hover {
         background-color: #0056b3;
@@ -150,6 +438,72 @@
         text-align: center; /* Centers text horizontally */
         vertical-align: middle; /* Centers text vertically */
         border: 1px solid black; /* Adds border for clarity */
+    }
+    .table-options-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .btn-toggle {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 5px 7px;
+        font-size: 18px;
+        border-radius: 20%;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-right: 10px;
+    }
+
+    .btn-toggle:hover {
+        background: #5093da;
+    }
+
+    .options-menu {
+        display: none;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        background: #aed6ed;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        z-index: 10;
+    }
+
+    .options-menu .form-control {
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    .btn-filter, .btn-refresh {
+        padding: 8px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn-filter {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-filter:hover {
+        background: #0056b3;
+    }
+
+    .btn-refresh {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-refresh:hover {
+        background: #c82333;
     }
 </style>
 {% endblock %}

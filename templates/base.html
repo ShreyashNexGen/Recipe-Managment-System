@@ -19,19 +19,34 @@
         </h2>
         <ul class="nav flex-column">
             {% if session.get('username') %}
+            
+            {% if 'dashboard' in session.get('user_roles', []) %}
             <li><a href="/dashboard" class="nav-link"><i class="fa-sharp fa-solid fa-chart-line"></i>Dashboard</a></li>
+            {% endif %}
+            
+            {% if 'raw_material' in session.get('user_roles', []) %}
             <li><a href="/raw-material" class="nav-link"><i class="fa-solid fa-box-open"></i>Raw Material</a></li>
+            {% endif %}
+            
+            {% if 'recipe' in session.get('user_roles', []) %}
             <li><a href="/recipe" class="nav-link"><i class="fa-solid fa-clipboard-list"></i>Recipe</a></li>
+            {% endif %}
+            
+            {% if 'report' in session.get('user_roles', []) %}
             <li><a href="/report" class="nav-link"><i class="fa-solid fa-clipboard-list"></i>Report</a></li>
+            {% endif %}
+        
+            {% if 'tag' in session.get('user_roles', []) %}
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-tags"></i>Tags</a>
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="/tag-overview">&bull;Tag Overview</a></li>
-                   
                     <li><a class="dropdown-item" href="/live-tag">&bull;Live Tag</a></li>
                 </ul>
             </li>
-            {% if session['username'] == 'Admin' %}
+            {% endif %}
+        
+            {% if session.get('username') == 'Admin' %}
             <li class="dropdown">
                 <a href="/" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-user-tie"></i>Admin</a>
                 <ul class="dropdown-menu">
@@ -40,13 +55,17 @@
                     <li><a class="dropdown-item" href="/role">&bull; Assign Role</a></li>
                     <li><a class="dropdown-item" href="/event_log">&bull; Event Log</a></li>
                 </ul>
-            </li>{% endif %}
+            </li>
+            {% endif %}
+        
             <a href="/logout" class="logout">Logout</a>
-        {% else %}
+        
+            {% else %}
             <li><a href="/login" class="nav-link"><i class="fa-solid fa-sign-in-alt"></i>Login</a></li>
             <li><a href="/register" class="nav-link"><i class="fa-solid fa-user-plus"></i>Register</a></li>
-        {% endif %}
-    </ul>
+            {% endif %}
+        </ul>
+        
     </div>
     <!-- Admin Password Popup -->
     <div id="admin-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">

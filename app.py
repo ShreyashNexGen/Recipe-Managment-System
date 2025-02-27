@@ -38,7 +38,7 @@ CORS(app)  # Enable CORS for frontend communication
 # Connection details
 # server = 'DESKTOP-9G39B01\WINCC'
 # database = 'A2Z_DB'
-server = 'SHREYASHNEXGEN\WINCCFLEX2014'
+server = 'DESKTOP-2NDPVUP'
 database = 'Shreyash'
 conn = pyodbc.connect(
     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
@@ -129,6 +129,7 @@ def init_db():
     Batch_No INT IDENTITY(1,1) PRIMARY KEY,
     Batch_Code NVARCHAR(255) NOT NULL,
     Timestamp DATETIME2 NOT NULL DEFAULT GETDATE(),
+    Recipe_Id INT,
     Recipe_Name NVARCHAR(255) NOT NULL,
     Article_No NVARCHAR(255),
     Filter_Size NVARCHAR(255),
@@ -636,15 +637,15 @@ def get_recipe_log():
         {
              "Batch_Code": row[1],
             "Timestamp": row[2],
-            "Recipe_Name": row[3],
-            "Article_No": row[4],
-            "Filter_Size": row[5],
-            "FilterSize": row[6],
-            "NgStatus": row[7],
-            "SerialNo": row[8],
-            "Parameter1": row[9],
-            "Parameter2": row[10],
-            "Batch_Completion_Status": row[11]
+            "Recipe_Name": row[4],
+            "Article_No": row[5],
+            "Filter_Size": row[6],
+            "FilterSize": row[7],
+            "NgStatus": row[8],
+            "SerialNo": row[9],
+            "Parameter1": row[10],
+            "Parameter2": row[11],
+            "Batch_Completion_Status": row[12]
         }
         for row in rows
     ]
@@ -811,9 +812,9 @@ def update_batch_status():
 
                             # Insert data into `recipe_log`
                             cursor.execute("""
-                            INSERT INTO Recipe_Log(Batch_Code, Timestamp, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
-                               (batch_code,timestamp, recipe_name, article_number, filter_size, filter_code,"NA",serial_no, "NA", "NA", "Completed"))
+                            INSERT INTO Recipe_Log(Batch_Code, Timestamp, Recipe_Id, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
+                               VALUES (?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?)""", 
+                               (batch_code,timestamp, recipe_id, recipe_name, article_number, filter_size, filter_code,"NA",serial_no, "NA", "NA", "Completed"))
 
                             conn.commit()
                             printdata(recipe_name, article_number, serial_no)
@@ -843,46 +844,208 @@ def update_batch_status():
 
 
 Test_Complete='ns=3;s="dbReport"."airDropTestData".'
+Test_Complete1='ns=3;s="dbReport"."forAirDropTest".'
+
 def opcua_monitoring():
-    """Continuously reads OPC UA values and updates MSSQL."""
+
+    """Continuously reads OPC UA values, updates MSSQL, and writes required values to OPC UA."""
+
     client = Client(ENDPOINT_URL)
+
     
+
     try:
+
         client.connect()
+
         print("Connected to OPC UA Server")
 
-        while True:  # Continuous loop
+
+
+        while True:  # Continuous monitoring loop
+
             try:
+
                 testComplete = client.get_node(f'{Test_Complete}"testComplete"').get_value()
+
                 
-                if testComplete == True:
+
+                if testComplete:
+
+                    # Step 1: Read Serial Number
+
                     serial_no = client.get_node(f'{Test_Complete}"qrCodeDropAir"').get_value()
+
                     avgAirFlow = client.get_node(f'{Test_Complete}"avgAirFlow"').get_value()
+
                     avgResult = client.get_node(f'{Test_Complete}"avgResult"').get_value()
+
                     testResult = client.get_node(f'{Test_Complete}"testResult"').get_value()
-                    if testResult==0:
-                        ng_status='no_Result'
-                    if testResult==1:
-                        ng_status='Ok'
+
+                    
+
+                    # Determine test status
+
+                    if testResult == 0:
+
+                        ng_status = 'no_Result'
+
+                    elif testResult == 1:
+
+                        ng_status = 'Ok'
+
                     else:
-                        ng_status='Not Ok'
+
+                        ng_status = 'Not Ok'
+
+
+
+                    # Step 2: Fetch Recipe_ID using serial_no from recipe_log
+
+                    recipe_id = None
+
+                    conn = get_db_connection()
+
+                    cursor = conn.cursor()
+
+                    
+
+                    cursor.execute("SELECT Recipe_ID FROM recipe_log WHERE SerialNo = ?", (serial_no,))
+
+                    row = cursor.fetchone()
+
+                    if row:
+
+                        recipe_id = row[0]
+
+
+
+                    if recipe_id:
+
+                        # Step 3: Fetch inspection settings for the Recipe_ID
+
+                        cursor.execute("""
+
+                            SELECT databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, 
+
+                                   Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, 
+
+                                   Upper_Tolerance1, Upper_Tolerance2
+
+                            FROM Inspection_Settings WHERE Recipe_ID = ?
+
+                        """, (recipe_id,))
+
+                        settings = cursor.fetchone()
+
+
+
+                        if settings:
+
+                            # Step 4: Write these values to OPC UA after ensuring correct data type forAirDropTest
+
+                            opcua_nodes = [
+
+                                "databaseAvailable", "Width", "Height", "Depth", "Art_No",
+
+                                "Air_Flow_Set", "Pressure_Drop_Setpoint", "Lower_Tolerance1",
+
+                                "Lower_Tolerance2", "Upper_Tolerance1", "Upper_Tolerance2"
+
+                            ]
+
+
+
+                            for i, submenu_value in enumerate(settings):
+
+                                node = client.get_node(f'{Test_Complete1}"{opcua_nodes[i]}"')                  
+
+                                # Get node data type
+
+                                data_type = node.get_data_type_as_variant_type()
+
+                                
+
+                                # Convert value based on data type
+
+                                if data_type == ua.VariantType.Float:
+
+                                    value = float(submenu_value)
+
+                                elif data_type == ua.VariantType.Int32:
+
+                                    value = int(submenu_value)
+
+                                elif data_type == ua.VariantType.Boolean:
+
+                                    value = bool(submenu_value)
+
+                                else:
+
+                                    print(f"Skipping {opcua_nodes[i]} due to unknown data type: {data_type}")
+
+                                    continue  # Skip unknown types
+
+
+
+                                # Write to OPC UA
+
+                                node.set_value(ua.DataValue(ua.Variant(value, data_type)))
+
+
+
+                            print("Inspection settings written to OPC UA successfully.")
+
+                        
+
+                        else:
+
+                            print("No Inspection Settings found for Recipe_ID:", recipe_id)
+
+
+
+                    # Step 5: Reset testComplete to False
 
                     test_complete_node = client.get_node(f'{Test_Complete}"testComplete"')
+
                     test_complete_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+
+
+
+                    # Step 6: Update Recipe Log
+
                     update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status)
-                   
+
+
+
+                    # Close database connection
+
+                    conn.close()
+
+                
 
                 time.sleep(1)  # Wait 1 second before next read
 
+
+
             except Exception as e:
-                print(f"Error reading OPC UA: {e}")
+
+                print(f"Error reading/writing OPC UA: {e}")
+
                 time.sleep(2)  # Wait before retrying
 
+
+
     except Exception as e:
+
         print(f"OPC UA Connection Error: {e}")
 
+
+
     finally:
+
         client.disconnect()
+
         print("Disconnected from OPC UA Server")
 from datetime import datetime
 
@@ -911,9 +1074,9 @@ def update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status):
             
             # Insert a new record with default values
             cursor.execute("""
-                INSERT INTO Recipe_Log (Batch_Code, Timestamp, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, ('NA', datetime.now(), 'NA', 'NA', 'NA', 'NA', ng_status, serial_no, avgAirFlow, avgResult, 'Completed'))
+                INSERT INTO Recipe_Log (Batch_Code, Timestamp,Recipe_Id, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
+                VALUES (?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?)
+            """, ('NA', datetime.now(),'NA', 'NA', 'NA', 'NA', 'NA', ng_status, serial_no, avgAirFlow, avgResult, 'Completed'))
             conn.commit()
             print(f"Inserted new record for Serial No: {serial_no}")
 
@@ -1063,12 +1226,12 @@ def role():
 
     if request.method == 'POST':
         selected_user = request.form.get('username')
-        roles = request.form.getlist('roles')
+        roles = request.form.getlist('roles')  # Get multiple roles as a list
 
-        if selected_user and roles:
-            roles_str = ','.join(roles)  # Convert roles list to string
+        if selected_user:
+            roles_str = ','.join(roles)  # Convert list to comma-separated string
 
-            # Update roles in the MSSQL database
+            # Update roles in the database
             cursor.execute("""
                 UPDATE users SET roles = ? WHERE username = ?
             """, (roles_str, selected_user))
@@ -1079,6 +1242,7 @@ def role():
     cursor.close()
     conn.close()
     return render_template('roles.html', users=users)
+
 @app.route('/get_roles', methods=['POST'])
 def get_roles():
     """Fetch user roles from MSSQL based on the provided username."""
@@ -1226,20 +1390,19 @@ def reset_password():
     return redirect(url_for('users'))
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """User login with password hashing and activity tracking."""
+    """User login with password hashing, role-based access, and activity tracking."""
     conn = get_db_connection()
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        
         if not conn:
             return redirect(url_for('login'))
 
         cursor = conn.cursor()
-        
-        # Fetch user details
-        cursor.execute("SELECT id, username, password, is_admin FROM users WHERE username = ?", (username,))
+
+        # Fetch user details along with roles
+        cursor.execute("SELECT id, username, password, is_admin, roles FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
 
         if user and check_password_hash(user[2], password):  # Verifying hashed password
@@ -1247,18 +1410,23 @@ def login():
             session['username'] = user[1]
             session['is_admin'] = user[3]
 
+            # Store roles in session as a list (split by comma)
+            session['user_roles'] = user[4].split(',') if user[4] else []
+
             # Insert login activity (MSSQL uses `GETDATE()` for current timestamp)
             cursor.execute("INSERT INTO user_activity (username, login_time) VALUES (?, GETDATE())", (username,))
             conn.commit()
 
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard'))
+
         else:
             flash('Invalid username or password.', 'danger')
 
         conn.close()
 
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -1872,8 +2040,13 @@ def recipe_details(recipe_id):
         print("sub_menu:",sub_menu)
 
         cursor3 = conn.cursor()
-        cursor3.execute("SELECT * FROM Insection_Settings WHERE Recipe_ID = ?", (recipe_id,))
+        cursor3.execute("SELECT * FROM Inspection_Settings WHERE Recipe_ID = ?", (recipe_id,))
         inspection_menu = cursor3.fetchall()
+        print("inspection_menu:", inspection_menu)
+
+        # cursor3 = conn.cursor()
+        # cursor3.execute("SELECT * FROM Insection_Settings WHERE Recipe_ID = ?", (recipe_id,))
+        # inspection_menu = cursor3.fetchall()
 
 
         if not recipe_details:
@@ -1891,7 +2064,7 @@ def recipe_details(recipe_id):
             'recipe_details.html',
             recipe_details=recipe_details,
             sub_menu=sub_menu[0],
-            inspection_menu=inspection_menu[0],
+            # inspection_menu=inspection_menu[0],
             pos_values=pos_values,  # Assuming last value should be removed
             barcode_value=barcode_value
         )
@@ -3330,22 +3503,79 @@ def report():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Query to fetch all data initially
-    query = "SELECT * FROM Recipe_Log"
-    if request.method == "POST":
-        start_date = request.form.get("start_date")
-        end_date = request.form.get("end_date")
-        
-        if start_date and end_date:
-            query = f"SELECT * FROM Recipe_Log WHERE Timestamp BETWEEN '{start_date}' AND '{end_date}'"
+    start_date = request.form.get("start_date")
+    end_date = request.form.get("end_date")
 
-    cursor.execute(query)
+    print(f"📌 Debug: Received Dates -> Start: {start_date}, End: {end_date}")  # Debugging
+
+    page = request.args.get("page", 1, type=int)
+    per_page = 5
+    offset = (page - 1) * per_page
+
+    query = "SELECT * FROM Recipe_Log"
+    params = []
+
+    if start_date and end_date:
+        query += " WHERE CONVERT(DATE, Timestamp) BETWEEN ? AND ?"
+        params.extend([start_date, end_date])
+
+    query += " ORDER BY Timestamp DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
+    params.extend([offset, per_page])
+
+    cursor.execute(query, params)
     columns = [column[0] for column in cursor.description]
     data = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    
+
+    count_query = "SELECT COUNT(*) FROM Recipe_Log"
+    cursor.execute(count_query)
+    total_count = cursor.fetchone()[0]
+    total_pages = (total_count + per_page - 1) // per_page
+
     conn.close()
 
-    return render_template("report.html", data=data)
+    return render_template(
+        "report.html",
+        data=data,
+        page=page,
+        total_pages=total_pages,
+        total_count=total_count,
+        start_date=start_date,
+        end_date=end_date
+    )
+
+
+
+
+@app.route("/search-report")
+def search_report():
+    query = request.args.get("query", "").lower()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Search in all relevant columns
+    sql_query = f"""
+        SELECT * FROM Recipe_Log 
+        WHERE 
+            LOWER(Batch_Code) LIKE ? OR
+            LOWER(Timestamp) LIKE ? OR
+            LOWER(Recipe_Name) LIKE ? OR
+            LOWER(Article_No) LIKE ? OR
+            LOWER(Filter_Size) LIKE ? OR
+            LOWER(FilterSize) LIKE ? OR
+            LOWER(NgStatus) LIKE ? OR
+            LOWER(SerialNo) LIKE ? OR
+            LOWER(Parameter1) LIKE ? OR
+            LOWER(Parameter2) LIKE ? OR
+            LOWER(Batch_Completion_Status) LIKE ?
+    """
+
+    cursor.execute(sql_query, tuple(f"%{query}%" for _ in range(11)))
+    columns = [column[0] for column in cursor.description]
+    data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    conn.close()
+    return jsonify(data)
+
 from flask import Flask, request, send_file
 import pandas as pd
 import io
@@ -3356,74 +3586,81 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 import pandas as pd
-
+import json 
 @app.route("/download", methods=["POST"])
 def download():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    import json
+    import io
+    import pandas as pd
+    from flask import send_file, request
+    from reportlab.lib.pagesizes import landscape, letter
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib import colors
+    from reportlab.lib.styles import ParagraphStyle
 
-    # Updated query to select specific columns
-    query = """SELECT   
-                [Batch_No],
-                [Timestamp],
-                [Recipe_Name],
-                [Article_No],
-                [Filter_Size],
-                [FilterSize],
-                [NgStatus],
-                [SerialNo]
-              FROM [Shreyash].[dbo].[Recipe_Log]"""
-              
-    cursor.execute(query)
-    columns = [column[0] for column in cursor.description]
-    data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    # Get the filtered data from the request
+    filtered_data = request.form.get("filtered_data")
+    print("Filtered Data Received:", filtered_data)  # Debugging output
 
-    conn.close()
+    if not filtered_data or filtered_data == "[]":
+        print("No data to generate PDF")  # Debugging output
+        return "No data to generate PDF", 400  # Prevent empty PDF errors
 
-    df = pd.DataFrame(data)
-    file_format = request.form.get("format")
+    try:
+        filtered_data = json.loads(filtered_data)  # Convert JSON string to list
+        print("Filtered Data Parsed:", filtered_data)  # Debugging output
 
-    if file_format == "pdf":
+        # Adjust headers to match all 11 columns
+        headers = [
+            "Batch_No", "Timestamp", "Recipe_Name", "Article_No", "Filter_Size", "FilterSize",
+            "NgStatus", "SerialNo", "Parameter1", "Parameter2", "BatchStatus"
+        ]
+
+        # Create DataFrame with all columns
+        df = pd.DataFrame(filtered_data, columns=headers)
+        print("DataFrame Created:\n", df)  # Debugging output
+
+        # Generate PDF
         output = io.BytesIO()
-        doc = SimpleDocTemplate(output, pagesize=landscape(letter))  # Landscape mode to fit more data
-
+        doc = SimpleDocTemplate(output, pagesize=landscape(letter))
         elements = []
-        heading = Paragraph("Filter Data Table", style=ParagraphStyle(name='Heading1', fontSize=18, alignment=1))
-        elements.append(heading)
 
-        # Add some space before the table
+        elements.append(Paragraph("Filtered Data Report", ParagraphStyle(name='Heading1', fontSize=18, alignment=1)))
         elements.append(Spacer(1, 12))
+        # Wrap text in table cells
+        def wrap_text(text, width):
+            return Paragraph(text, ParagraphStyle(name="Normal", wordWrap="CJK"))
 
-        # Convert DataFrame to a list with headers
+        # Convert DataFrame to a list with wrapped text
         headers = list(df.columns)
-        table_data = [headers] + df.values.tolist()
+        table_data = [headers] + [[wrap_text(str(cell), 100) for cell in row] for row in df.values.tolist()]
 
-        # Auto-adjust column widths (prevents cutting)
+# Adjust column widths dynamically
         num_cols = len(headers)
-        column_widths = [760 / num_cols] * num_cols  # Distributes width evenly
+        column_widths = [max(60, 700 / num_cols)] * num_cols  # Adjust to prevent cropping
 
-        # Create table
+# Apply wrapping & better styling
         table = Table(table_data, colWidths=column_widths)
-
-        # Apply styles
         style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),  # Blue header background
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Header text color
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center align all text
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold font for headers
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),  # Padding for headers
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # White background for all rows
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),  # Grid for table
+            ('WORDWRAP', (0, 0), (-1, -1), True),  # Enable text wrapping
+            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ])
         table.setStyle(style)
-
         elements.append(table)
         doc.build(elements)
 
         output.seek(0)
-        return send_file(output, download_name="report.pdf", as_attachment=True, mimetype="application/pdf")
+        return send_file(output, download_name="filtered_report.pdf", as_attachment=True, mimetype="application/pdf")
 
-    return "Invalid format", 400
+    except Exception as e:
+        print("Error Occurred:", str(e))  # Debugging output
+        return f"Internal Server Error: {str(e)}", 500  # Send error message
 
 
 @app.route('/get_last_plc_values', methods=['GET'])

@@ -7,37 +7,178 @@
     <!-- <h2 style="font-size: 20px; color: #333;text-align: center; font-weight: 500;">Current Running Recipe No.: 1234</h2> -->
      
      <!-- Status Overview Section -->
-     <div class="status-overview mt-5">
-        <h2 style="font-size: 20px; color: #0056b3; text-align: center; font-weight: bold;">System Status</h2>
-        <div class="row">
-            <div class="col-md-4">
+<div class="status-overview container mt-5">
+    <h2 class="status-title">System Status</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="status-card">
+                <i class="fas fa-network-wired status-icon"></i>
                 <p><strong>PLC IP:</strong> <span id="plc-ip">Loading...</span></p>
                 <p><strong>Internet Connected:</strong> <span id="internet-connected">Loading...</span></p>
             </div>
-            <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
+            <div class="status-card">
+                <i class="fas fa-server status-icon"></i>
                 <p><strong>PLC Connected:</strong> <span id="plc-connected">Loading...</span></p>
                 <p><strong>No. of Tags Created:</strong> <span id="tags-count">Loading...</span></p>
             </div>
-            <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
+            <div class="status-card">
+                <i class="fas fa-database status-icon"></i>
                 <p><strong>No. of Logs Created:</strong> <span id="logs-count">Loading...</span></p>
-                <p><strong>Interval Time of Log Entry:</strong> <span id="interval-time">Loading...</span></p>
+                <p><strong>Log Interval Time:</strong> <span id="interval-time">Loading...</span></p>
             </div>
-            <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
+            <div class="status-card">
+                <i class="fas fa-key status-icon"></i>
                 <p><strong>Serial Key:</strong> <span id="serial-key">Loading...</span></p>
                 <p><strong>Running Recipe:</strong> <span id="recipe-name">Loading...</span></p>
             </div>
         </div>
-        <!-- <div class="text-center mt-3">
-            <p><strong>Serial Key:</strong> <span id="serial-key">Loading...</span></p>
-        </div> -->
-        <div class="container mt-4">
-            <div class="update-interval-container">
-                <label for="interval-time" class="form-label">Set Interval Time:</label>
+        <div class="update-interval-container">
+            <div class="update-card">
+                <h3><i class="fas fa-clock interval-icon"></i> Set Log Interval Time</h3>
                 <input type="number" id="interval-time1" class="form-control" placeholder="Enter Interval Time">
-                <button id="update-interval-btn" class="btn btn-primary mt-2">Update</button>
+                <button id="update-interval-btn" class="btn btn-update">Update</button>
             </div>
         </div>
     </div>
+
+    <!-- Update Interval Time -->
+    <!-- <div class="update-interval-container">
+        <div class="update-card">
+            <i class="fas fa-clock interval-icon"></i>
+            <h3>Set Log Interval Time</h3>
+            <input type="number" id="interval-time1" class="form-control" placeholder="Enter Interval Time">
+            <button id="update-interval-btn" class="btn btn-update">Update</button>
+        </div>
+    </div> -->
+</div>
+
+<!-- CSS for Styling -->
+<style>
+    .status-overview {
+        padding: 20px;
+        background: #f4f7fc;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #004085;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .status-card {
+        background: linear-gradient(135deg, #64bbd9, #0f56a3);
+        color: white;
+        border-radius: 10px;
+        padding: 6px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.2s;
+    }
+
+    .status-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .status-card p {
+        font-size: 15px;
+        margin: 5px 0;
+    }
+
+    .status-icon {
+        font-size: 30px;
+        /*margin-bottom: 10px;*/
+    }
+
+    .update-interval-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .form-control {
+        width: 200px;
+        display: inline-block;
+        margin-right: 10px;
+        border-radius: 5px;
+    }
+
+    .btn-update {
+        background: #28a745;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 14px;
+        color: white;
+        font-weight: bold;
+    }
+
+    .btn-update:hover {
+        background: #218838;
+    }
+    .update-interval-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .update-card {
+        background: linear-gradient(135deg, #64bbd9, #0f56a3);
+        color: white;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        /*width: 300px;*/
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .update-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .interval-icon {
+        font-size: 15px;
+        /*margin-bottom: 10px;*/
+    }
+
+    .update-card h3 {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    .form-control {
+        width: 100%;
+        border-radius: 8px;
+        padding: 8px;
+        border: none;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .btn-update {
+        background: #ffc107;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 14px;
+        color: black;
+        font-weight: bold;
+    }
+
+    .btn-update:hover {
+        background: #e0a800;
+    }
+</style>
+
    
     <!-- Status Bar Section -->
     <div class="status-bars">
@@ -71,7 +212,6 @@
             <canvas  id="plcChart"></canvas>
         </div>
     </div>
-    <h2 class="highlighted-box">List of 10 Products</h2>
 
     <!-- <table class="table table-bordered">
         <thead>
@@ -83,23 +223,58 @@
         </thead>
     </table> -->
     <div class="container mt-5">
+        <h1 class="text-center">Air Inspection Settings</h1>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>DataBase Available</th>
+                    <th>Width</th>
+                    <th>Height</th>
+                    <th>Depth</th>
+                    <th>Art No</th>
+                    <th>Air Flow Set</th>
+                    <th>Pressure Drop Setpoint</th>
+                    <th>Lower Tolerance1</th>
+                    <th>Lower Tolerance2</th>
+                    <th>Upper Tolerance1</th>
+                    <th>Upper Tolerance2</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in Inspection_Settings %}
+                <tr>
+                    <td>{{ row.databaseAvailable }}</td>
+                    <td>{{ row.Width }}</td>
+                    <td>{{ row.Height }}</td>
+                    <td>{{ row.Depth }}</td>
+                    <td>{{ row.Art_No }}</td>
+                    <td>{{ row.Air_Flow_Set }}</td>
+                    <td>{{ row.Pressure_Drop_Setpoint }}</td>
+                    <td>{{ row.Lower_Tolerance1 }}</td>
+                    <td>{{ row.Lower_Tolerance2 }}</td>
+                    <td>{{ row.Upper_Tolerance1 }}</td>
+                    <td>{{ row.Upper_Tolerance2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    <div class="container mt-5">
         <h1 class="text-center">Filter Log</h1>
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
                 <tr>
                     <th>Filter Code</th>
-<th>Timestamp</th>
-<th>Recipe Name</th>
-<th>Article No</th>
-<th>Filter Size</th>
-<th>FilterSize</th>
-<th>Ng Status</th>
-<th>Serial No</th>
-<th>AvgAirFlow</th>
-<th>AvgResult</th>
-<th>Filter Completion Status</th>
-<th>Print</th>
-
+                    <th>Timestamp</th>
+                    <th>Recipe Name</th>
+                    <th>Article No</th>
+                    <th>Filter Size</th>
+                    <th>FilterSize</th>
+                    <th>Ng Status</th>
+                    <th>Serial No</th>
+                    <th>AvgAirFlow</th>
+                    <th>AvgResult</th>
+                    <th>Filter Completion Status</th>
+                    <th>Print</th>
                 </tr>
             </thead>
             <tbody id="recipe-log-table">
@@ -284,7 +459,7 @@ setInterval(fetchStatusSummary1, 60000);
             background-color: darkorange;
         }
 .status-overview {
-    background: #c3caf1;
+    background: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
@@ -308,7 +483,7 @@ setInterval(fetchStatusSummary1, 60000);
 .status-overview p {
     font-size: 1rem;
     margin: 10px 0;
-    padding: 10px;
+    padding: 2px;
     background: #f9f9f9;
     border-radius: 5px;
     border: 1px solid #eaeaea;
@@ -356,12 +531,11 @@ setInterval(fetchStatusSummary1, 60000);
 }
 /* Update Interval Button Section */
 .update-interval-container {
-    background: #ffffff;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin: 20px auto;
-    max-width: 500px;
+    /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;*/
+    margin: 8px auto;
+    /*max-width: 500px;*/
     text-align: center;
 }
 
