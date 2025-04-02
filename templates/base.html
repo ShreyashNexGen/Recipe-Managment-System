@@ -14,31 +14,32 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h2>
-            <img src="{{ url_for('static', filename='logonew.png') }}" alt="Logo" class="logo">
-            Recipe Management
+            <img src="{{ url_for('static', filename='nexgenLogo.png') }}" alt="Logo" class="logo">
+            <!-- Recipe Management -->
         </h2>
+        <h2>Recipe Management</h2>
         <ul class="nav flex-column">
             {% if session.get('username') %}
             
             {% if 'dashboard' in session.get('user_roles', []) %}
-            <li><a href="/dashboard" class="nav-link"><i class="fa-sharp fa-solid fa-chart-line"></i>Dashboard</a></li>
+            <li><a href="/dashboard" class="nav-link"><i class="fa-sharp fa-solid fa-chart-line" style="margin-right: 8px;"></i>Dashboard</a></li>
             {% endif %}
             
             {% if 'raw_material' in session.get('user_roles', []) %}
-            <li><a href="/raw-material" class="nav-link"><i class="fa-solid fa-box-open"></i>Raw Material</a></li>
+            <li><a href="/raw-material" class="nav-link"><i class="fa-solid fa-box-open" style="margin-right: 8px;"></i>Raw Material</a></li>
             {% endif %}
             
             {% if 'recipe' in session.get('user_roles', []) %}
-            <li><a href="/recipe" class="nav-link"><i class="fa-solid fa-clipboard-list"></i>Recipe</a></li>
+            <li><a href="/recipe" class="nav-link"><i class="fa-solid fa-clipboard-list" style="margin-right: 8px;"></i>Recipe</a></li>
             {% endif %}
             
             {% if 'report' in session.get('user_roles', []) %}
-            <li><a href="/report" class="nav-link"><i class="fa-solid fa-clipboard-list"></i>Report</a></li>
+            <li><a href="/report" class="nav-link"><i class="fa-solid fa-clipboard-list" style="margin-right: 8px;"></i>Report</a></li>
             {% endif %}
         
             {% if 'tag' in session.get('user_roles', []) %}
             <li class="dropdown">
-                <a href="#" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-tags"></i>Tags</a>
+                <a href="#" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-tags" style="margin-right: 8px;"></i>Tags</a>
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="/tag-overview">&bull;Tag Overview</a></li>
                     <li><a class="dropdown-item" href="/live-tag">&bull;Live Tag</a></li>
@@ -48,7 +49,7 @@
         
             {% if session.get('username') == 'Admin' %}
             <li class="dropdown">
-                <a href="/" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-user-tie"></i>Admin</a>
+                <a href="/" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-user-tie" style="margin-right: 8px;"></i>Admin</a>
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="/plc">&bull; PLC</a></li>
                     <li><a class="dropdown-item" href="/users">&bull; Users</a></li>
@@ -61,8 +62,8 @@
             <a href="/logout" class="logout">Logout</a>
         
             {% else %}
-            <li><a href="/login" class="nav-link"><i class="fa-solid fa-sign-in-alt"></i>Login</a></li>
-            <li><a href="/register" class="nav-link"><i class="fa-solid fa-user-plus"></i>Register</a></li>
+            <li><a href="/login" class="nav-link"><i class="fa-solid fa-sign-in-alt" style="margin-right: 8px;"></i>Login</a></li>
+            <li><a href="/register" class="nav-link"><i class="fa-solid fa-user-plus" style="margin-right: 8px;"></i>Register</a></li>
             {% endif %}
         </ul>
         

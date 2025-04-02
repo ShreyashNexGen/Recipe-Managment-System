@@ -87,19 +87,18 @@
 
 
 /*css for icons of dashboard*/
-.nav-link i {
-    margin-right: 10px; /* Adds space to the right of the icon */
-    font-size: 18px; /* Optional: Adjust icon size if needed */
-    vertical-align: middle; /* Ensures alignment with text */
-}
-
 .nav-link {
     display: flex; /* Ensures icon and text align properly */
     align-items: center; /* Vertically aligns icon with text */
-     /* Optional: Adjusts padding around the link */
+    width: 200px; /* Set a fixed width for uniform size */
+    padding: 5px; /* Adds space inside the link */
+    text-align: center; /* Ensures text starts from left */
+    justify-content: flex-start; /* Align icon and text properly */
 }
 
-
+.dropdown-item {
+    width: 150px;
+}
 
 
 
@@ -270,9 +269,10 @@ td a:hover {
     transform: translateY(-2px);
 } */
 .logo {
-    width: 50px;  /* Adjust width as per your design */
+    width: 125px;  /* Adjust width as per your design */
     height: auto;  /* Maintain aspect ratio */
-    margin-right: 10px; /* Space between the logo and text */
+    margin-right: 50px; /* Space between the logo and text */
+
 }
 /* General Styling */
 #add-recipe-section {

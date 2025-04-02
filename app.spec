@@ -5,8 +5,8 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('static', 'static'), ('templates', 'templates')],
-    hiddenimports=[],
+    datas=[('templates', 'templates'), ('static', 'static')],
+    hiddenimports=['pymssql'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='static/N-LOG.ico',  # Correct relative path to your icon
+    icon=['static\\N-LOG.ico'],
 )

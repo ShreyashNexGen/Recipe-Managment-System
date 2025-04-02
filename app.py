@@ -38,7 +38,7 @@ CORS(app)  # Enable CORS for frontend communication
 # Connection details
 # server = 'DESKTOP-9G39B01\WINCC'
 # database = 'A2Z_DB'
-server = 'DESKTOP-2NDPVUP'
+server = 'SHREYASHNEXGEN\WINCCFLEX2014'
 database = 'Shreyash'
 conn = pyodbc.connect(
     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
@@ -243,7 +243,8 @@ def init_db():
                     username NVARCHAR(255) NOT NULL UNIQUE,
                     email NVARCHAR(255) NOT NULL UNIQUE,
                     password NVARCHAR(255) NOT NULL,
-                    is_admin INT DEFAULT 0
+                    is_admin INT DEFAULT 0,
+                    roles NVARCHAR(MAX)
                 )
             """,
             "user_activity": """
@@ -622,6 +623,7 @@ def recipe_list():
         recipes=recipes,
         pos_values=pos_values,
         page=page,
+        per_page=per_page,
         total_pages=total_pages
     )
 @app.route('/api/recipe_log', methods=['GET'])
@@ -1942,7 +1944,7 @@ def update_raw_material(material_Id):
         # Update the record
         cursor.execute('''
             UPDATE Raw_Materials
-            SET typeCode = ?, lotNo = ?, make = ?, user = ?, materialType = ?, barcode = ?
+            SET typeCode = ?, lotNo = ?, make = ?, [user] = ?, materialType = ?, barcode = ?
             WHERE material_Id = ?
         ''', (typeCode, lotNo, make, user, materialType, barcode, material_Id))
         conn.commit()
@@ -2064,7 +2066,7 @@ def recipe_details(recipe_id):
             'recipe_details.html',
             recipe_details=recipe_details,
             sub_menu=sub_menu[0],
-            # inspection_menu=inspection_menu[0],
+            inspection_menu=inspection_menu[0],
             pos_values=pos_values,  # Assuming last value should be removed
             barcode_value=barcode_value
         )
@@ -2184,14 +2186,53 @@ def update_recipe():
         flash("Please log in to update recipes.", "warning")
         return redirect(url_for('login'))
 
-    # Extract form data
     recipe_id = request.form.get('recipe_id')
     recipe_name = request.form.get('recipe_name')
     filter_size = request.form.get('filter_size')
     filter_code = request.form.get('filter_code')
     art_no = request.form.get('art_no')
+
     alu_coil_width = request.form.get('Alu_coil_width')
+    alu_roller_type = request.form.get('Alu_roller_type')
+    spacer = request.form.get('Spacer')
     motor_speed = request.form.get('Motor_speed')
+    motor_stroke = request.form.get('Motor_stroke')
+    motor_force = request.form.get('Motor_force')
+
+    # Extract newly added fields
+    corr1_feed_length = request.form.get('Corr1Feed_length')
+    corr2_feed_length = request.form.get('Corr2feed_length')
+    pleat_height = request.form.get('Pleat_Height')
+    blade_opening = request.form.get('Blade_opening')
+    left_blade_media_thickness = request.form.get('Left_Blade_MediaTHickness')
+    right_blade_media_thickness = request.form.get('Right_Blade_MediaThickness')
+    soft_touch = request.form.get('Soft_Touch')
+    press_touch = request.form.get('Press_Touch')
+    puller_start_pos = request.form.get('Puller_Start_pos')
+    puller_end_pos = request.form.get('Puller_End_pos')
+    puller2_feed_correction = request.form.get('Puller2_Feed_Correction')
+    filter_box_height = request.form.get('Filter_Box_Height')
+    filter_box_width = request.form.get('Filter_Box_Width')
+    filter_box_length = request.form.get('Filter_Box_Length')
+    set_pleat_count = request.form.get('Set_Pleat_Count')
+    set_pleat_pitch = request.form.get('Set_Pleat_Pitch')
+    set_batch_count = request.form.get('Set_Batch_Count')
+    machine_speed_ref = request.form.get('Machine_Speed_Ref')
+    decoiler_set_point = request.form.get('Decoiler_Set_point')
+    low_dia_set = request.form.get('Low_Dia_Set')
+    cutter_park_pos = request.form.get('Cutter_Park_pos')
+    cutter_fwd_pos = request.form.get('Cutter_Fwd_Pos')
+    databaseAvailable = request.form.get('databaseAvailable')
+    Width = request.form.get('Width')
+    Height = request.form.get('Height')
+    Depth = request.form.get('Depth')
+    Art_Num = request.form.get('Art_Num')
+    Air_Flow_Set = request.form.get('Air_Flow_Set')
+    Pressure_Drop_Setpoint = request.form.get('Pressure_Drop_Setpoint')
+    Lower_Tolerance1 = request.form.get('Lower_Tolerance1')
+    Lower_Tolerance2 = request.form.get('Lower_Tolerance2')
+    Upper_Tolerance1 = request.form.get('Upper_Tolerance1')
+    Upper_Tolerance2 = request.form.get('Upper_Tolerance2')
     
     # Extract POS values (1-9)
     pos_values = [request.form.get(f'pos{i}', None) for i in range(1, 10)]
@@ -2228,12 +2269,34 @@ def update_recipe():
         )
 
         # Update `Sub_Menu` table
-        cursor.execute(
-            '''UPDATE Sub_Menu 
-               SET motor_speed = ?
-               WHERE Recipe_ID = ?''',
-            (motor_speed, recipe_id)
-        )
+        cursor.execute('''
+       UPDATE Sub_Menu 
+            SET Motor_speed = ?, Motor_stroke = ?, other_speed_force = ?, 
+                alu_coil_width = ?, Corr1Feed_length = ?, Corr2feed_length = ?, Pleat_Height = ?, 
+                Blade_opening = ?, Left_Blade_MediaTHickness = ?, Right_Blade_MediaThickness = ?, 
+                Soft_Touch = ?, Press_Touch = ?, Puller_Start_pos = ?, Puller_End_pos = ?, 
+                Puller2_Feed_Correction = ?, Filter_Box_Height = ?, Filter_Box_Width = ?, 
+                Filter_Box_Length = ?, Set_Pleat_Count = ?, Set_Pleat_Pitch = ?, Set_Batch_Count = ?, 
+                Machine_Speed_Ref = ?, Decoiler_Set_point = ?, Low_Dia_Set = ?, Cutter_Park_pos = ?, 
+                Cutter_Fwd_Pos = ?
+            WHERE Recipe_ID = ?
+    ''', ( motor_speed, motor_stroke, motor_force, alu_coil_width, corr1_feed_length, corr2_feed_length, pleat_height,
+          blade_opening, left_blade_media_thickness, right_blade_media_thickness, soft_touch, press_touch,
+          puller_start_pos, puller_end_pos, puller2_feed_correction, filter_box_height, filter_box_width,
+          filter_box_length, set_pleat_count, set_pleat_pitch, set_batch_count, machine_speed_ref,
+          decoiler_set_point, low_dia_set, cutter_park_pos, cutter_fwd_pos,recipe_id))
+
+
+         # Update Inspection_Settings
+        cursor.execute('''
+        UPDATE Inspection_Settings 
+        SET databaseAvailable = ?, Width = ?, Height = ?, Depth = ?, Art_No = ?, 
+            Air_Flow_Set = ?, Pressure_Drop_Setpoint = ?, Lower_Tolerance1 = ?, 
+            Lower_Tolerance2 = ?, Upper_Tolerance1 = ?, Upper_Tolerance2 = ? 
+        WHERE Recipe_ID = ?
+    ''', (databaseAvailable, Width, Height, Depth, Art_Num, Air_Flow_Set, Pressure_Drop_Setpoint,
+          Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2, recipe_id))
+
 
         # Commit changes
         conn.commit()
@@ -2241,11 +2304,11 @@ def update_recipe():
         flash("Recipe updated successfully!", "success")
 
     except pyodbc.Error as e:
-        flash(f"Database error: {str(e)}", "danger")
+        print(f"Database error: {str(e)}", "danger")
         conn.rollback()  # Rollback in case of error
 
     except Exception as e:
-        flash(f"Unexpected error: {str(e)}", "danger")
+        print(f"Unexpected error: {str(e)}", "danger")
 
     finally:
         conn.close()

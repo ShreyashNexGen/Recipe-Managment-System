@@ -467,7 +467,7 @@
         <tbody>
             {% for recipe in recipes %}
             <tr id="row-{{ recipe.Recipe_ID }}">
-                <td>{{ loop.index }}</td>
+                <td>{{ (page-1)*per_page + loop.index }}</td>
                 <td class="highlighted-header" style="font-style: white;"><a href="{{ url_for('recipe_details', recipe_id=recipe.Recipe_ID) }}">{{ recipe.Recipe_ID }}</a></td>
                 <td>{{recipe.Recipe_Name}}</td>
                 <td>{{ recipe.Filter_Size }}</td>
