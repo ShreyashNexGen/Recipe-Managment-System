@@ -30,12 +30,11 @@
                         <div class="dropdown-list" id="dropdown_recipe_name"></div>
                     </div>
                 </div>
-                
-                
                 <button type="button" onclick="loadRecipe()">Load Recipe</button>
             </div>
         </div>
-        <form action="/add_recipe" method="POST">
+        <form action="/add_recipe" method="POST" class="recipe-form">
+            <div class="form-row">
             <label for="recipe_id">Recipe ID:</label>
             <input type="text" id="recipe_id" name="recipe_id" required>
 
@@ -50,7 +49,10 @@
 
             <label for="art_no">Art No:</label>
             <input type="text" id="art_no" name="art_no" required>
-
+            </div>
+            <hr>
+            <h1 style="display: block; margin: 0 auto; text-align: center;">Roll Positions</h1>
+            <div class="form-row">
             {% for i in range(1, 10) %}
             <label for="pos{{ i }}">Pos{{ i }}:</label>
             <select id="pos{{ i }}" name="pos{{ i }}">
@@ -60,7 +62,10 @@
                 {% endfor %}
             </select>
             {% endfor %}
-
+        </div>
+        <hr>
+        <h1 style="display: block; margin: 0 auto; text-align: center;">Machine Settings</h1>
+        <div class="form-row">
             <label for="Alu_coil_width">Alu Coil Width:</label>
             <input type="text" id="Alu_coil_width" name="Alu_coil_width">
 
@@ -75,7 +80,8 @@
 
             <label for="Motor_stroke">Motor Stroke:</label>
             <input type="text" id="Motor_stroke" name="Motor_stroke">
-
+        </div>
+            <div class="form-row">
             <label for="Motor_force">Motor Force:</label>
             <input type="text" id="Motor_force" name="Motor_force">
 
@@ -90,8 +96,9 @@
             <input type="text" id="Pleat_Height" name="Pleat_Height">
 
             <label for="Blade_opening">Blade Opening:</label>
-            <input type="text" id="Blade_opening" name="Blade_opening">
-
+            <input type="text" id="Blade_opening" name="Blade_opening">    
+        </div>
+             <div class="form-row">
             <label for="Left_Blade_MediaTHickness">Left Blade Media Thickness:</label>
             <input type="text" id="Left_Blade_MediaTHickness" name="Left_Blade_MediaTHickness">
 
@@ -105,8 +112,9 @@
             <input type="text" id="Press_Touch" name="Press_Touch">
 
             <label for="Puller_Start_pos">Puller Start Position:</label>
-            <input type="text" id="Puller_Start_pos" name="Puller_Start_pos">
-
+            <input type="text" id="Puller_Start_pos" name="Puller_Start_pos">    
+        </div>
+            <div class="form-row">
             <label for="Puller_End_pos">Puller End Position:</label>
             <input type="text" id="Puller_End_pos" name="Puller_End_pos">
 
@@ -120,8 +128,9 @@
             <input type="text" id="Filter_Box_Width" name="Filter_Box_Width">
 
             <label for="Filter_Box_Length">Filter Box Length:</label>
-            <input type="text" id="Filter_Box_Length" name="Filter_Box_Length">
-
+            <input type="text" id="Filter_Box_Length" name="Filter_Box_Length">    
+        </div>
+             <div class="form-row">
             <label for="Set_Pleat_Count">Set Pleat Count:</label>
             <input type="text" id="Set_Pleat_Count" name="Set_Pleat_Count">
 
@@ -136,7 +145,8 @@
 
             <label for="Decoiler_Set_point">Decoiler Set Point:</label>
             <input type="text" id="Decoiler_Set_point" name="Decoiler_Set_point">
-
+        </div>
+        <div class="form-row">
             <label for="Low_Dia_Set">Low Diameter Set:</label>
             <input type="text" id="Low_Dia_Set" name="Low_Dia_Set">
 
@@ -145,56 +155,57 @@
 
             <label for="Cutter_Fwd_Pos">Cutter Forward Position:</label>
             <input type="text" id="Cutter_Fwd_Pos" name="Cutter_Fwd_Pos">
-
+        </div>
+        <hr>
+        <h1 style="display: block; margin: 0 auto; text-align: center;">Air Inspection Settings</h1>
+        <div class="form-row">
             <label for="databaseAvailable">Database Available:</label>
             <input type="text" id="databaseAvailable" name="databaseAvailable">
-
             <label for="Width">Width:</label>
-            <input type="text" id="Width" name="Width">
-
+            <input type="text" id="Width" name="Width">          
             <label for="Height">Height:</label>
             <input type="text" id="Height" name="Height">
-
             <label for="Depth">Depth:</label>
             <input type="text" id="Depth" name="Depth">
-
             <label for="Art_Num">Art Number.:</label>
-            <input type="text" id="Art_Num" name="Art_Num">
+            <input type="text" id="Art_Num" name="Art_Num">    
+        </div>
+            <div class="form-row">
 
             <label for="Air_Flow_Set">Air Flow Set:</label>
             <input type="text" id="Air_Flow_Set" name="Air_Flow_Set">
 
-            <label for="Pressure_Drop_Setpoint">Pressure_Drop_Setpoint:</label>
+            <label for="Pressure_Drop_Setpoint">Pressure Drop Setpoint:</label>
             <input type="text" id="Pressure_Drop_Setpoint" name="Pressure_Drop_Setpoint">
-
-            <label for="Lower_Tolerance1">Lower_Tolerance1:</label>
+            
+            <label for="Lower_Tolerance1">Lower Tolerance1:</label>
             <input type="text" id="Lower_Tolerance1" name="Lower_Tolerance1">
 
-            <label for="Lower_Tolerance2">Lower_Tolerance2:</label>
+            <label for="Lower_Tolerance2">Lower Tolerance2:</label>
             <input type="text" id="Lower_Tolerance2" name="Lower_Tolerance2">
 
-            <label for="Upper_Tolerance1">Upper_Tolerance1:</label>
+            <label for="Upper_Tolerance1">Upper Tolerance1:</label>
             <input type="text" id="Upper_Tolerance1" name="Upper_Tolerance1">
 
-            <label for="Upper_Tolerance2">Upper_Tolerance2:</label>
+            <label for="Upper_Tolerance2">Upper Tolerance2:</label>
             <input type="text" id="Upper_Tolerance2" name="Upper_Tolerance2">
-
-
-
-            <button type="button" class="submit-button" onclick="loadLastPLCValues()">Upload Settings</button>
-            <button type="submit" class="submit-button">Submit Recipe</button>
+            </div>
+        <hr>
+            <div class="form-buttons">
+            <button type="button" class="submit-button1" onclick="loadLastPLCValues()">Upload Settings</button>
+            <button type="submit" class="submit-button1">Submit Recipe</button>
+            </div>
         </form>
     </div>
 </div>
-
-
 <div id="update-recipe-section" style="display: none;">
     <div id="update-recipe-form">
         <div class="popup-recipe-header">
             <h3>Update Recipe</h3>
             <button type="button" class="close-button" onclick="toggleUpdatePopup()">X</button>
         </div>
-        <form action="/update_recipe" method="POST">
+        <form action="/update_recipe" method="POST" class="recipe-form">
+            <div class="form-row">
             <label for="update_recipe_id">Recipe ID:</label>
             <input type="text" id="update_recipe_id" name="recipe_id" readonly>
 
@@ -209,7 +220,10 @@
 
             <label for="update_art_no">Art No:</label>
             <input type="text" id="update_art_no" name="art_no" required>
-
+            </div>
+            <hr>
+            <h1 style="display: block; margin: 0 auto; text-align: center;">Roll Positions</h1>
+            <div class="form-row">
             {% for i in range(1, 10) %}
             <label for="update_pos{{ i }}">Pos{{ i }}:</label>
             <select id="update_pos{{ i }}" name="pos{{ i }}">
@@ -219,7 +233,10 @@
                 {% endfor %}
             </select>
             {% endfor %}
-
+             </div>
+             <hr>
+             <h1 style="display: block; margin: 0 auto; text-align: center;">Machine Settings</h1>
+             <div class="form-row">
             <label for="update_alu_coil_width">Alu Coil Width:</label>
             <input type="text" id="update_alu_coil_width" name="Alu_coil_width">
 
@@ -234,7 +251,8 @@
 
             <label for="update_motor_stroke">Motor Stroke:</label>
             <input type="text" id="update_motor_stroke" name="Motor_stroke">
-
+            </div>
+            <div class="form-row">
             <label for="update_motor_force">Motor Force:</label>
             <input type="text" id="update_motor_force" name="Motor_force">
             <!-- New fields added -->
@@ -249,7 +267,8 @@
 
             <label for="update_Blade_opening">Blade Opening:</label>
             <input type="text" id="update_Blade_opening" name="Blade_opening">
-
+            </div>
+            <div class="form-row">
             <label for="update_Left_Blade_MediaTHickness">Left Blade Media Thickness:</label>
             <input type="text" id="update_Left_Blade_MediaTHickness" name="Left_Blade_MediaTHickness">
 
@@ -264,22 +283,24 @@
 
             <label for="update_Puller_Start_pos">Puller Start Position:</label>
             <input type="text" id="update_Puller_Start_pos" name="Puller_Start_pos">
-
+             </div>
+             <div class="form-row">
             <label for="update_Puller_End_pos">Puller End Position:</label>
             <input type="text" id="update_Puller_End_pos" name="Puller_End_pos">
-
+ 
             <label for="update_Puller2_Feed_Correction">Puller 2 Feed Correction:</label>
             <input type="text" id="update_Puller2_Feed_Correction" name="Puller2_Feed_Correction">
-
+  
             <label for="update_Filter_Box_Height">Filter Box Height:</label>
             <input type="text" id="update_Filter_Box_Height" name="Filter_Box_Height">
-
+            
             <label for="update_Filter_Box_Width">Filter Box Width:</label>
             <input type="text" id="update_Filter_Box_Width" name="Filter_Box_Width">
 
             <label for="update_Filter_Box_Length">Filter Box Length:</label>
             <input type="text" id="update_Filter_Box_Length" name="Filter_Box_Length">
-
+             </div>
+             <div class="form-row">
             <label for="update_Set_Pleat_Count">Set Pleat Count:</label>
             <input type="text" id="update_Set_Pleat_Count" name="Set_Pleat_Count">
 
@@ -288,13 +309,14 @@
 
             <label for="update_Set_Batch_Count">Set Batch Count:</label>
             <input type="text" id="update_Set_Batch_Count" name="Set_Batch_Count">
-
+            
             <label for="update_Machine_Speed_Ref">Machine Speed Reference:</label>
             <input type="text" id="update_Machine_Speed_Ref" name="Machine_Speed_Ref">
 
             <label for="update_Decoiler_Set_point">Decoiler Set Point:</label>
             <input type="text" id="update_Decoiler_Set_point" name="Decoiler_Set_point">
-
+             </div>
+             <div class="form-row">
             <label for="update_Low_Dia_Set">Low Diameter Set:</label>
             <input type="text" id="update_Low_Dia_Set" name="Low_Dia_Set">
 
@@ -303,7 +325,11 @@
 
             <label for="update_Cutter_Fwd_Pos">Cutter Forward Position:</label>
             <input type="text" id="update_Cutter_Fwd_Pos" name="Cutter_Fwd_Pos">
-
+            
+            </div>
+            <hr>
+            <h1 style="display: block; margin: 0 auto; text-align: center;">Air Inspection Settings</h1>
+            <div class="form-row">
             <label for="update_databaseAvailable">Database Available:</label>
             <input type="text" id="update_databaseAvailable" name="databaseAvailable">
 
@@ -318,26 +344,30 @@
 
             <label for="update_Art_Num">Art Number.:</label>
             <input type="text" id="update_Art_Num" name="Art_Num">
-
+            </div>
+            <div class="form-row">
             <label for="update_Air_Flow_Set">Air Flow Set:</label>
             <input type="text" id="update_Air_Flow_Set" name="Air_Flow_Set">
 
-            <label for="update_Pressure_Drop_Setpoint">Pressure_Drop_Setpoint:</label>
+            <label for="update_Pressure_Drop_Setpoint">Pressure Drop Setpoint:</label>
             <input type="text" id="update_Pressure_Drop_Setpoint" name="Pressure_Drop_Setpoint">
 
-            <label for="update_Lower_Tolerance1">Lower_Tolerance1:</label>
+            <label for="update_Lower_Tolerance1">Lower Tolerance1:</label>
             <input type="text" id="update_Lower_Tolerance1" name="Lower_Tolerance1">
 
-            <label for="update_Lower_Tolerance2">Lower_Tolerance2:</label>
+            <label for="update_Lower_Tolerance2">Lower Tolerance2:</label>
             <input type="text" id="update_Lower_Tolerance2" name="Lower_Tolerance2">
 
-            <label for="update_Upper_Tolerance1">Upper_Tolerance1:</label>
+            <label for="update_Upper_Tolerance1">Upper Tolerance1:</label>
             <input type="text" id="update_Upper_Tolerance1" name="Upper_Tolerance1">
-
-            <label for="update_Upper_Tolerance2">Upper_Tolerance2:</label>
+            </div>
+            <div class="form-row">
+            <label for="update_Upper_Tolerance2">Upper Tolerance2:</label>
             <input type="text" id="update_Upper_Tolerance2" name="Upper_Tolerance2">
-
-            <button type="submit" class="submit-button">Update Recipe</button>
+            </div>
+            <hr>
+            <div class="form-buttons">
+            <button type="submit" class="submit-button1">Update Recipe</button></div>
         </form>
     </div>
 </div>
@@ -348,6 +378,68 @@
 
 
 <style>
+    .recipe-form {
+        display: flex;
+        padding-left: 10px;
+    padding-right: 10px;
+        flex-direction: column;
+        width: 100%;
+        max-width: 1200px; /* Adjust based on your layout */
+        margin: auto;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr); /* 4 equal columns */
+        gap: 15px; /* Space between items */
+        align-items: center;
+        /*margin-bottom: 10px; /* Space between rows */
+    }
+    .form-buttons {
+        display: flex;
+        justify-content: center; /* Centers buttons */
+        gap: 10px; /* Adds spacing between buttons */
+        margin-bottom: 10px;
+    /* margin-top: 10px; */
+    }
+    label {
+        font-weight: bold;
+        display: block;
+    }
+    
+    input, select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .form-row {
+            grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+        }
+    }
+    
+    @media (max-width: 600px) {
+        .form-row {
+            grid-template-columns: repeat(1, 1fr); /* 1 column on mobile */
+        }
+    }
+    
+    .submit-button1 {
+        display: inline-block; /* Ensures buttons stay in line */
+        background-color: #007bff; /* Darker purple */
+        color: rgb(27, 26, 26);
+        border: none;
+        border-radius: 4px;
+        padding: 8px 12px;
+        cursor: pointer;
+        margin-right: 10px; /* Space between buttons */
+    }
+    .submit-button1:last-child {
+        margin-right: 0; /* Remove margin from the last button */
+    }
     /* Styling for table header */
     .highlighted-tag{
         font-weight: bold;
@@ -378,49 +470,105 @@
     }
     
     /* Flexbox container for side-by-side layout */
-.recipe-container {
-    display: flex;
-    gap: 10px; /* Space between fields */
-    align-items: center;
-    justify-content: center; /* Center horizontally */
-    height: 10vh; /* Full height to center vertically */
+    .recipe-container {
+        display: flex;
+        justify-content: center;         /* Center the dropdowns horizontally */
+        align-items: flex-start;         /* Align tops of each dropdown */
+        gap: 15px;                       /* Space between dropdowns */
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+.dropdown-container {
+    position: relative;
+    width: 220px; /* Slightly wider for balance */
+    margin: 5px 10px;
 }
 
-/* Dropdown wrapper */
-.dropdown-container {
-    min-width: 150px; /* Decrease width */
-    padding: 3px; /* Reduce padding */
+.dropdown-container input[type="text"] {
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px 35px 10px 12px; /* Room for icon on the right */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    box-sizing: border-box;
+}
+
+.dropdown-container input[type="text"]:focus {
+    border-color: #8e24aa; /* Match your theme */
+    box-shadow: 0 0 5px rgba(142, 36, 170, 0.3);
+    outline: none;
+}
+
+.dropdown-container .dropdown-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 14px;
+    pointer-events: none; /* Let clicks go through */
+}
+.dropdown-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: absolute;
+    width: 100%;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: none; /* toggle this with JS */
+}
+.dropdown-list div {
+    padding: 8px 12px;
+    text-align: center;  /* Center the text */
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.dropdown-list div:hover {
+    background-color: #f2f2f2;
+}
+
+/*.dropdown-container {
+    min-width: 150px;
+    padding: 3px; 
     position: relative;
     display: flex;
     align-items: center;
-    border-radius: 5px;
     padding: 5px;
     margin-bottom: 10px;
     min-width: 150px;
 }
 
-/* Input field */
+
 .dropdown-container input {
     font-size: small;
-    border-radius: 20px;
-    padding: 5px; /* Adjust padding */
+    padding: 5px; 
     outline: none;
-    background-color: #a3c5e9;
+    background-color: #ffffff;
     flex: 1;
     padding: 8px;
     cursor: pointer;
 }
 
-/* Dropdown arrow */
+
 .dropdown-icon {
     cursor: pointer;
     padding: 5px;
     margin-bottom: 20px;
 }
 
-/* Dropdown list */
 .dropdown-list {
-    font-size: 12px; /* Smaller font size */
+    font-size: 12px; 
     position: absolute;
     top: 100%;
     left: 0;
@@ -434,7 +582,7 @@
     border-radius: 5px;
 }
 
-/* Dropdown items */
+
 .dropdown-item {
     padding: 5px;
     cursor: pointer;
@@ -446,7 +594,12 @@
 .dropdown-item:hover {
     background: #f5f5f5;
 }
-
+label[for="load_recipe_id"] {
+    display: block;
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
     
     
 </style>

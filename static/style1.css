@@ -162,7 +162,7 @@
 }
 
 .add-button:hover {
-    background-color: #a389e8;
+    background-color: #1c67b8;
     transform: translateY(-2px);
 }
 
@@ -292,15 +292,15 @@ td a:hover {
     background-color: white;
     display: flex;
     flex-direction: column; 
-    padding-left: 20px;
+    /* padding-left: 10px;
     padding-right: 20px;
-    padding-bottom: 20px;
+    padding-bottom: 20px; */
     border-radius: 8px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
     width: 70%; /* Increased width for a wider form */
     max-width: 800px; /* Max width to prevent it from becoming too wide */
     overflow-y: auto;
-    border: 20px solid #e7e1e9;
+    border: 10px solid #aed6ed;
     position: relative;
     box-sizing: border-box;
     max-height: 90vh; /* Limit the height to avoid overly long form */
@@ -322,40 +322,45 @@ td a:hover {
     background-color: white;
     display: flex;
     flex-direction: column; 
-    padding-left: 20px;
+    margin-top: 30px;
+    margin-left: 150px;
+    /* padding-left: 10px;
     padding-right: 20px;
-    padding-bottom: 20px;
+    padding-bottom: 20px; */
     border-radius: 8px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    width: 70%; /* Increased width for a wider form */
-    max-width: 800px; /* Max width to prevent it from becoming too wide */
+    width: 100%; /* Increased width for a wider form */
+    max-width: 1000px; /* Max width to prevent it from becoming too wide */
     overflow-y: auto;
-    border: 20px solid #e7e1e9;
+    border: 10px solid #aed6ed;
     position: relative;
     box-sizing: border-box;
-    margin-left: 350px;
-    margin-top: 50px;
-    max-height: 90vh; /* Limit the height to avoid overly long form */
+    max-height: 90vh;/* Limit the height to avoid overly long form */
 }
 .popup-recipe-header {
-    background-color: #e7e1e9; /* Purple background */
-    color: rgb(17, 17, 17); /* White text */
-    padding: 15px;
-    border-radius: 12px 12px 0 0; /* Rounded corners at the top */
-    margin-bottom: 20px; /* Space below the header */
+    background-color: #aed6ed; /* Purple background */
+    color: rgb(17, 17, 17); /* Text color */
+    margin-bottom: 20px;
     text-align: center;
-    margin-top: 10px;
+    position: relative;
+    padding: 18px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Align elements horizontally */
+    flex-wrap: wrap; /* Ensures responsiveness */
 }
 
 .popup-recipe-header h3 {
-    margin: 0; /* Remove default margin */
+    margin: 0;
     font-size: 20px;
+    flex-grow: 1; /* Allows title to take available space */
+    text-align: center;
 }
 
 .popup-recipe-header .close-button {
     position: absolute;
-    top: 22px;
-    right: 15px;
+    top: 10px;
+    right: 10px;
     background-color: transparent;
     border: none;
     color: rgb(14, 13, 13);
@@ -368,31 +373,85 @@ td a:hover {
 }
 
 .popup-recipe-header div {
-    margin-top: 10px;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    /* gap: 10px; Spacing between elements */
 }
 
 .popup-recipe-header label {
-    color: rgb(19, 18, 18); /* Label text color */
-    margin-bottom: 5px;
-}
-
-.popup-recipe-header input[type="text"] {
-    width: calc(50% - 110px); /* Adjust width to fit with button */
+    color: rgb(19, 18, 18);
+    font-size: 18px;
     margin-right: 10px;
 }
 
-.popup-recipe-header button {
-    background-color: #8e24aa; /* Darker purple button */
-    color: rgb(27, 26, 26);
-    border: none;
-    border-radius: 4px;
-    padding: 8px 12px;
+.recipe-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* .dropdown-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #569ff7;
+    border: 1px solid #080808;
+    border-radius: 6px;
+    padding: 5px 10px;
+    min-width: 160px;
     cursor: pointer;
 }
 
-.popup-recipe-header button:hover {
-    background-color: #7b1fa2; /* Slightly darker on hover */
+.dropdown-container input {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+    text-align: center;
 }
+
+.dropdown-icon {
+    margin-left: 8px;
+    color: #777;
+} */
+
+.popup-recipe-header button {
+    background-color: #007bff;
+    color: rgb(252, 249, 249);
+    border: none;
+    border-radius: 4px;
+    padding: 10px 17px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.popup-recipe-header button:hover {
+    background-color: #1c76d6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .popup-recipe-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .recipe-container {
+        justify-content: center;
+    }
+
+    button {
+        margin-top: 10px;
+        width: 100%;
+    }
+}
+
 
 #recipe-form h3 {
     text-align: center;
@@ -531,12 +590,12 @@ select {
 
 #recipe-form {
     background-color: white;
-    padding: 20px;
+    /* padding: 20px; */
     border-radius: 8px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    width: 70%; /* Increased width for a wider form */
-    max-width: 800px; /* Max width to prevent it from becoming too wide */
-    overflow-y: auto;
+    width: 100%; /* Increased width for a wider form */
+    max-width: 900px; /* Max width to prevent it from becoming too wide */
+    /* overflow-y: auto; */
     position: relative;
     box-sizing: border-box;
     max-height: 90vh; /* Limit the height to avoid overly long form */
