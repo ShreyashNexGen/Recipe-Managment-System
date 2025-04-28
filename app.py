@@ -31,6 +31,13 @@ from bson import json_util
 from pymongo import MongoClient
 from flask_cors import CORS
 import pyodbc
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+import pandas as pd
+import json 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
 # socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
@@ -948,9 +955,9 @@ def opcua_monitoring():
 
                             opcua_nodes = [
 
-                                "databaseAvailable", "Width", "Height", "Depth", "Art_No",
+                                "databaseAvailable", "Width", "Height", "Depth", "Art No.",
 
-                                "Air_Flow_Set", "Pressure_Drop_Setpoint", "Lower_Tolerance1",
+                                "Air Flow set", "Pressure Drop Setpoint", "Lower_Tolerance1",
 
                                 "Lower_Tolerance2", "Upper_Tolerance1", "Upper_Tolerance2"
 
@@ -974,7 +981,7 @@ def opcua_monitoring():
 
                                     value = float(submenu_value)
 
-                                elif data_type == ua.VariantType.Int32:
+                                elif data_type == ua.VariantType.Int32 or data_type == ua.VariantType.Int16:
 
                                     value = int(submenu_value)
 
@@ -2011,6 +2018,7 @@ def delete_recipe(recipe_id):
     finally:
         if conn:
             conn.close()
+
 def fetch_data_as_dict(cursor):
     """Helper function to convert query result to dictionary."""
     columns = [column[0] for column in cursor.description]
@@ -3639,17 +3647,6 @@ def search_report():
     conn.close()
     return jsonify(data)
 
-from flask import Flask, request, send_file
-import pandas as pd
-import io
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-import pandas as pd
-import json 
 @app.route("/download", methods=["POST"])
 def download():
     import json

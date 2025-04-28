@@ -806,25 +806,67 @@ function openUpdatePopup(recipeId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Populate the form fields with the recipe data
-                document.getElementById("update_recipe_id").value = data.recipe_id;
-                document.getElementById("update_recipe_name").value = data.recipe_name;
-                document.getElementById("update_filter_size").value = data.filter_size;
-                document.getElementById("update_filter_code").value = data.filter_code;
-                document.getElementById("update_art_no").value = data.art_no;
+    document.getElementById("update_recipe_id").value = data.recipe_id;
+    document.getElementById("update_recipe_name").value = data.recipe_name;
+    document.getElementById("update_filter_size").value = data.filter_size;
+    document.getElementById("update_filter_code").value = data.filter_code;
+    document.getElementById("update_art_no").value = data.art_no;
 
-                for (let i = 1; i <= 9; i++) {
+    // Roll Positions
+    // for (let i = 1; i <= 9; i++) {
+    //     if (data[`pos${i}`] !== undefined) {
+    //         document.getElementById(`update_pos${i}`).value = data[`pos${i}`];
+    //     }
+    // }
+    for (let i = 1; i <= 9; i++) {
                     const posSelect = document.getElementById(`update_pos${i}`);
                     posSelect.value = data[`Pos${i}`] || ""; // Populate Pos1 to Pos9
                 }
 
-                document.getElementById("update_alu_coil_width").value = data.Alu_coil_width || "";
-                document.getElementById("update_alu_roller_type").value = data.Alu_roller_type || "";
-                document.getElementById("update_spacer").value = data.Spacer || "";
-                document.getElementById("update_motor_speed").value = data.Motor_speed || "";
-                document.getElementById("update_motor_stroke").value = data.Motor_stroke || "";
-                document.getElementById("update_motor_force").value = data.Motor_force || "";
-            } else {
+    // Machine Settings
+    document.getElementById("update_alu_coil_width").value = data.Alu_coil_width;
+    document.getElementById("update_alu_roller_type").value = data.Alu_roller_type;
+    document.getElementById("update_spacer").value = data.Spacer;
+    document.getElementById("update_motor_speed").value = data.Motor_speed;
+    document.getElementById("update_motor_stroke").value = data.Motor_stroke;
+    document.getElementById("update_motor_force").value = data.Motor_force;
+    document.getElementById("update_Corr1Feed_length").value = data.Corr1Feed_length;
+    document.getElementById("update_Corr2feed_length").value = data.Corr2feed_length;
+    document.getElementById("update_Pleat_Height").value = data.Pleat_Height;
+    document.getElementById("update_Blade_opening").value = data.Blade_opening;
+    document.getElementById("update_Left_Blade_MediaTHickness").value = data.Left_Blade_MediaTHickness;
+    document.getElementById("update_Right_Blade_MediaThickness").value = data.Right_Blade_MediaThickness;
+    document.getElementById("update_Soft_Touch").value = data.Soft_Touch;
+    document.getElementById("update_Press_Touch").value = data.Press_Touch;
+    document.getElementById("update_Puller_Start_pos").value = data.Puller_Start_pos;
+    document.getElementById("update_Puller_End_pos").value = data.Puller_End_pos;
+    document.getElementById("update_Puller2_Feed_Correction").value = data.Puller2_Feed_Correction;
+    document.getElementById("update_Filter_Box_Height").value = data.Filter_Box_Height;
+    document.getElementById("update_Filter_Box_Width").value = data.Filter_Box_Width;
+    document.getElementById("update_Filter_Box_Length").value = data.Filter_Box_Length;
+    document.getElementById("update_Set_Pleat_Count").value = data.Set_Pleat_Count;
+    document.getElementById("update_Set_Pleat_Pitch").value = data.Set_Pleat_Pitch;
+    document.getElementById("update_Set_Batch_Count").value = data.Set_Batch_Count;
+    document.getElementById("update_Machine_Speed_Ref").value = data.Machine_Speed_Ref;
+    document.getElementById("update_Decoiler_Set_point").value = data.Decoiler_Set_point;
+    document.getElementById("update_Low_Dia_Set").value = data.Low_Dia_Set;
+    document.getElementById("update_Cutter_Park_pos").value = data.Cutter_Park_pos;
+    document.getElementById("update_Cutter_Fwd_Pos").value = data.Cutter_Fwd_Pos;
+
+    // Air Inspection Settings
+    document.getElementById("update_databaseAvailable").value = data.databaseAvailable;
+    document.getElementById("update_Width").value = data.Width;
+    document.getElementById("update_Height").value = data.Height;
+    document.getElementById("update_Depth").value = data.Depth;
+    document.getElementById("update_Art_Num").value = data.Art_Num;
+    document.getElementById("update_Air_Flow_Set").value = data.Air_Flow_Set;
+    document.getElementById("update_Pressure_Drop_Setpoint").value = data.Pressure_Drop_Setpoint;
+    document.getElementById("update_Lower_Tolerance1").value = data.Lower_Tolerance1;
+    document.getElementById("update_Lower_Tolerance2").value = data.Lower_Tolerance2;
+    document.getElementById("update_Upper_Tolerance1").value = data.Upper_Tolerance1;
+    document.getElementById("update_Upper_Tolerance2").value = data.Upper_Tolerance2;
+}
+ else {
                 alert("Recipe not found!");
             }
         })
