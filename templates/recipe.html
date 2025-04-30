@@ -293,29 +293,24 @@
             <button type="button" class="close-button" onclick="toggleUpdatePopup()">X</button>
         </div>
         <form action="/update_recipe" method="POST" class="recipe-form">
-            <div class="form-step1" id="updatestep1">
-                <div class="form-row">
-                    <label for="update_recipe_id">Recipe ID:</label>
-                    <input type="text" id="update_recipe_id" name="recipe_id" readonly>
-        
-                    <label for="update_recipe_name">Recipe Name:</label>
-                    <input type="text" id="update_recipe_name" name="recipe_name" required>
-        
-                    <label for="update_filter_size">Filter Size:</label>
-                    <input type="text" id="update_filter_size" name="filter_size" required>
-        
-                    <label for="update_filter_code">Filter Code:</label>
-                    <input type="text" id="update_filter_code" name="filter_code" required>
-        
-                    <label for="update_art_no">Art No:</label>
-                    <input type="text" id="update_art_no" name="art_no" required>
-                </div>
-                <div class="form-buttons">
-                    <button type="button" onclick="nextStep()">Next</button>
-                </div>
+            <div class="form-row">
+            <label for="update_recipe_id">Recipe ID:</label>
+            <input type="text" id="update_recipe_id" name="recipe_id" readonly>
+
+            <label for="update_recipe_name">Recipe Name:</label>
+            <input type="text" id="update_recipe_name" name="recipe_name" required>
+
+            <label for="update_filter_size">Filter Size:</label>
+            <input type="text" id="update_filter_size" name="filter_size" required>
+
+            <label for="update_filter_code">Filter Code:</label>
+            <input type="text" id="update_filter_code" name="filter_code" required>
+
+            <label for="update_art_no">Art No:</label>
+            <input type="text" id="update_art_no" name="art_no" required>
             </div>
-            <div class="form-step1" id="updatestep2" style="display:none;">
-                <h1 style="display: block; margin: 0 auto; text-align: center;">Roll Positions</h1>
+            <hr>
+            <h1 style="display: block; margin: 0 auto; text-align: center;">Roll Positions</h1>
             <div class="form-row">
             {% for i in range(1, 10) %}
             <label for="update_pos{{ i }}">Pos{{ i }}:</label>
@@ -327,182 +322,141 @@
             </select>
             {% endfor %}
              </div>
-             <div class="form-buttons">
-                <button type="button" onclick="prevStep()">Back</button>
-                <button type="button" onclick="nextStep()">Next</button>
+             <hr>
+             <h1 style="display: block; margin: 0 auto; text-align: center;">Machine Settings</h1>
+             <div class="form-row">
+            <label for="update_alu_coil_width">Alu Coil Width:</label>
+            <input type="text" id="update_alu_coil_width" name="Alu_coil_width">
+
+            <label for="update_alu_roller_type">Alu Roller Type:</label>
+            <input type="text" id="update_alu_roller_type" name="Alu_roller_type">
+
+            <label for="update_spacer">Spacer:</label>
+            <input type="text" id="update_spacer" name="Spacer">
+
+            <label for="update_motor_speed">Motor Speed:</label>
+            <input type="text" id="update_motor_speed" name="Motor_speed">
+
+            <label for="update_motor_stroke">Motor Stroke:</label>
+            <input type="text" id="update_motor_stroke" name="Motor_stroke">
             </div>
+            <div class="form-row">
+            <label for="update_motor_force">Motor Force:</label>
+            <input type="text" id="update_motor_force" name="Motor_force">
+            <!-- New fields added -->
+            <label for="update_Corr1Feed_length">Corr1 Feed Length:</label>
+            <input type="text" id="update_Corr1Feed_length" name="Corr1Feed_length">
+
+            <label for="update_Corr2feed_length">Corr2 Feed Length:</label>
+            <input type="text" id="update_Corr2feed_length" name="Corr2feed_length">
+
+            <label for="update_Pleat_Height">Pleat Height:</label>
+            <input type="text" id="update_Pleat_Height" name="Pleat_Height">
+
+            <label for="update_Blade_opening">Blade Opening:</label>
+            <input type="text" id="update_Blade_opening" name="Blade_opening">
             </div>
-            <div class="form-step1" id="updatestep3" style="display:none;">
-                <h1 style="display: block; margin: 0 auto; text-align: center;">Machine Settings</h1>
-                <div class="form-row">
-                    <label for="update_alu_coil_width">Alu Coil Width:</label>
-                    <input type="text" id="update_alu_coil_width" name="Alu_coil_width">
-        
-                    <label for="update_alu_roller_type">Alu Roller Type:</label>
-                    <input type="text" id="update_alu_roller_type" name="Alu_roller_type">
-        
-                    <label for="update_spacer">Spacer:</label>
-                    <input type="text" id="update_spacer" name="Spacer">
-        
-                    <label for="update_motor_speed">Motor Speed:</label>
-                    <input type="text" id="update_motor_speed" name="Motor_speed">
-        
-                    <label for="update_motor_stroke">Motor Stroke:</label>
-                    <input type="text" id="update_motor_stroke" name="Motor_stroke">
-                    </div>
-                    <div class="form-row">
-                    <label for="update_motor_force">Motor Force:</label>
-                    <input type="text" id="update_motor_force" name="Motor_force">
-                    <!-- New fields added -->
-                    <label for="update_Corr1Feed_length">Corr1 Feed Length:</label>
-                    <input type="text" id="update_Corr1Feed_length" name="Corr1Feed_length">
-        
-                    <label for="update_Corr2feed_length">Corr2 Feed Length:</label>
-                    <input type="text" id="update_Corr2feed_length" name="Corr2feed_length">
-        
-                    <label for="update_Pleat_Height">Pleat Height:</label>
-                    <input type="text" id="update_Pleat_Height" name="Pleat_Height">
-        
-                    <label for="update_Blade_opening">Blade Opening:</label>
-                    <input type="text" id="update_Blade_opening" name="Blade_opening">
-                    </div>
-                    <div class="form-row">
-                    <label for="update_Left_Blade_MediaTHickness">Left Blade Media Thickness:</label>
-                    <input type="text" id="update_Left_Blade_MediaTHickness" name="Left_Blade_MediaTHickness">
-        
-                    <label for="update_Right_Blade_MediaThickness">Right Blade Media Thickness:</label>
-                    <input type="text" id="update_Right_Blade_MediaThickness" name="Right_Blade_MediaThickness">
-        
-                    <label for="update_Soft_Touch">Soft Touch:</label>
-                    <input type="text" id="update_Soft_Touch" name="Soft_Touch">
-        
-                    <label for="update_Press_Touch">Press Touch:</label>
-                    <input type="text" id="update_Press_Touch" name="Press_Touch">
-        
-                    <label for="update_Puller_Start_pos">Puller Start Position:</label>
-                    <input type="text" id="update_Puller_Start_pos" name="Puller_Start_pos">
-                     </div>
-                     <div class="form-row">
-                    <label for="update_Puller_End_pos">Puller End Position:</label>
-                    <input type="text" id="update_Puller_End_pos" name="Puller_End_pos">
-         
-                    <label for="update_Puller2_Feed_Correction">Puller 2 Feed Correction:</label>
-                    <input type="text" id="update_Puller2_Feed_Correction" name="Puller2_Feed_Correction">
-          
-                    <label for="update_Filter_Box_Height">Filter Box Height:</label>
-                    <input type="text" id="update_Filter_Box_Height" name="Filter_Box_Height">
-                    
-                    <label for="update_Filter_Box_Width">Filter Box Width:</label>
-                    <input type="text" id="update_Filter_Box_Width" name="Filter_Box_Width">
-        
-                    <label for="update_Filter_Box_Length">Filter Box Length:</label>
-                    <input type="text" id="update_Filter_Box_Length" name="Filter_Box_Length">
-                     </div>
-                     <div class="form-row">
-                    <label for="update_Set_Pleat_Count">Set Pleat Count:</label>
-                    <input type="text" id="update_Set_Pleat_Count" name="Set_Pleat_Count">
-        
-                    <label for="update_Set_Pleat_Pitch">Set Pleat Pitch:</label>
-                    <input type="text" id="update_Set_Pleat_Pitch" name="Set_Pleat_Pitch">
-        
-                    <label for="update_Set_Batch_Count">Set Batch Count:</label>
-                    <input type="text" id="update_Set_Batch_Count" name="Set_Batch_Count">
-                    
-                    <label for="update_Machine_Speed_Ref">Machine Speed Reference:</label>
-                    <input type="text" id="update_Machine_Speed_Ref" name="Machine_Speed_Ref">
-        
-                    <label for="update_Decoiler_Set_point">Decoiler Set Point:</label>
-                    <input type="text" id="update_Decoiler_Set_point" name="Decoiler_Set_point">
-                     </div>
-                     <div class="form-row">
-                    <label for="update_Low_Dia_Set">Low Diameter Set:</label>
-                    <input type="text" id="update_Low_Dia_Set" name="Low_Dia_Set">
-        
-                    <label for="update_Cutter_Park_pos">Cutter Park Position:</label>
-                    <input type="text" id="update_Cutter_Park_pos" name="Cutter_Park_pos">
-        
-                    <label for="update_Cutter_Fwd_Pos">Cutter Forward Position:</label>
-                    <input type="text" id="update_Cutter_Fwd_Pos" name="Cutter_Fwd_Pos">
-                    
-                    </div>
-                    <div class="form-buttons">
-                        <button type="button" onclick="prevStep()">Back</button>
-                        <button type="button" onclick="nextStep()">Next</button>
-                    </div>
+            <div class="form-row">
+            <label for="update_Left_Blade_MediaTHickness">Left Blade Media Thickness:</label>
+            <input type="text" id="update_Left_Blade_MediaTHickness" name="Left_Blade_MediaTHickness">
+
+            <label for="update_Right_Blade_MediaThickness">Right Blade Media Thickness:</label>
+            <input type="text" id="update_Right_Blade_MediaThickness" name="Right_Blade_MediaThickness">
+
+            <label for="update_Soft_Touch">Soft Touch:</label>
+            <input type="text" id="update_Soft_Touch" name="Soft_Touch">
+
+            <label for="update_Press_Touch">Press Touch:</label>
+            <input type="text" id="update_Press_Touch" name="Press_Touch">
+
+            <label for="update_Puller_Start_pos">Puller Start Position:</label>
+            <input type="text" id="update_Puller_Start_pos" name="Puller_Start_pos">
+             </div>
+             <div class="form-row">
+            <label for="update_Puller_End_pos">Puller End Position:</label>
+            <input type="text" id="update_Puller_End_pos" name="Puller_End_pos">
+ 
+            <label for="update_Puller2_Feed_Correction">Puller 2 Feed Correction:</label>
+            <input type="text" id="update_Puller2_Feed_Correction" name="Puller2_Feed_Correction">
+  
+            <label for="update_Filter_Box_Height">Filter Box Height:</label>
+            <input type="text" id="update_Filter_Box_Height" name="Filter_Box_Height">
+            
+            <label for="update_Filter_Box_Width">Filter Box Width:</label>
+            <input type="text" id="update_Filter_Box_Width" name="Filter_Box_Width">
+
+            <label for="update_Filter_Box_Length">Filter Box Length:</label>
+            <input type="text" id="update_Filter_Box_Length" name="Filter_Box_Length">
+             </div>
+             <div class="form-row">
+            <label for="update_Set_Pleat_Count">Set Pleat Count:</label>
+            <input type="text" id="update_Set_Pleat_Count" name="Set_Pleat_Count">
+
+            <label for="update_Set_Pleat_Pitch">Set Pleat Pitch:</label>
+            <input type="text" id="update_Set_Pleat_Pitch" name="Set_Pleat_Pitch">
+
+            <label for="update_Set_Batch_Count">Set Batch Count:</label>
+            <input type="text" id="update_Set_Batch_Count" name="Set_Batch_Count">
+            
+            <label for="update_Machine_Speed_Ref">Machine Speed Reference:</label>
+            <input type="text" id="update_Machine_Speed_Ref" name="Machine_Speed_Ref">
+
+            <label for="update_Decoiler_Set_point">Decoiler Set Point:</label>
+            <input type="text" id="update_Decoiler_Set_point" name="Decoiler_Set_point">
+             </div>
+             <div class="form-row">
+            <label for="update_Low_Dia_Set">Low Diameter Set:</label>
+            <input type="text" id="update_Low_Dia_Set" name="Low_Dia_Set">
+
+            <label for="update_Cutter_Park_pos">Cutter Park Position:</label>
+            <input type="text" id="update_Cutter_Park_pos" name="Cutter_Park_pos">
+
+            <label for="update_Cutter_Fwd_Pos">Cutter Forward Position:</label>
+            <input type="text" id="update_Cutter_Fwd_Pos" name="Cutter_Fwd_Pos">
+            
             </div>
-            <div class="form-step1" id="updatestep4" style="display:none;">
-                <h1 style="display: block; margin: 0 auto; text-align: center;">Air Inspection Settings</h1>
-                <div class="form-row">
-                    <label for="update_databaseAvailable">Database Available:</label>
-                    <input type="text" id="update_databaseAvailable" name="databaseAvailable">
-        
-                    <label for="update_Width">Width:</label>
-                    <input type="text" id="update_Width" name="Width">
-        
-                    <label for="update_Height">Height:</label>
-                    <input type="text" id="update_Height" name="Height">
-        
-                    <label for="update_Depth">Depth:</label>
-                    <input type="text" id="update_Depth" name="Depth">
-        
-                    <label for="update_Art_Num">Art Number.:</label>
-                    <input type="text" id="update_Art_Num" name="Art_Num">
-                    </div>
-                    <div class="form-row">
-                    <label for="update_Air_Flow_Set">Air Flow Set:</label>
-                    <input type="text" id="update_Air_Flow_Set" name="Air_Flow_Set">
-        
-                    <label for="update_Pressure_Drop_Setpoint">Pressure Drop Setpoint:</label>
-                    <input type="text" id="update_Pressure_Drop_Setpoint" name="Pressure_Drop_Setpoint">
-        
-                    <label for="update_Lower_Tolerance1">Lower Tolerance1:</label>
-                    <input type="text" id="update_Lower_Tolerance1" name="Lower_Tolerance1">
-        
-                    <label for="update_Lower_Tolerance2">Lower Tolerance2:</label>
-                    <input type="text" id="update_Lower_Tolerance2" name="Lower_Tolerance2">
-        
-                    <label for="update_Upper_Tolerance1">Upper Tolerance1:</label>
-                    <input type="text" id="update_Upper_Tolerance1" name="Upper_Tolerance1">
-                    </div>
-                    <div class="form-row">
-                    <label for="update_Upper_Tolerance2">Upper Tolerance2:</label>
-                    <input type="text" id="update_Upper_Tolerance2" name="Upper_Tolerance2">
-                    </div>
-                    <div class="form-buttons">
-                        <button type="button" onclick="prevStep()">Back</button>
-                        <button type="submit" class="submit-button1">Update Recipe</button></div>
-                    </div>
+            <hr>
+            <h1 style="display: block; margin: 0 auto; text-align: center;">Air Inspection Settings</h1>
+            <div class="form-row">
+            <label for="update_databaseAvailable">Database Available:</label>
+            <input type="text" id="update_databaseAvailable" name="databaseAvailable">
+
+            <label for="update_Width">Width:</label>
+            <input type="text" id="update_Width" name="Width">
+
+            <label for="update_Height">Height:</label>
+            <input type="text" id="update_Height" name="Height">
+
+            <label for="update_Depth">Depth:</label>
+            <input type="text" id="update_Depth" name="Depth">
+
+            <label for="update_Art_Num">Art Number.:</label>
+            <input type="text" id="update_Art_Num" name="Art_Num">
             </div>
+            <div class="form-row">
+            <label for="update_Air_Flow_Set">Air Flow Set:</label>
+            <input type="text" id="update_Air_Flow_Set" name="Air_Flow_Set">
+
+            <label for="update_Pressure_Drop_Setpoint">Pressure Drop Setpoint:</label>
+            <input type="text" id="update_Pressure_Drop_Setpoint" name="Pressure_Drop_Setpoint">
+
+            <label for="update_Lower_Tolerance1">Lower Tolerance1:</label>
+            <input type="text" id="update_Lower_Tolerance1" name="Lower_Tolerance1">
+
+            <label for="update_Lower_Tolerance2">Lower Tolerance2:</label>
+            <input type="text" id="update_Lower_Tolerance2" name="Lower_Tolerance2">
+
+            <label for="update_Upper_Tolerance1">Upper Tolerance1:</label>
+            <input type="text" id="update_Upper_Tolerance1" name="Upper_Tolerance1">
+            </div>
+            <div class="form-row">
+            <label for="update_Upper_Tolerance2">Upper Tolerance2:</label>
+            <input type="text" id="update_Upper_Tolerance2" name="Upper_Tolerance2">
+            </div>
+            <hr>
+            <div class="form-buttons">
+            <button type="submit" class="submit-button1">Update Recipe</button></div>
         </form>
-        <script>
-            let currentStep1 = 1;
-            function showStep(step) {
-                // Hide all steps
-                document.querySelectorAll('.form-step1').forEach(function(stepDiv) {
-                    stepDiv.style.display = 'none';
-                });
-                // Show the selected step
-                document.getElementById('step' + step).style.display = 'block';
-            }
-            
-            function nextStep() {
-                if (currentStep1 < 4) {
-                    currentStep1++;
-                    showStep(currentStep1);
-                }
-            }
-            
-            function prevStep() {
-                if (currentStep1 > 1) {
-                    currentStep1--;
-                    showStep(currentStep1);
-                }
-            }
-            
-            // Initially show the first step
-            showStep(currentStep1);
-            
-        </script>
     </div>
 </div>
 
