@@ -26,7 +26,15 @@
             {% endif %}
             
             {% if 'raw_material' in session.get('user_roles', []) %}
-            <li><a href="/raw-material" class="nav-link"><i class="fa-solid fa-box-open" style="margin-right: 8px;"></i>Raw Material</a></li>
+            <!-- <li><a href="/raw-material" class="nav-link"><i class="fa-solid fa-box-open" style="margin-right: 8px;"></i>Raw Material</a></li> -->
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-box-open" style="margin-right: 8px;"></i>Raw Material</a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="/raw-material">&bull;Filter</a></li>
+                    <li><a class="dropdown-item" href="/alu-raw-material">&bull;Aluminium</a></li>
+                    <li><a class="dropdown-item" href="/h-raw-material">&bull;Housing</a></li>
+                </ul>
+            </li>
             {% endif %}
             
             {% if 'recipe' in session.get('user_roles', []) %}

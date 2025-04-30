@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="content-header">
-    <h1> Filter Raw Material</h1>
+    <h1>Housing Raw Material</h1>
     <button onclick="openAddMaterialForm()" class="add-button">+ Add Material</button>    
 </div>
 <div class="search-section">
@@ -35,15 +35,19 @@
         </div>
 
         <!-- Form Content -->
-        <form id="addRawMaterialForm" action="{{ url_for('raw_material') }}" method="POST">
+        <form id="addRawMaterialForm" action="{{ url_for('raw_material2') }}" method="POST">
             <div class="popup-raw-body">
                 <div class="form-raw-group">
-                    <label for="type1">Type:</label>
-                    <input type="text" id="type1" name="type1" placeholder="Enter Type" required>
+                    <label for="depth">Depth:</label>
+                    <input type="text" id="depth" name="depth" placeholder="Enter depth" required>
                 </div>
                 <div class="form-raw-group">
                     <label for="width">Width:</label>
                     <input type="number" id="width" name="width" placeholder="Enter Width" required>
+                </div>
+                <div class="form-raw-group">
+                    <label for="height">Height:</label>
+                    <input type="number" id="height" name="height" placeholder="Enter height" required>
                 </div>
                 <div class="form-raw-group">
                     <label for="part_no">Part_No.:</label>
@@ -60,40 +64,44 @@
 </div>
 
 <!-- Update Raw Material Popup Form -->
-<div id="update-material-section" class="pop-raw-up" style="display: none;">
-    <div id="material-update-form" class="popup-raw-content">
-        <div class="popup-raw-header">
+<div id="update-material-section" class="pop-update-up" style="display: none;">
+    <div id="material-update-form" class="popup-update-content">
+        <div class="popup-update-header">
             <h3>Update Raw Material</h3>
             <button type="button" class="close-update-button" onclick="toggleUpdatePopup()"><i class="fas fa-times"></i></button>
         </div>
         <!-- Form Content -->
         <form id="updateMaterialForm" method="POST">
             <div class="popup-update-body">
-                <div class="form-update-group" style="display: none;">
+                <div class="form-update-group"style="display: none;">
                     <label for="update_material_Id">Material ID:</label>
                     <input type="text" id="update_material_Id" name="material_Id" readonly>
                 </div>
-                <div class="form-update-group" >
-                    <label for="update_type">Type:</label>
-                    <input type="text" id="update_type" name="type" required>
+                <div class="form-update-group">
+                    <label for="update_depth">Depth:</label>
+                    <input type="text" id="update_depth" name="depth" required>
                 </div>
                 <div class="form-update-group">
                     <label for="update_width">Width:</label>
                     <input type="number" id="update_width" name="width" required>
                 </div>
                 <div class="form-update-group">
+                    <label for="update_height">Height:</label>
+                    <input type="number" id="update_height" name="height" required>
+                </div>
+                <div class="form-update-group">
                     <label for="update_part_no">Part No.:</label>
                     <input type="number" id="update_part_no" name="part_no" required>
                 </div>
-                <div class="form-update-group" style="display: none;">
+                <div class="form-update-group"style="display: none;">
                     <label for="update_make">Make:</label>
                     <input type="text" id="update_make" name="make" required>
                 </div>
-                <div class="form-update-group" style="display: none;">
+                <div class="form-update-group"style="display: none;">
                     <label for="update_user">User:</label>
                     <input type="text" id="update_user" name="user" required>
                 </div>
-                <div class="form-update-group" style="display: none;">
+                <div class="form-update-group"style="display: none;">
                     <label for="update_materialType">Material Type:</label>
                     <input type="text" id="update_materialType" name="materialType" readonly>
                 </div>
@@ -135,8 +143,9 @@
             <tr>
                 <th>Serial No.</th>
                 <th>Material ID</th>
-                <th>Type</th>
+                <th>Depth</th>
                 <th>Width</th>
+                <th>Height</th>
                 <th>Part No.</th>
                 <th>Make</th>
                 <th>User</th>
@@ -152,8 +161,9 @@
             <tr id="row-{{ material.material_Id}}">
                 <td>{{ serial_number + loop.index }}</td>
                 <td>{{ material.material_Id }}</td>
-                <td>{{ material.type}}</td>
+                <td>{{ material.length}}</td>
                 <td>{{ material.width}}</td>
+                <td>{{ material.height}}</td>
                 <td>{{ material.part_no}}</td>
                 <td>{{ material.make }}</td>
                 <td>{{ material.user }}</td>
@@ -170,7 +180,7 @@
                     </button>
                 </td>
                 <td>
-                    <button class="update-button" onclick="openUpdatePopup('{{ material.material_Id }}', '{{ material.type }}', '{{ material.width}}','{{ material.part_no}}', '{{ material.make }}', '{{ material.user }}', '{{ material.materialType }}', '{{ material.barcode }}')">
+                    <button class="update-button" onclick="openUpdatePopup('{{ material.material_Id }}', '{{ material.length}}', '{{ material.width}}','{{ material.height}}','{{ material.part_no}}', '{{ material.make }}', '{{ material.user }}', '{{ material.materialType }}', '{{ material.barcode }}')">
                         <i class="fa-regular fa-pen-to-square"></i> 
                     </button>
                 </td>
@@ -184,19 +194,19 @@
 <div class="pagination-container">
     <!-- Previous Button -->
     {% if page > 1 %}
-      <a href="{{ url_for('raw_material', page=page - 1, limit=limit) }}" class="pagination-btn">Previous</a>
+      <a href="{{ url_for('raw_material2', page=page - 1, limit=limit) }}" class="pagination-btn">Previous</a>
     {% else %}
       <span class="pagination-btn disabled">Previous</span>
     {% endif %}
 
     <!-- Page Numbers -->
     {% for p in range(1, total_pages + 1) %}
-      <a href="{{ url_for('raw_material', page=p, limit=limit) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+      <a href="{{ url_for('raw_material2', page=p, limit=limit) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
     {% endfor %}
 
     <!-- Next Button -->
     {% if page < total_pages %}
-      <a href="{{ url_for('raw_material', page=page + 1, limit=limit) }}" class="pagination-btn">Next</a>
+      <a href="{{ url_for('raw_material2', page=page + 1, limit=limit) }}" class="pagination-btn">Next</a>
     {% else %}
       <span class="pagination-btn disabled">Next</span>
     {% endif %}
@@ -263,7 +273,7 @@
     
         // Confirm the deletion
         if (confirm("Do you want to delete this raw material?")) {
-            fetch(`/delete-raw-material/${material_Id}`, {
+            fetch(`/delete-h_raw-material/${material_Id}`, {
                 method: "DELETE",
                 headers: {
                     'Content-Type': 'application/json',
@@ -322,11 +332,12 @@
     }
 
     // Function to open the update popup with pre-filled data
-    function openUpdatePopup(material_Id, type, width,part_no, make, user, materialType, barcode) {
-        console.log(type,width,part_no)
+    function openUpdatePopup(material_Id, depth, width,height,part_no, make, user, materialType, barcode) {
+        // console.log(type,width,part_no)
         document.getElementById('update_material_Id').value = material_Id;
-        document.getElementById('update_type').value = type;
+        document.getElementById('update_depth').value = depth;
         document.getElementById('update_width').value = width;
+        document.getElementById('update_height').value = height;
         document.getElementById('update_part_no').value = part_no;
         document.getElementById('update_make').value = make;
         document.getElementById('update_user').value = user;
@@ -347,8 +358,9 @@ document.addEventListener("DOMContentLoaded", function () {
         event.preventDefault();  // Prevent the form from submitting normally
 
         const material_Id = document.getElementById("update_material_Id").value;
-        const type = document.getElementById("update_type").value;
+        const depth = document.getElementById("update_depth").value;
         const width = document.getElementById("update_width").value;
+        const height = document.getElementById("update_height").value;
         const part_no = document.getElementById("update_part_no").value;
         const make = document.getElementById("update_make").value;
         const user = document.getElementById("update_user").value;
@@ -359,15 +371,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Send POST request to update the material in the backend
         try {
-            const response = await fetch(`/update-raw-material/${material_Id}`, {
+            const response = await fetch(`/update-h_raw-material/${material_Id}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     material_Id,
-                    type,
+                    depth,
                     width,
+                    height,
                     part_no,
                     make,
                     user,
@@ -381,7 +394,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (response.ok && result.success) {
                 alert("Raw material updated successfully!");
                 // Dynamically update the row in the table
-                updateTableRow(material_Id, type, width,part_no, make, user, materialType,barcode);
+                updateTableRow(material_Id,depth, width,height,part_no, make, user, materialType,barcode);
                 toggleUpdatePopup();  // Close the popup
             } else {
                 alert(`Error: ${result.error || "Failed to update the material."}`);
@@ -394,18 +407,19 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Function to update the table row after the material is updated
-function updateTableRow(material_Id, type, width,part_no, make, user, materialType,barcode) {
+function updateTableRow(material_Id, depth, width, height,part_no, make, user, materialType,barcode) {
     const row = document.getElementById(`row-${material_Id}`);
     if (row) {
         row.cells[1].innerText = material_Id;
-        row.cells[2].innerText = type;
+        row.cells[2].innerText = depth;
         row.cells[3].innerText = width;
-        row.cells[4].innerText = part_no;
-        row.cells[5].innerText = make;
-        row.cells[6].innerText = user;
-        row.cells[7].innerText = `${type}x${width}:${part_no}`;
-        row.cells[8].innerHTML = `
-            <button class="download-button" onclick="downloadBarcode('${(`${type}x${width}:${part_no}`)}')">
+        row.cells[4].innerText = height;
+        row.cells[5].innerText = part_no;
+        row.cells[6].innerText = make;
+        row.cells[7].innerText = user;
+        row.cells[8].innerText = `${width}x${height}:${part_no}`;
+        row.cells[9].innerHTML = `
+            <button class="download-button" onclick="downloadBarcode('${(`${width}x${height}:${part_no}`)}')">
                 <i class="fa-solid fa-download"></i>
             </button>
         `;
