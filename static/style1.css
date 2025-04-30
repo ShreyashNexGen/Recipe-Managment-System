@@ -343,7 +343,7 @@ td a:hover {
     margin-bottom: 20px;
     text-align: center;
     position: relative;
-    padding: 18px 16px;
+    /* padding: 18px 16px; */
     display: flex;
     align-items: center;
     justify-content: space-between; /* Align elements horizontally */
@@ -453,14 +453,50 @@ td a:hover {
 }
 
 
-#recipe-form h3 {
+/* #recipe-form h3 {
     text-align: center;
     margin-bottom: 20px;
     color: #333;
     font-size: 24px;
     font-weight: bold;
+} */
+.form-buttons {
+    text-align: center;
+    margin-top: 20px;
 }
 
+.form-buttons button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    /* margin: 8px 10px; */
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+/* Hover effect */
+.form-buttons button:hover {
+    background-color: white;
+    color: black;
+    border: 2px solid #4CAF50;
+}
+
+/* Special style for Submit button */
+.form-buttons button[type="submit"] {
+    background-color: #2196F3; /* Blue */
+}
+
+.form-buttons button[type="submit"]:hover {
+    background-color: white;
+    color: black;
+    border: 2px solid #2196F3;
+}
 
 
 /* Input Fields Styling */
@@ -603,7 +639,7 @@ select {
 
 #recipe-form h3 {
     text-align: center;
-    margin-bottom: 20px;
+    /* margin-bottom: 20px; */
     color: #333;
     font-size: 24px;
     font-weight: bold;
