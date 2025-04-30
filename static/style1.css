@@ -321,21 +321,20 @@ td a:hover {
 #update-recipe-form {
     background-color: white;
     display: flex;
-    flex-direction: column; 
-    margin-top: 30px;
-    margin-left: 150px;
-    /* padding-left: 10px;
-    padding-right: 20px;
-    padding-bottom: 20px; */
+    flex-direction: column;
     border-radius: 8px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    width: 100%; /* Increased width for a wider form */
-    max-width: 1000px; /* Max width to prevent it from becoming too wide */
+    width: 100%;
+    max-width: 1000px;
+    max-height: 90vh;
     overflow-y: auto;
     border: 10px solid #aed6ed;
-    position: relative;
+    position: fixed; /* <-- Centering needs fixed position */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* <-- This centers it */
     box-sizing: border-box;
-    max-height: 90vh;/* Limit the height to avoid overly long form */
+    z-index: 9999; /* Make sure it appears above other content */
 }
 .popup-recipe-header {
     background-color: #aed6ed; /* Purple background */
@@ -343,7 +342,7 @@ td a:hover {
     margin-bottom: 20px;
     text-align: center;
     position: relative;
-    /* padding: 18px 16px; */
+    padding: 18px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between; /* Align elements horizontally */

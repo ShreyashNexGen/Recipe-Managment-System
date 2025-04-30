@@ -154,6 +154,8 @@ def init_db():
                         Alu_coil_width NVARCHAR(255),
                         Alu_roller_type INT,
                         Spacer FLOAT,
+                        Alu_Material NVARCHAR(255),
+                        House_Material NVARCHAR(255),
                         Recipe_ID INT FOREIGN KEY REFERENCES Recipe(Recipe_ID)
                     )
             """,
@@ -643,6 +645,10 @@ def recipe_list():
     # Fetch distinct material types
     cursor.execute("SELECT DISTINCT materialType FROM Raw_Materials")
     pos_values = [row[0] for row in cursor.fetchall()]
+    cursor.execute("SELECT DISTINCT materialType FROM Alu_Raw_Materials")
+    alu_values = [row[0] for row in cursor.fetchall()]
+    cursor.execute("SELECT DISTINCT materialType FROM h_Raw_Materials")
+    h_values = [row[0] for row in cursor.fetchall()]
 
     # Get total recipe count
     cursor.execute("SELECT COUNT(*) FROM Recipe")
@@ -655,10 +661,13 @@ def recipe_list():
         'recipe.html',
         recipes=recipes,
         pos_values=pos_values,
+        alu_values=alu_values,
+        h_values=h_values,
         page=page,
         per_page=per_page,
         total_pages=total_pages
     )
+
 @app.route('/api/recipe_log', methods=['GET'])
 def get_recipe_log():
     conn = get_db_connection()
@@ -2797,13 +2806,15 @@ def add_recipe():
     Lower_Tolerance2 = request.form.get('Lower_Tolerance2')
     Upper_Tolerance1 = request.form.get('Upper_Tolerance1')
     Upper_Tolerance2 = request.form.get('Upper_Tolerance2')
+    alu_value = request.form.get('alu_mat', None)
+    house_value = request.form.get('house_mat', None)
+
 
     print("Received Form Data:", recipe_id, databaseAvailable, Width, Height, Depth)
     
     # Extract POS values (1-9)
     pos_values = [request.form.get(f'pos{i}', None) for i in range(1, 10)]
-    
-
+ 
     # Validate required fields
     # required_fields = [recipe_id, recipe_name, filter_size, filter_code, art_no, alu_coil_width, motor_speed, motor_stroke, motor_force]
     # if any(field is None or field.strip() == "" for field in required_fields):
@@ -2826,9 +2837,9 @@ def add_recipe():
         # Insert into `Recipe_Details1` table
         cursor.execute(
             '''INSERT INTO Recipe_Details1 
-               (Recipe_ID, Pos1, Pos2, Pos3, Pos4, Pos5, Pos6, Pos7, Pos8, Pos9, Alu_coil_width, Alu_roller_type, Spacer) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            (recipe_id, *pos_values, alu_coil_width, alu_roller_type, spacer)
+               (Recipe_ID, Pos1, Pos2, Pos3, Pos4, Pos5, Pos6, Pos7, Pos8, Pos9, Alu_coil_width, Alu_roller_type, Spacer,Alu_Material,House_Material) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)''',
+            (recipe_id, *pos_values, alu_coil_width, alu_roller_type, spacer,alu_value,house_value)
         )
 
         # Insert into `Sub_Menu` table with new fields
@@ -2985,6 +2996,7 @@ def start_recipe(recipe_id):
         print(r"recipe_info",recipe_info)
         cursor.execute("SELECT * FROM Recipe_Details1 WHERE Recipe_ID = ?", (recipe_id,))
         recipe_details = cursor.fetchone()
+        print(recipe_details)
         cursor.execute("SELECT * FROM Sub_Menu WHERE Recipe_ID = ?", (recipe_id,))
         sub_menu = cursor.fetchone()
         print(sub_menu)
