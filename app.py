@@ -97,8 +97,34 @@ def init_db():
             "Raw_Materials": """
                     CREATE TABLE Raw_Materials (
                         material_Id INT IDENTITY(1,1) PRIMARY KEY,
-                        typeCode NVARCHAR(255) NOT NULL,
-                        lotNo NVARCHAR(255) NOT NULL,
+                        type NVARCHAR(255) NOT NULL,
+                        width NVARCHAR(255) NOT NULL,
+                        part_no NVARCHAR(255) NOT NULL,
+                        materialType NVARCHAR(255) NOT NULL UNIQUE,
+                        make NVARCHAR(255) NOT NULL,
+                        [user] NVARCHAR(255) NOT NULL,
+                        barcode NVARCHAR(255) NOT NULL
+                    )
+            """,
+            "Alu_Raw_Materials": """
+                    CREATE TABLE Alu_Raw_Materials (
+                        material_Id INT IDENTITY(1,1) PRIMARY KEY,
+                        thickness NVARCHAR(255) NOT NULL,
+                        width NVARCHAR(255) NOT NULL,
+                        part_no NVARCHAR(255) NOT NULL,
+                        materialType NVARCHAR(255) NOT NULL UNIQUE,
+                        make NVARCHAR(255) NOT NULL,
+                        [user] NVARCHAR(255) NOT NULL,
+                        barcode NVARCHAR(255) NOT NULL
+                    )
+            """,
+            "h_Raw_Materials": """
+                    CREATE TABLE h_Raw_Materials (
+                        material_Id INT IDENTITY(1,1) PRIMARY KEY,
+                        length NVARCHAR(255) NOT NULL,
+                        width NVARCHAR(255) NOT NULL,
+                        height NVARCHAR(255) NOT NULL,
+                        part_no NVARCHAR(255) NOT NULL,
                         materialType NVARCHAR(255) NOT NULL UNIQUE,
                         make NVARCHAR(255) NOT NULL,
                         [user] NVARCHAR(255) NOT NULL,
@@ -1799,14 +1825,17 @@ def raw_material():
     if request.method == 'POST':
         try:
             # Extract required fields from form
-            type_code = request.form['typeCode']
-            lot_no = request.form['lotNo']
-            material_type = request.form['materialType']
+            type1 = request.form['type1']
+            width = request.form['width']
+            part_no = request.form['part_no']
 
             # Auto-generate fields
             make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             user = "admin"
-            barcode = f"-{type_code}-{lot_no}"  # Example barcode
+            # barcode = f"-{type_code}-{lot_no}"  # Example barcode
+            material_type= f"{type1}x{width}:{part_no}"
+            barcode=material_type
+
 
             # Connect to MSSQL database
             conn = get_db_connection()
@@ -1817,9 +1846,9 @@ def raw_material():
 
             # Insert data into the Raw_Materials table
             cursor.execute("""
-                INSERT INTO Raw_Materials (typeCode, lotNo, materialType, make, [user], barcode) 
-                VALUES (?, ?, ?, ?, ?, ?)""",
-                (type_code, lot_no, material_type, make, user, barcode))
+                INSERT INTO Raw_Materials (type, width,part_no, materialType, make, [user], barcode) 
+                VALUES (?, ?, ?, ?, ?, ?,?)""",
+                (type1, width,part_no, material_type, make, user, barcode))
             conn.commit()
             
             return jsonify({"success": True, "message": "Material added successfully!"})
@@ -1920,40 +1949,43 @@ def delete_raw_material(raw_material_id):
 @app.route('/update-raw-material/<int:material_Id>', methods=['POST'])
 def update_raw_material(material_Id):
     """Update raw material details in MSSQL database."""
-    
+    conn = None  # Ensure conn is defined before try
+
     try:
-        # Parse JSON data from the request
         data = request.json
-        typeCode = data.get("typeCode")
-        lotNo = data.get("lotNo")
-        make = data.get("make")
-        user = data.get("user")
-        materialType = data.get("materialType")
-        barcode = data.get("barcode")
+        print(data)
 
         # Validate required fields
-        missing_fields = [field for field in ["typeCode", "lotNo", "make", "user", "materialType", "barcode"] if not data.get(field)]
+        required_fields = ["type", "width", "part_no", "make", "user", "barcode"]
+        missing_fields = [field for field in required_fields if not data.get(field)]
         if missing_fields:
             return jsonify({"success": False, "error": f"Missing fields: {', '.join(missing_fields)}"}), 400
 
-        # Connect to MSSQL database
+        type1 = data.get("type")
+        width = data.get("width")
+        part_no = data.get("part_no")
+        make = data.get("make")
+        user = data.get("user")
+        barcode = f"{type1}x{width}:{part_no}"
+        materialType = f"{type1}x{width}:{part_no}"
+
         conn = get_db_connection()
         if not conn:
             return jsonify({"success": False, "error": "Database connection failed"}), 500
 
         cursor = conn.cursor()
 
-        # Check if the material_Id exists
+        # Check if material exists
         cursor.execute("SELECT COUNT(*) FROM Raw_Materials WHERE material_Id = ?", (material_Id,))
         if cursor.fetchone()[0] == 0:
             return jsonify({"success": False, "error": "Material with the given ID does not exist."}), 404
 
-        # Update the record
+        # Perform update
         cursor.execute('''
             UPDATE Raw_Materials
-            SET typeCode = ?, lotNo = ?, make = ?, [user] = ?, materialType = ?, barcode = ?
+            SET type = ?, width = ?, part_no = ?, make = ?, [user] = ?, materialType = ?, barcode = ?
             WHERE material_Id = ?
-        ''', (typeCode, lotNo, make, user, materialType, barcode, material_Id))
+        ''', (type1, width, part_no, make, user, materialType, barcode, material_Id))
         conn.commit()
 
         if cursor.rowcount == 0:
@@ -1976,6 +2008,391 @@ def update_raw_material(material_Id):
         if conn:
             conn.close()
 
+@app.route('/alu-raw-material', methods=['GET', 'POST'])
+def raw_material1():
+    """Handle raw material addition (POST) and retrieval with pagination (GET)."""
+    
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            # Extract required fields from form
+            type1 = request.form['thickness']
+            width = request.form['width']
+            part_no = request.form['part_no']
+
+            # Auto-generate fields
+            make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            user = "admin"
+            # barcode = f"-{type_code}-{lot_no}"  # Example barcode
+            material_type= f"{width}x{type1}:{part_no}"
+            barcode=material_type
+
+
+            # Connect to MSSQL database
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({"success": False, "message": "Database connection failed"}), 500
+            
+            cursor = conn.cursor()
+
+            # Insert data into the Raw_Materials table
+            cursor.execute("""
+                INSERT INTO Alu_Raw_Materials (thickness, width,part_no, materialType, make, [user], barcode) 
+                VALUES (?, ?, ?, ?, ?, ?,?)""",
+                (type1, width,part_no, material_type, make, user, barcode))
+            conn.commit()
+            
+            return jsonify({"success": True, "message": "Material added successfully!"})
+
+        except pyodbc.Error as e:
+            print(f"Database Error: {e}")
+            return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
+
+        finally:
+            conn.close()
+
+    # Handle GET request for pagination
+    try:
+        current_page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        offset = (current_page - 1) * limit
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "message": "Database connection failed"}), 500
+        
+        cursor = conn.cursor()
+
+        # Fetch paginated raw materials
+        cursor.execute("""
+            SELECT * FROM Alu_Raw_Materials 
+            ORDER BY material_Id
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+        """, (offset, limit))
+        raw_materials = cursor.fetchall()
+
+        # Calculate total pages
+        cursor.execute("SELECT COUNT(*) FROM Alu_Raw_Materials")
+        total_rows = cursor.fetchone()[0]
+        total_pages = (total_rows + limit - 1) // limit
+
+        conn.close()
+
+        # Render the template with paginated data
+        return render_template(
+            'aluminium_raw_material.html',
+            raw_materials=raw_materials,
+            page=current_page,
+            total_pages=total_pages,
+            limit=limit
+        )
+
+    except pyodbc.Error as e:
+        print(f"Database Error: {e}")
+        return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
+
+@app.route('/delete-alu_raw-material/<int:raw_material_id>', methods=['DELETE'])
+def delete_raw_material1(raw_material_id):
+    """Delete a raw material entry from MSSQL database."""
+    
+    try:
+        print(f"Attempting to delete alu_raw material with ID: {raw_material_id}")
+
+        # Check if user is logged in
+        if 'username' not in session:
+            print("Unauthorized access attempt.")
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+        # Connect to the MSSQL database
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "error": "Database connection failed"}), 500
+
+        cursor = conn.cursor()
+
+        # Check if the material exists
+        cursor.execute('SELECT * FROM Alu_Raw_Materials WHERE material_Id = ?', (raw_material_id,))
+        row = cursor.fetchone()
+
+        if row is None:
+            print(f"Material with ID {raw_material_id} not found.")
+            return jsonify({"success": False, "error": "Raw material not found"}), 404
+
+        # Delete the raw material
+        cursor.execute('DELETE FROM Alu_Raw_Materials WHERE material_Id = ?', (raw_material_id,))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            print(f"Failed to delete material with ID {raw_material_id}.")
+            return jsonify({"success": False, "error": "Failed to delete material"}), 500
+
+        print(f"Successfully deleted material with ID {raw_material_id}.")
+        return jsonify({"success": True})
+
+    except pyodbc.Error as e:
+        print(f"Database Error: {e}")
+        return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
+
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/update-alu_raw-material/<int:material_Id>', methods=['POST'])
+def update_raw_material1(material_Id):
+    """Update raw material details in MSSQL database."""
+    conn = None  # Ensure conn is defined before try
+
+    try:
+        data = request.json
+        print(data)
+
+        # Validate required fields
+        required_fields = ["thickness", "width", "part_no", "make", "user", "barcode"]
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return jsonify({"success": False, "error": f"Missing fields: {', '.join(missing_fields)}"}), 400
+
+        type1 = data.get("thickness")
+        width = data.get("width")
+        part_no = data.get("part_no")
+        make = data.get("make")
+        user = data.get("user")
+        barcode = f"{width}x{type1}:{part_no}"
+        materialType = f"{width}x{type1}:{part_no}"
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "error": "Database connection failed"}), 500
+
+        cursor = conn.cursor()
+
+        # Check if material exists
+        cursor.execute("SELECT COUNT(*) FROM Alu_Raw_Materials WHERE material_Id = ?", (material_Id,))
+        if cursor.fetchone()[0] == 0:
+            return jsonify({"success": False, "error": "Material with the given ID does not exist."}), 404
+
+        # Perform update
+        cursor.execute('''
+            UPDATE Alu_Raw_Materials
+            SET thickness = ?, width = ?, part_no = ?, make = ?, [user] = ?, materialType = ?, barcode = ?
+            WHERE material_Id = ?
+        ''', (type1, width, part_no, make, user, materialType, barcode, material_Id))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "No changes were made to the raw material."}), 400
+
+        return jsonify({"success": True, "message": "Raw material updated successfully."})
+
+    except pyodbc.IntegrityError as e:
+        if "UNIQUE constraint failed: Alu_Raw_Materials.materialType" in str(e):
+            return jsonify({"success": False, "error": "Material Type must be unique."}), 409
+        return jsonify({"success": False, "error": f"Database integrity error: {str(e)}"}), 400
+
+    except pyodbc.Error as e:
+        return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {str(e)}"}), 500
+
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/h-raw-material', methods=['GET', 'POST'])
+def raw_material2():
+    """Handle raw material addition (POST) and retrieval with pagination (GET)."""
+    
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            # Extract required fields from form
+            depth = request.form['depth']
+            width = request.form['width']
+            height = request.form['height']
+            part_no = request.form['part_no']
+
+            # Auto-generate fields
+            make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            user = "admin"
+            # barcode = f"-{type_code}-{lot_no}"  # Example barcode
+            material_type= f"{width}x{height}:{part_no}"
+            barcode=material_type
+
+
+            # Connect to MSSQL database
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({"success": False, "message": "Database connection failed"}), 500
+            
+            cursor = conn.cursor()
+
+            # Insert data into the Raw_Materials table
+            cursor.execute("""
+                INSERT INTO h_Raw_Materials (length, width,height,part_no, materialType, make, [user], barcode) 
+                VALUES (?, ?, ?, ?,?, ?, ?,?)""",
+                (depth, width,height,part_no, material_type, make, user, barcode))
+            conn.commit()
+            
+            return jsonify({"success": True, "message": "Material added successfully!"})
+
+        except pyodbc.Error as e:
+            print(f"Database Error: {e}")
+            return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
+
+        finally:
+            conn.close()
+
+    # Handle GET request for pagination
+    try:
+        current_page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        offset = (current_page - 1) * limit
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "message": "Database connection failed"}), 500
+        
+        cursor = conn.cursor()
+
+        # Fetch paginated raw materials
+        cursor.execute("""
+            SELECT * FROM h_Raw_Materials 
+            ORDER BY material_Id
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+        """, (offset, limit))
+        raw_materials = cursor.fetchall()
+
+        # Calculate total pages
+        cursor.execute("SELECT COUNT(*) FROM h_Raw_Materials")
+        total_rows = cursor.fetchone()[0]
+        total_pages = (total_rows + limit - 1) // limit
+
+        conn.close()
+
+        # Render the template with paginated data
+        return render_template(
+            'housing_raw_material.html',
+            raw_materials=raw_materials,
+            page=current_page,
+            total_pages=total_pages,
+            limit=limit
+        )
+
+    except pyodbc.Error as e:
+        print(f"Database Error: {e}")
+        return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
+@app.route('/delete-h_raw-material/<int:raw_material_id>', methods=['DELETE'])
+def delete_raw_material2(raw_material_id):
+    """Delete a raw material entry from MSSQL database."""
+    
+    try:
+        print(f"Attempting to delete alu_raw material with ID: {raw_material_id}")
+
+        # Check if user is logged in
+        if 'username' not in session:
+            print("Unauthorized access attempt.")
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+        # Connect to the MSSQL database
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "error": "Database connection failed"}), 500
+
+        cursor = conn.cursor()
+
+        # Check if the material exists
+        cursor.execute('SELECT * FROM h_Raw_Materials WHERE material_Id = ?', (raw_material_id,))
+        row = cursor.fetchone()
+
+        if row is None:
+            print(f"Material with ID {raw_material_id} not found.")
+            return jsonify({"success": False, "error": "Raw material not found"}), 404
+
+        # Delete the raw material
+        cursor.execute('DELETE FROM h_Raw_Materials WHERE material_Id = ?', (raw_material_id,))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            print(f"Failed to delete material with ID {raw_material_id}.")
+            return jsonify({"success": False, "error": "Failed to delete material"}), 500
+
+        print(f"Successfully deleted material with ID {raw_material_id}.")
+        return jsonify({"success": True})
+
+    except pyodbc.Error as e:
+        print(f"Database Error: {e}")
+        return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
+
+    finally:
+        if conn:
+            conn.close()
+@app.route('/update-h_raw-material/<int:material_Id>', methods=['POST'])
+def update_raw_material2(material_Id):
+    """Update raw material details in MSSQL database."""
+    conn = None  # Ensure conn is defined before try
+
+    try:
+        data = request.json
+        print(data)
+
+        # Validate required fields
+        required_fields = ["depth", "width","height", "part_no", "make", "user", "barcode"]
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return jsonify({"success": False, "error": f"Missing fields: {', '.join(missing_fields)}"}), 400
+
+        depth = data.get("depth")
+        width = data.get("width")
+        height= data.get("height")
+        part_no = data.get("part_no")
+        make = data.get("make")
+        user = data.get("user")
+        barcode = f"{width}x{height}:{part_no}"
+        materialType = f"{width}x{height}:{part_no}"
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "error": "Database connection failed"}), 500
+
+        cursor = conn.cursor()
+
+        # Check if material exists
+        cursor.execute("SELECT COUNT(*) FROM h_Raw_Materials WHERE material_Id = ?", (material_Id,))
+        if cursor.fetchone()[0] == 0:
+            return jsonify({"success": False, "error": "Material with the given ID does not exist."}), 404
+
+        # Perform update
+        cursor.execute('''
+            UPDATE h_Raw_Materials
+            SET length = ?, width = ?, height = ?, part_no = ?, make = ?, [user] = ?, materialType = ?, barcode = ?
+            WHERE material_Id = ?
+        ''', (depth, width, height, part_no, make, user, materialType, barcode, material_Id))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "No changes were made to the raw material."}), 400
+
+        return jsonify({"success": True, "message": "Raw material updated successfully."})
+
+    except pyodbc.IntegrityError as e:
+        if "UNIQUE constraint failed: h_Raw_Materials.materialType" in str(e):
+            return jsonify({"success": False, "error": "Material Type must be unique."}), 409
+        return jsonify({"success": False, "error": f"Database integrity error: {str(e)}"}), 400
+
+    except pyodbc.Error as e:
+        return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {str(e)}"}), 500
+
+    finally:
+        if conn:
+            conn.close()
 
 @app.route('/delete-recipe/<int:recipe_id>', methods=['DELETE'])
 def delete_recipe(recipe_id):
