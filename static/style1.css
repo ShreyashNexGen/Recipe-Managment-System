@@ -505,6 +505,17 @@ label {
     font-size: 14px;
     color: #555;
 }
+input[type="number"],
+select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
 
 input[type="text"],
 select {
@@ -522,7 +533,11 @@ select:focus {
     border-color: #007bff;
     outline: none;
 }
-
+input[type="number"]:focus,
+select:focus {
+    border-color: #007bff;
+    outline: none;
+}
 /* Dropdown Styling */
 select {
     background-color: #f9f9f9;
@@ -1088,13 +1103,17 @@ select:focus {
 
 /* Popup form styling */
 #material-update-form {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: #e7e1e9;
-    border-radius: 12px; /* Rounded corners */
-    width: 400px; /* Adjusted width to match production popup */
-    padding: 20px;
-    margin-left: 500px;
-    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3); /* Softer shadow */
-    animation: fadeIn 0.3s ease-in-out; /* Smooth animation */
+    border-radius: 12px;
+    width: 400px;
+    /* padding: 20px; */
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+    /* animation: fadeIn 0.3s ease-in-out; */
+    z-index: 1000; /* Makes sure it's on top */
 }
 .popup-update-header {
     display: flex;
