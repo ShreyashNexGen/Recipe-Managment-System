@@ -18,20 +18,22 @@
             <tr>
                 <th>Id</th><th>Pos1</th><th>Pos2</th><th>Pos3</th>
                 <th>Pos4</th><th>Pos5</th><th>Pos6</th><th>Pos7</th>
+                </tr>
+                <tr>
+                    <td>{{ recipe_details[0][0] }}</td>  <!-- Adjust index as needed -->
+                    <td>{{ recipe_details[0][1] }}</td>  <!-- Assuming Pos1 is at index 1 -->
+                    <td>{{ recipe_details[0][2] }}</td>  <!-- Pos2 at index 2 -->
+                    <td>{{ recipe_details[0][3] }}</td>  <!-- Pos3 at index 3 -->
+                    <td>{{ recipe_details[0][4] }}</td>  <!-- Pos4 at index 4 -->
+                    <td>{{ recipe_details[0][5] }}</td>  <!-- Pos5 at index 5 -->
+                    <td>{{ recipe_details[0][6] }}</td>  <!-- Pos6 at index 6 -->
+                    <td>{{ recipe_details[0][7] }}</td>  <!-- Pos7 at index 7 -->
+                    </tr>
+                <tr>
                 <th>Pos8</th><th>Pos9</th><th>Alu Coil Width</th>
                 <th>Alu Roller Type</th><th>Spacer</th><th>Alu_Material</th><th>House_Material</th>
             </tr>
-        </thead>
-        <tbody>
             <tr>
-                <td>{{ recipe_details[0][0] }}</td>  <!-- Adjust index as needed -->
-                <td>{{ recipe_details[0][1] }}</td>  <!-- Assuming Pos1 is at index 1 -->
-                <td>{{ recipe_details[0][2] }}</td>  <!-- Pos2 at index 2 -->
-                <td>{{ recipe_details[0][3] }}</td>  <!-- Pos3 at index 3 -->
-                <td>{{ recipe_details[0][4] }}</td>  <!-- Pos4 at index 4 -->
-                <td>{{ recipe_details[0][5] }}</td>  <!-- Pos5 at index 5 -->
-                <td>{{ recipe_details[0][6] }}</td>  <!-- Pos6 at index 6 -->
-                <td>{{ recipe_details[0][7] }}</td>  <!-- Pos7 at index 7 -->
                 <td>{{ recipe_details[0][8] }}</td>  <!-- Pos8 at index 8 -->
                 <td>{{ recipe_details[0][9] }}</td>  <!-- Pos9 at index 9 -->
                 <td>{{ recipe_details[0][10] }}</td> <!-- Alu_Coil_Width at index 11 -->
@@ -40,7 +42,7 @@
                 <td>{{ recipe_details[0][13] }}</td> <!-- Spacer at index 13 -->
                 <td>{{ recipe_details[0][14] }}</td> <!-- Spacer at index 13 -->
             </tr>
-        </tbody>
+        </thead>
     </table>
 </div>
 
