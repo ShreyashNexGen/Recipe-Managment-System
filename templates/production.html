@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Filter Log{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Filter Log</h1>    
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Filter Code</th>
+                <th>Timestamp</th>
+                <th>Recipe Name</th>
+                <th>Article No</th>
+                <th>Filter Size</th>
+                <th>FilterSize</th>
+                <th>Ng Status</th>
+                <th>Serial No</th>
+                <th>AvgAirFlow</th>
+                <th>AvgResult</th>
+                <th>Filter Completion Status</th>
+                <th>Print</th>
+            </tr>
+        </thead>
+        <tbody id="recipe-log-table">
+            <!-- Data will be dynamically inserted here -->
+        </tbody>
+    </table>
+     <!-- Pagination Controls -->
+     <div class="d-flex justify-content-between align-items-center mt-4">
+        <nav>
+            <ul class="pagination mb-0" id="pagination">
+                <!-- Dynamic pagination -->
+            </ul>
+        </nav>
+    </div>
+</div>   
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let fullData = [];
+    const rowsPerPage = 5;
+    let currentPage = 1;
+
+    function fetchRecipeLog() {
+        fetch('/api/recipe_log')
+            .then(response => response.json())
+            .then(data => {
+                fullData = data;
+                renderPage(currentPage);
+                setupPagination();
+            })
+            .catch(error => console.error('Error fetching recipe log:', error));
+    }
+
+    function renderPage(page) {
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const visibleData = fullData.slice(start, end);
+
+        const tableBody = document.getElementById('recipe-log-table');
+        tableBody.innerHTML = '';
+
+        visibleData.forEach(row => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${row.Batch_Code}</td>
+                    <td>${row.Timestamp}</td>
+                    <td>${row.Recipe_Name}</td>
+                    <td>${row.Article_No}</td>
+                    <td>${row.Filter_Size}</td>
+                    <td>${row.FilterSize}</td>
+                    <td>${row.NgStatus}</td>
+                    <td>${row.SerialNo}</td>
+                    <td>${row.Parameter1}</td>
+                    <td>${row.Parameter2}</td>
+                    <td>${row.Batch_Completion_Status}</td>
+                    <td><button class="print-btn" onclick="rePrint(${row.SerialNo})">Re-Print</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function setupPagination() {
+        const totalPages = Math.ceil(fullData.length / rowsPerPage);
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+    
+        const maxVisiblePages = 7;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = startPage + maxVisiblePages - 1;
+    
+        if (endPage > totalPages) {
+            endPage = totalPages;
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+    
+        // Previous
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
+            </li>
+        `;
+    
+        // First page and dots
+        if (startPage > 1) {
+            pagination.innerHTML += `
+                <li class="page-item"><a class="page-link" href="#" onclick="changePage(1)">1</a></li>
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            `;
+        }
+    
+        // Main page range
+        for (let i = startPage; i <= endPage; i++) {
+            pagination.innerHTML += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                </li>
+            `;
+        }
+    
+        // Dots and last page
+        if (endPage < totalPages) {
+            pagination.innerHTML += `
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                <li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a></li>
+            `;
+        }
+    
+        // Next
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
+            </li>
+        `;
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(fullData.length / rowsPerPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderPage(currentPage);
+        setupPagination();
+    }
+    // Initial fetch
+    fetchRecipeLog();
+</script>
+
+<!-- Optional CSS -->
+<style>
+    nav {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: 5px;
+    }
+    .pagination .page-item {
+        margin: 0 2px;
+    }
+
+    .pagination .page-link {
+        color: #007bff;
+        padding: 6px 12px;
+        text-decoration: none;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+    .page-link {
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        color: #007bff;
+        background-color: #fff;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        text-align: center;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #007bff;
+        color: #fff;
+        border-color: #007bff;
+    }
+    
+    .page-item.disabled .page-link {
+        color: #aaa;
+        background-color: #f9f9f9;
+        cursor: not-allowed;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #fff;
+    /* size: 12px; */
+        pointer-events: none;
+        background-color: #007bff;
+    }
+
+    .input-group {
+        display: flex;
+        align-items: center;
+        margin-left: 1rem;
+    }
+
+    .input-group input {
+        max-width: 100px;
+        margin-right: 5px;
+    }
+
+    .d-flex {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 14px;
+        align-items: center;
+    }
+</style>
+
+
+{% endblock %}

@@ -180,38 +180,360 @@
 </style>
 
    
-    <!-- Status Bar Section -->
-    <div class="status-bars">
-        <!-- Machine Running Status -->
-        <div class="status-bar">
-            <h4>Machine Running Status</h4>
-            <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 33%; background-color: rgb(87, 231, 87);" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">Running</div>
-            </div>
-        </div>
-
-        <!-- Stop Status -->
-        <div class="status-bar">
-            <h4>Stop Status</h4>
-            <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 25%; background-color: red;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">Stopped</div>
-            </div>
-        </div>
+    <div class="chart-container">
+    <!-- OEE Chart -->
+    <div class="chart-box">
+      <h4 class="chart-title">OEE</h4>
+      <canvas id="oeeChart"></canvas>
+      <button class="reset-btn" onclick="resetOEE()">Reset</button>
     </div>
-
-    <div class="pie-chart-container">
-        <!-- Pie Chart 1 -->
-        <div class="pie-chart">
-            <h2 style="text-align: center;">Internet Connection</h2>
-            <canvas id="internetChart"></canvas>
-        </div>
-
-        <!-- Pie Chart 2 -->
-        <div class="pie-chart">
-            <h2 style="text-align: center;">Plc Connection</h2>
-            <canvas  id="plcChart"></canvas>
-        </div>
+  
+    <!-- Machine Availability Chart -->
+    <div class="chart-box">
+      <h4 class="chart-title">Machine Availability</h4>
+      <canvas id="availabilityChart"></canvas>
+      <button class="reset-btn" onclick="resetAvailability()">Reset</button>
     </div>
+  </div>
+   <!-- Date-Time Filter Section -->
+   <div class="filter-section">
+    <h4 class="filter-title">Filter by Date & Time</h4>
+    <div class="filter-form">
+      <div class="form-group">
+        <label for="start-date">Start Date</label>
+        <input type="datetime-local" id="start-date" name="start-date">
+      </div>
+      <div class="form-group">
+        <label for="end-date">End Date</label>
+        <input type="datetime-local" id="end-date" name="end-date">
+      </div>
+      <div class="form-group button-group">
+        <button>Apply Filter</button>
+      </div>
+    </div>
+  </div>
+  <!-- Bar Graph Section -->
+<div class="bar-chart-container">
+    <h4 class="bar-chart-title">Raw Material Analysis</h4>
+    <div class="bar-chart-box">
+      <canvas id="rawMaterialBarChart"></canvas>
+    </div>
+  </div>
+  
+  <!-- Date-Time Filter Section -->
+  <!-- <div class="filter-section">
+    <h4 class="filter-title">Filter by Date & Time</h4>
+    <div class="filter-form">
+      <div class="form-group">
+        <label for="start-date">Start Date</label>
+        <input type="datetime-local" id="start-date" name="start-date">
+      </div>
+      <div class="form-group">
+        <label for="end-date">End Date</label>
+        <input type="datetime-local" id="end-date" name="end-date">
+      </div>
+      <div class="form-group button-group">
+        <button>Apply Filter</button>
+      </div>
+    </div>
+  </div> -->
+  
+  <!-- <style>
+    .chart-container {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #d1edd7;
+      }
+      
+      .chart-box {
+        background: #aac3af;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 300px;
+        text-align: center;
+      }
+      
+      .chart-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+      }
+      
+      .reset-btn {
+        margin-top: 15px;
+        background-color: #dc3545;
+        color: white;
+        padding: 6px 18px;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      
+      .reset-btn:hover {
+        background-color: #bd2130;
+      }
+      
+  </style> -->
+  <style>
+    /* Container for both charts */
+.chart-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin: 50px auto;
+    max-width: 1200px;
+  }
+  
+  /* Individual chart card */
+  .chart-box {
+    background: linear-gradient(to bottom right, #b6dfa1, #32b9bf);
+    padding: 17px;
+    border-radius: 16px;
+    border: 2px solid black;
+    box-shadow: 0 8px 24px rgba(0, 51, 102, 0.1);
+    width: 320px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .chart-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(0, 51, 102, 0.15);
+  }
+  
+  /* Chart title styling */
+  .chart-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #0f3e74;
+    margin-bottom: 20px;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  /* Canvas spacing */
+  .chart-canvas {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Reset Button Styling */
+  .reset-btn {
+    margin-top: 20px;
+    background-color: #1e88e5;
+    color: white;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 30px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .reset-btn:hover {
+    background-color: #1565c0;
+  }
+  /* Bar Chart Styling */
+.bar-chart-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #f0f8ff;
+    border: 2px solid #0077b6;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
+  }
+  
+  .bar-chart-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #023e8a;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .bar-chart-box {
+    width: 100%;
+    height: 400px;
+  }
+  
+  /* Filter Section Styling */
+  .filter-section {
+    margin: 40px auto;
+    max-width: 1000px;
+    padding: 30px;
+    border: 2px solid #0077b6;
+    border-radius: 12px;
+    background: #f0f8ff;
+    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.15);
+    text-align: center;
+  }
+  
+  .filter-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #023e8a;
+    margin-bottom: 25px;
+  }
+  
+  .filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+  }
+  
+  .form-group label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #1d3557;
+  }
+  
+  .form-group input {
+    padding: 8px 12px;
+    border: 1.5px solid #90e0ef;
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: #ffffff;
+    color: #000;
+  }
+  
+  .button-group button {
+    margin-top: 25px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #0077b6;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .button-group button:hover {
+    background-color: #023e8a;
+  }
+  
+  
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const oeeCtx = document.getElementById('oeeChart').getContext('2d');
+    let oeeChart = new Chart(oeeCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Running', 'Stop', 'Faulty', 'Ideal'],
+        datasets: [{
+          data: [40, 20, 25, 15],
+          backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
+        }]
+      }
+    });
+  
+    const availabilityCtx = document.getElementById('availabilityChart').getContext('2d');
+    let availabilityChart = new Chart(availabilityCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Running', 'Stopped'],
+        datasets: [{
+          data: [70, 30],
+          backgroundColor: ['#28a745', '#dc3545']
+        }]
+      }
+    });
+  
+    function resetOEE() {
+      oeeChart.data.datasets[0].data = [0, 0, 0, 0];
+      oeeChart.update();
+    }
+  
+    function resetAvailability() {
+      availabilityChart.data.datasets[0].data = [0, 0];
+      availabilityChart.update();
+    }
+    function applyDateFilter() {
+        const start = document.getElementById('start-date').value;
+        const end = document.getElementById('end-date').value;
+        console.log("Filtering from", start, "to", end);
+        // You can trigger chart update logic here
+      }
+      const ctx = document.getElementById('rawMaterialBarChart').getContext('2d');
+    const rawMaterialBarChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Iron', 'Aluminum', 'Copper', 'Zinc', 'Steel', 'Plastic', 'Rubber'],
+        datasets: [{
+          label: 'Quantity Used (kg)',
+          data: [120, 90, 150, 80, 200, 70, 60],
+          backgroundColor: [
+            '#0077b6',
+            '#00b4d8',
+            '#48cae4',
+            '#90e0ef',
+            '#0077b6',
+            '#00b4d8',
+            '#48cae4'
+          ],
+          borderRadius: 6,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              color: '#023e8a',
+              font: {
+                size: 14
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: '#caf0f8',
+            titleColor: '#03045e',
+            bodyColor: '#023e8a',
+            borderColor: '#0077b6',
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: '#023e8a',
+              font: {
+                size: 13
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: '#023e8a',
+              font: {
+                size: 13
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
 
     <!-- <table class="table table-bordered">
         <thead>
@@ -222,67 +544,6 @@
             </tr>
         </thead>
     </table> -->
-    <div class="container mt-5">
-        <h1 class="text-center">Air Inspection Settings</h1>
-        <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
-                <tr>
-                    <th>DataBase Available</th>
-                    <th>Width</th>
-                    <th>Height</th>
-                    <th>Depth</th>
-                    <th>Art No</th>
-                    <th>Air Flow Set</th>
-                    <th>Pressure Drop Setpoint</th>
-                    <th>Lower Tolerance1</th>
-                    <th>Lower Tolerance2</th>
-                    <th>Upper Tolerance1</th>
-                    <th>Upper Tolerance2</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in Inspection_Settings %}
-                <tr>
-                    <td>{{ row.databaseAvailable }}</td>
-                    <td>{{ row.Width }}</td>
-                    <td>{{ row.Height }}</td>
-                    <td>{{ row.Depth }}</td>
-                    <td>{{ row.Art_No }}</td>
-                    <td>{{ row.Air_Flow_Set }}</td>
-                    <td>{{ row.Pressure_Drop_Setpoint }}</td>
-                    <td>{{ row.Lower_Tolerance1 }}</td>
-                    <td>{{ row.Lower_Tolerance2 }}</td>
-                    <td>{{ row.Upper_Tolerance1 }}</td>
-                    <td>{{ row.Upper_Tolerance2 }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    <div class="container mt-5">
-        <h1 class="text-center">Filter Log</h1>
-        <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Filter Code</th>
-                    <th>Timestamp</th>
-                    <th>Recipe Name</th>
-                    <th>Article No</th>
-                    <th>Filter Size</th>
-                    <th>FilterSize</th>
-                    <th>Ng Status</th>
-                    <th>Serial No</th>
-                    <th>AvgAirFlow</th>
-                    <th>AvgResult</th>
-                    <th>Filter Completion Status</th>
-                    <th>Print</th>
-                </tr>
-            </thead>
-            <tbody id="recipe-log-table">
-                <!-- Data will be dynamically inserted here -->
-            </tbody>
-        </table>
-    </div>
-</div>
 
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -315,47 +576,6 @@
         })
         .catch(error => console.error('Error updating interval time:', error));
 });
-
-    // Fetch and display the recipe log
-    function fetchRecipeLog() {
-    fetch('/api/recipe_log')
-        .then(response => response.json())
-        .then(data => {
-            console.log("Received response:", data); // Log the full response
-
-            const tableBody = document.getElementById('recipe-log-table');
-            tableBody.innerHTML = ''; // Clear existing rows
-
-            data.forEach(row => {
-                console.log("Processing row:", row); // Log each row for debugging
-
-                tableBody.innerHTML += `
-               <tr>
-    <td>${row.Batch_Code}</td>
-    <td>${row.Timestamp}</td>
-    <td>${row.Recipe_Name}</td>
-    <td>${row.Article_No}</td>
-    <td>${row.Filter_Size}</td>
-    <td>${row.FilterSize}</td>
-    <td>${row.NgStatus}</td>
-    <td>${row.SerialNo}</td>
-    <td>${row.Parameter1}</td>
-    <td>${row.Parameter2}</td>
-    <td>${row.Batch_Completion_Status}</td>
-    <td>
-    <button class="print-btn" onclick="rePrint(${row.SerialNo})">Re-Print</button>           
-    </td>
-</tr>
-
-                `;
-            });
-        })
-        .catch(error => console.error('Error fetching recipe log:', error));
-}
-
-        // Refresh the table every 5 seconds
-        setInterval(fetchRecipeLog, 1000);
-        fetchRecipeLog(); // Initial fetch
         // Fetch and display system statuses
     function fetchSystemStatus() {
         fetch('/status') // Update with your actual Flask endpoint
