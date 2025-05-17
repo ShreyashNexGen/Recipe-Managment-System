@@ -14,68 +14,89 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h2>
-            <img src="{{ url_for('static', filename='nexgenLogo.png') }}" alt="Logo" class="logo">
-            <!-- Recipe Management -->
+            <img src="{{ url_for('static', filename='logonew.png') }}" alt="Logo" class="logo">
         </h2>
         <h2>Recipe Management</h2>
         <ul class="nav flex-column">
             {% if session.get('username') %}
             
             {% if 'dashboard' in session.get('user_roles', []) %}
-            <li><a href="/dashboard" class="nav-link"><i class="fa-sharp fa-solid fa-chart-line" style="margin-right: 8px;"></i>Dashboard</a></li>
-            {% endif %}
-            
-            {% if 'raw_material' in session.get('user_roles', []) %}
-            <!-- <li><a href="/raw-material" class="nav-link"><i class="fa-solid fa-box-open" style="margin-right: 8px;"></i>Raw Material</a></li> -->
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-box-open" style="margin-right: 8px;"></i>Raw Material</a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/raw-material">&bull;Filter</a></li>
-                    <li><a class="dropdown-item" href="/alu-raw-material">&bull;Aluminium</a></li>
-                    <li><a class="dropdown-item" href="/h-raw-material">&bull;Housing</a></li>
-                </ul>
+            <li>
+                <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">
+                    <i class="fa-sharp fa-solid fa-chart-line" style="margin-right: 8px;"></i>Dashboard
+                </a>
             </li>
             {% endif %}
+            {% if 'production' in session.get('user_roles', []) %}
+            <li><a href="/production" class="nav-link"><i class="fa-solid fa-clipboard-list" style="margin-right: 8px;"></i>Production Log</a></li>
+            {% endif %}
+            {% if 'raw_material' in session.get('user_roles', []) %}
+            <li class="dropdown {% if request.path.startswith('/raw-material') or request.path.startswith('/alu-raw-material') or request.path.startswith('/h-raw-material') %}show{% endif %}">
+                <a href="#" class="dropdown-toggle nav-link {% if request.path.startswith('/raw-material') or request.path.startswith('/alu-raw-material') or request.path.startswith('/h-raw-material') %}active{% endif %}" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-box-open" style="margin-right: 8px;"></i>Raw Material
+                </a>
+                <ul class="dropdown-menu {% if request.path.startswith('/raw-material') or request.path.startswith('/alu-raw-material') or request.path.startswith('/h-raw-material') %}show{% endif %}">
+                    <li><a class="dropdown-item {% if request.path == '/raw-material' %}active{% endif %}" href="/raw-material">&bull; Filter</a></li>
+                    <li><a class="dropdown-item {% if request.path == '/alu-raw-material' %}active{% endif %}" href="/alu-raw-material">&bull; Aluminium</a></li>
+                    <li><a class="dropdown-item {% if request.path == '/h-raw-material' %}active{% endif %}" href="/h-raw-material">&bull; Housing</a></li>
+                </ul>
+            </li>
             
+            
+            
+            {% endif %}
+    
             {% if 'recipe' in session.get('user_roles', []) %}
-            <li><a href="/recipe" class="nav-link"><i class="fa-solid fa-clipboard-list" style="margin-right: 8px;"></i>Recipe</a></li>
+            <li>
+                <a href="/recipe" class="nav-link {% if request.path == '/recipe' %}active{% endif %}">
+                    <i class="fa-solid fa-clipboard-list" style="margin-right: 8px;"></i>Recipe
+                </a>
+            </li>
             {% endif %}
-            
+    
             {% if 'report' in session.get('user_roles', []) %}
-            <li><a href="/report" class="nav-link"><i class="fa-solid fa-clipboard-list" style="margin-right: 8px;"></i>Report</a></li>
+            <li>
+                <a href="/report" class="nav-link {% if request.path == '/report' %}active{% endif %}">
+                    <i class="fa-solid fa-clipboard-list" style="margin-right: 8px;"></i>Report
+                </a>
+            </li>
             {% endif %}
-        
+    
             {% if 'tag' in session.get('user_roles', []) %}
             <li class="dropdown">
-                <a href="#" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-tags" style="margin-right: 8px;"></i>Tags</a>
+                <a href="#" class="dropdown-toggle nav-link {% if request.path.startswith('/tag') or request.path.startswith('/live-tag') %}active{% endif %}" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-tags" style="margin-right: 8px;"></i>Tags
+                </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/tag-overview">&bull;Tag Overview</a></li>
-                    <li><a class="dropdown-item" href="/live-tag">&bull;Live Tag</a></li>
+                    <li><a class="dropdown-item {% if request.path == '/tag-overview' %}active{% endif %}" href="/tag-overview">&bull; Tag Overview</a></li>
+                    <li><a class="dropdown-item {% if request.path == '/live-tag' %}active{% endif %}" href="/live-tag">&bull; Live Tag</a></li>
                 </ul>
             </li>
             {% endif %}
-        
+    
             {% if session.get('username') == 'Admin' %}
             <li class="dropdown">
-                <a href="/" class="dropdown-toggle , nav-link" data-bs-toggle="dropdown"><i class="fa-solid fa-user-tie" style="margin-right: 8px;"></i>Admin</a>
+                <a href="#" class="dropdown-toggle nav-link {% if request.path.startswith('/plc') or request.path.startswith('/users') or request.path.startswith('/role') or request.path.startswith('/event_log') %}active{% endif %}" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-user-tie" style="margin-right: 8px;"></i>Admin
+                </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/plc">&bull; PLC</a></li>
-                    <li><a class="dropdown-item" href="/users">&bull; Users</a></li>
-                    <li><a class="dropdown-item" href="/role">&bull; Assign Role</a></li>
-                    <li><a class="dropdown-item" href="/event_log">&bull; Event Log</a></li>
+                    <li><a class="dropdown-item {% if request.path == '/plc' %}active{% endif %}" href="/plc">&bull; PLC</a></li>
+                    <li><a class="dropdown-item {% if request.path == '/users' %}active{% endif %}" href="/users">&bull; Users</a></li>
+                    <li><a class="dropdown-item {% if request.path == '/role' %}active{% endif %}" href="/role">&bull; Assign Role</a></li>
+                    <li><a class="dropdown-item {% if request.path == '/event_log' %}active{% endif %}" href="/event_log">&bull; Event Log</a></li>
                 </ul>
             </li>
             {% endif %}
-        
+    
             <a href="/logout" class="logout">Logout</a>
-        
+    
             {% else %}
-            <li><a href="/login" class="nav-link"><i class="fa-solid fa-sign-in-alt" style="margin-right: 8px;"></i>Login</a></li>
-            <li><a href="/register" class="nav-link"><i class="fa-solid fa-user-plus" style="margin-right: 8px;"></i>Register</a></li>
+            <li><a href="/login" class="nav-link {% if request.path == '/login' %}active{% endif %}"><i class="fa-solid fa-sign-in-alt" style="margin-right: 8px;"></i>Login</a></li>
+            <li><a href="/register" class="nav-link {% if request.path == '/register' %}active{% endif %}"><i class="fa-solid fa-user-plus" style="margin-right: 8px;"></i>Register</a></li>
             {% endif %}
         </ul>
-        
     </div>
+    
     <!-- Admin Password Popup -->
     <div id="admin-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">
         <h4>Enter Admin Password</h4>
@@ -212,6 +233,19 @@
         
         
     </script>
-  
+  <script>
+    const sidebarLinks = document.querySelectorAll('.sidebar ul li a');
+
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function () {
+            // Remove active class from all links
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+
+            // Add active class to the clicked link
+            this.classList.add('active');
+        });
+    });
+</script>
+
 </body>
 </html>

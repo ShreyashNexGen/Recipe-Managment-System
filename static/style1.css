@@ -38,6 +38,7 @@
 .sidebar ul li {
     padding: 3px 20px;
     transition: padding-left 0.3s ease;
+    margin-top: 3px;
 }
 
 .sidebar ul li:hover {
@@ -67,19 +68,25 @@
     position: absolute;
     bottom: 20px;
     left: 140px;
-    color: #4b3f72;
+    color: #19181d;
     font-size: 16px;
     text-decoration: none;
     padding: 10px 20px;
     border-radius: 5px;
-    background-color: #e8defc;
+    background: linear-gradient(135deg, #64bbd9, #0f56a3);
     transition: background 0.3s ease, transform 0.3s ease;
 }
 
 .sidebar .logout:hover {
-    background-color: #c7b7f0;
+    background-color: #0463c8;
     color: #2e1f57;
     transform: translateX(5px);
+}
+.sidebar ul li a.active {
+    background-color: #1968df;
+    transform: translateY(-5px);
+    color: #ffffff;
+    border-radius: 20px;
 }
 
 
@@ -269,7 +276,7 @@ td a:hover {
     transform: translateY(-2px);
 } */
 .logo {
-    width: 125px;  /* Adjust width as per your design */
+    width: 75px;  /* Adjust width as per your design */
     height: auto;  /* Maintain aspect ratio */
     margin-right: 50px; /* Space between the logo and text */
 
@@ -802,13 +809,14 @@ select:focus {
 
 
 .dropdown-menu {
-    display: none; /* Hidden by default */
+    display: none;
 }
 
-.dropdown:hover .dropdown-menu {
-    display: block; /* Show on hover */
-    
+.dropdown:hover .dropdown-menu,
+.dropdown.show .dropdown-menu {
+    display: block;
 }
+
 
 .highlighted-box {
     background-color: #f3e8ff; /* Light purple background */
@@ -952,7 +960,7 @@ select:focus {
 
 /* Popup form styling */
 #material-form {
-    background: #e7e1e9;
+    background: #aed6ed;
     border-radius: 12px; /* Rounded corners */
     width: 400px; /* Adjusted width to match production popup */
     padding: 20px;
@@ -964,7 +972,7 @@ select:focus {
     font-size: 18px;
     justify-content: space-between;
     align-items: center;
-    background-color: #e7e1e9; /* Light gray header background */
+    background-color: #aed6ed; /* Light gray header background */
     
     padding: 3px 10px 15px 69px;
     border-radius: 10px 10px 0 0; /* Rounded corners for the top */
@@ -983,7 +991,7 @@ select:focus {
     flex-direction: column;
     width: 100%;
     padding: 0px;
-    background-color: #e7e1e9; /* Ensures background color remains consistent */
+    background-color: #aed6ed; /* Ensures background color remains consistent */
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -992,7 +1000,7 @@ select:focus {
     display: flex; /* Use flexbox for horizontal alignment */
     margin-bottom: 15px; /* Space between rows */
     align-items: left; 
-    border-bottom: 2px solid #e7e1e9; /* Subtle bottom border */
+    border-bottom: 2px solid #aed6ed; /* Subtle bottom border */
 }
 
 .form-raw-group label {
@@ -1107,7 +1115,7 @@ select:focus {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #e7e1e9;
+    background: #aed6ed;
     border-radius: 12px;
     width: 400px;
     /* padding: 20px; */
@@ -1120,7 +1128,7 @@ select:focus {
     font-size: 18px;
     justify-content: space-between;
     align-items: center;
-    background-color: #e7e1e9; /* Light gray header background */
+    background-color: #aed6ed; /* Light gray header background */
     
     padding: 3px 10px 15px 69px;
     border-radius: 10px 10px 0 0; /* Rounded corners for the top */
@@ -1139,7 +1147,7 @@ select:focus {
     flex-direction: column;
     width: 100%;
     padding: 0px;
-    background-color: #e7e1e9; /* Ensures background color remains consistent */
+    background-color: #aed6ed; /* Ensures background color remains consistent */
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -1148,7 +1156,7 @@ select:focus {
     display: flex; /* Use flexbox for horizontal alignment */
     margin-bottom: 15px; /* Space between rows */
     align-items: left; 
-    border-bottom: 2px solid #e7e1e9; /* Subtle bottom border */
+    border-bottom: 2px solid #aed6ed; /* Subtle bottom border */
 }
 
 .form-update-group label {
@@ -1259,7 +1267,7 @@ select:focus {
 
 /* Popup form styling */
 #tag-form {
-    background: #e7e1e9;
+    background: #aed6ed;
     border-radius: 12px; /* Rounded corners */
     width: 400px; /* Adjusted width to match production popup */
     padding: 20px;
@@ -1271,7 +1279,7 @@ select:focus {
     font-size: 18px;
     justify-content: space-between;
     align-items: center;
-    background-color: #e7e1e9; /* Light gray header background */
+    background-color: #aed6ed; /* Light gray header background */
     
     padding: 3px 10px 15px 69px;
     border-radius: 10px 10px 0 0; /* Rounded corners for the top */
@@ -1290,7 +1298,7 @@ select:focus {
     flex-direction: column;
     width: 100%;
     padding: 0px;
-    background-color: #e7e1e9; /* Ensures background color remains consistent */
+    background-color: #aed6ed; /* Ensures background color remains consistent */
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -1299,7 +1307,7 @@ select:focus {
     display: flex; /* Use flexbox for horizontal alignment */
     margin-bottom: 15px; /* Space between rows */
     align-items: left; 
-    border-bottom: 2px solid #e7e1e9; /* Subtle bottom border */
+    border-bottom: 2px solid #aed6ed; /* Subtle bottom border */
 }
 
 .form-tag-group label {
@@ -1408,7 +1416,7 @@ select:focus {
 
 /* Popup form styling */
 #update-tag-form {
-    background: #e7e1e9;
+    background: #aed6ed;
     border-radius: 12px; /* Rounded corners */
     width: 400px; /* Adjusted width to match production popup */
     padding: 20px;
@@ -1422,7 +1430,7 @@ select:focus {
     font-size: 18px;
     justify-content: space-between;
     align-items: center;
-    background-color: #e7e1e9; /* Light gray header background */
+    background-color: #aed6ed; /* Light gray header background */
     
     padding: 3px 10px 15px 69px;
     border-radius: 10px 10px 0 0; /* Rounded corners for the top */
@@ -1441,7 +1449,7 @@ select:focus {
     flex-direction: column;
     width: 100%;
     padding: 0px;
-    background-color: #e7e1e9; /* Ensures background color remains consistent */
+    background-color: #aed6ed; /* Ensures background color remains consistent */
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -1450,7 +1458,7 @@ select:focus {
     display: flex; /* Use flexbox for horizontal alignment */
     margin-bottom: 15px; /* Space between rows */
     align-items: left; 
-    border-bottom: 2px solid #e7e1e9; /* Subtle bottom border */
+    border-bottom: 2px solid #aed6ed; /* Subtle bottom border */
 }
 
 .form-update-tag-group label {

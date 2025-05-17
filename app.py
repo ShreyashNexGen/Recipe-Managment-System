@@ -351,7 +351,12 @@ def get_opcua_client():
         print(f"Failed to connect to OPC UA Server: {e}")
         return None
     return client
-
+@app.route('/production')
+def filter_log():
+    if 'username' not in session:
+        flash('Please log in to access the dashboard.', 'warning')
+        return redirect(url_for('login'))
+    return render_template('production.html', username=session['username'])
 @app.route('/status', methods=['GET'])
 def get_status():
     try:
@@ -2670,6 +2675,8 @@ def update_recipe():
     
     # Extract POS values (1-9)
     pos_values = [request.form.get(f'pos{i}', None) for i in range(1, 10)]
+    alu_material = request.form.get('alu_mat', None)
+    house_material = request.form.get('house_mat', None)
 
     # Validate required fields
     required_fields = [recipe_id, recipe_name, filter_size, filter_code, art_no, alu_coil_width, motor_speed]
@@ -2697,9 +2704,9 @@ def update_recipe():
         cursor.execute(
             '''UPDATE Recipe_Details1 
                SET Pos1 = ?, Pos2 = ?, Pos3 = ?, Pos4 = ?, Pos5 = ?, 
-                   Pos6 = ?, Pos7 = ?, Pos8 = ?, Pos9 = ?, Alu_coil_width = ?
+                   Pos6 = ?, Pos7 = ?, Pos8 = ?, Pos9 = ?, Alu_coil_width = ?,Alu_roller_type = ?, Spacer = ?,Alu_Material = ?,House_Material = ?
                WHERE Recipe_ID = ?''',
-            (*pos_values, alu_coil_width, recipe_id)
+            (*pos_values, alu_coil_width,alu_roller_type,spacer,alu_material,house_material,recipe_id)
         )
 
         # Update `Sub_Menu` table
@@ -3975,7 +3982,8 @@ def get_recipe():
         for pos in recipe_pos_list:
             data["Alu_roller_type"] = pos.get("Alu_roller_type", "")
             data["Spacer"] = pos.get("Spacer", "")
-
+            data["Alu_Material"] = pos.get("Alu_Material", "")
+            data["House_Material"] = pos.get("House_Material", "")
             # Add positions dynamically
             for i in range(1, 10):  # Pos1 to Pos9
                 pos_key = f"Pos{i}"
@@ -4042,9 +4050,6 @@ def report():
         start_date=start_date,
         end_date=end_date
     )
-
-
-
 
 @app.route("/search-report")
 def search_report():
@@ -4288,5 +4293,5 @@ if __name__ == '__main__':
     # socketio.run(app, host='0.0.0.0', port=5000)
     start_periodic_update()
     webbrowser.open("http://127.0.0.1:5000")
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    app.run(host='127.0.0.1', port=5000, debug=True)
 
