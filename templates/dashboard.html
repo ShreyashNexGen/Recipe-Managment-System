@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
+<!-- jQuery & jQuery UI -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+
 <div class="container mt-4">
     <h1 style="font-size: 30px; color: #3d2758; text-align: center; font-weight: bold;">Dashboard</h1>
     
@@ -8,43 +13,41 @@
      
      <!-- Status Overview Section -->
 <div class="status-overview container mt-5">
-    <h2 class="status-title">System Status</h2>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="status-card">
-                <i class="fas fa-network-wired status-icon"></i>
-                <p><strong>PLC IP:</strong> <span id="plc-ip">Loading...</span></p>
-                <p><strong>Internet Connected:</strong> <span id="internet-connected">Loading...</span></p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="status-card">
-                <i class="fas fa-server status-icon"></i>
-                <p><strong>PLC Connected:</strong> <span id="plc-connected">Loading...</span></p>
-                <p><strong>No. of Tags Created:</strong> <span id="tags-count">Loading...</span></p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="status-card">
-                <i class="fas fa-database status-icon"></i>
-                <p><strong>No. of Logs Created:</strong> <span id="logs-count">Loading...</span></p>
-                <p><strong>Log Interval Time:</strong> <span id="interval-time">Loading...</span></p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="status-card">
-                <i class="fas fa-key status-icon"></i>
-                <p><strong>Serial Key:</strong> <span id="serial-key">Loading...</span></p>
-                <p><strong>Running Recipe:</strong> <span id="recipe-name">Loading...</span></p>
-            </div>
-        </div>
-        <div class="update-interval-container">
-            <div class="update-card">
-                <h3><i class="fas fa-clock interval-icon"></i> Set Log Interval Time</h3>
-                <input type="number" id="interval-time1" class="form-control" placeholder="Enter Interval Time">
-                <button id="update-interval-btn" class="btn btn-update">Update</button>
-            </div>
-        </div>
+  <h3 class="dashboard-title">System Status</h3>
+  <div class="status-fixed-row" id="status-draggable">
+    <div class="status-card" id="plc-ip-card">
+        <i class="fas fa-network-wired icon"></i>
+        <p class="label">PLC IP</p>
+        <p class="value" id="plc-ip">192.168.0.1</p>
+        <p class="label">Internet</p>
+        <p class="value" id="internet-connected">Connected</p>
+    </div>
+    <div class="status-card" id="plc-connected-card">
+        <i class="fas fa-server icon"></i>
+        <p class="label">PLC Connected</p>
+        <p class="value" id="plc-connected">Not Connected</p>
+        <p class="label">Tags</p>
+        <p class="value" id="tags-count">0</p>
+    </div>
+    <div class="status-card" id="logs-card">
+        <i class="fas fa-database icon"></i>
+        <p class="label">Logs</p>
+        <p class="value" id="logs-count">0</p>
+        <p class="label">Interval</p>
+        <p class="value" id="interval-time">20s</p>
+    </div>
+    <div class="status-card" id="serial-key-card">
+        <i class="fas fa-key icon"></i>
+        <p class="label">Serial Key</p>
+        <p class="value" id="serial-key">DESKTOP-2NDPVUP</p>
+    </div>
+    <div class="status-card" id="recipe-name-card">
+        <i class="fas fa-cogs icon"></i>
+        <p class="label">Running Recipe</p>
+        <p class="value" id="recipe-name">Not Connected</p>
+    </div>
+</div>
+  
     </div>
 
     <!-- Update Interval Time -->
@@ -59,7 +62,21 @@
 </div>
 
 <!-- CSS for Styling -->
-<style>
+<!-- <style>
+  .status-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 20px;
+    justify-content: space-between;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  
+  .status-row .col-md-4 {
+    flex: 1;
+    min-width: 220px;
+  }
+  
     .status-overview {
         padding: 20px;
         background: #f4f7fc;
@@ -177,49 +194,516 @@
     .btn-update:hover {
         background: #e0a800;
     }
-</style>
+</style> -->
+<style>
+  .status-card p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  .ui-resizable-handle {
+    background: #007bff;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .status-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
 
-   
-    <div class="chart-container">
-    <!-- OEE Chart -->
-    <div class="chart-box">
-      <h4 class="chart-title">OEE</h4>
+  .ui-draggable-dragging {
+    transform: rotate(2deg) scale(1.05);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.3);
+  }
+
+  .ui-sortable-helper {
+    background: rgba(255,255,255,0.8);
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+  }
+  .dashboard-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #3a2b4d;
+  }
+  
+  .status-fixed-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 10px;
+  }
+  
+  .status-card {
+    background: linear-gradient(135deg, #5fb9e3, #1f6aad);
+    border-radius: 10px;
+    padding: 8px 10px;
+    width: 18%;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    color: white;
+    text-align: center;
+    font-size: 12px;
+  }
+  
+  .status-card .icon {
+    font-size: 18px;
+    margin-bottom: 5px;
+  }
+  
+  .status-card .label {
+    font-weight: 500;
+    margin: 2px 0;
+    color: black;
+  }
+  
+  .status-card .value {
+    font-weight: bold;
+    margin-bottom: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 3px;
+    font-size: 13px;
+  }
+  </style>
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="chart-visualization">
+  <h2>Chart Visualization</h2>
+
+  <div class="chart-cards">
+    <div class="chart-card">
+      <h3>OEE</h3>
       <canvas id="oeeChart"></canvas>
-      <button class="reset-btn" onclick="resetOEE()">Reset</button>
     </div>
-  
-    <!-- Machine Availability Chart -->
-    <div class="chart-box">
-      <h4 class="chart-title">Machine Availability</h4>
+
+    <div class="chart-card">
+      <h3>Machine Availability</h3>
       <canvas id="availabilityChart"></canvas>
-      <button class="reset-btn" onclick="resetAvailability()">Reset</button>
+    </div>
+
+    <div class="chart-card">
+      <h3>PLC Connection</h3>
+      <canvas id="plcChart"></canvas>
     </div>
   </div>
-   <!-- Date-Time Filter Section -->
-   <div class="filter-section">
-    <h4 class="filter-title">Filter by Date & Time</h4>
-    <div class="filter-form">
-      <div class="form-group">
-        <label for="start-date">Start Date</label>
-        <input type="datetime-local" id="start-date" name="start-date">
-      </div>
-      <div class="form-group">
-        <label for="end-date">End Date</label>
-        <input type="datetime-local" id="end-date" name="end-date">
-      </div>
-      <div class="form-group button-group">
-        <button>Apply Filter</button>
-      </div>
-    </div>
-  </div>
-  <!-- Bar Graph Section -->
-<div class="bar-chart-container">
-    <h4 class="bar-chart-title">Raw Material Analysis</h4>
-    <div class="bar-chart-box">
-      <canvas id="rawMaterialBarChart"></canvas>
-    </div>
-  </div>
+</div>
+
+<style>
+  .chart-visualization {
+    padding: 30px;
+    background-color: #b1cae7;
+    text-align: center;
+  }
+
+  .chart-visualization h2 {
+    font-size: 26px;
+    color: #123456;
+    margin-bottom: 30px;
+  }
+
+  .chart-cards {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .chart-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    width: 300px;
+    height: auto;
+  }
+
+  .chart-card h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #333;
+  }
+
+  canvas {
+    width: 100%;
+    height: 220px;
+  }
+  /* Draggable resize handle */
+  .ui-resizable-handle {
+    background: #b1cae7;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .ui-draggable-dragging {
+    transform: rotate(1deg) scale(1.02);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+  }
+</style>
+<script>
+  $(function() {
+    $(".chart-card").draggable({
+      containment: ".chart-visualization",
+      stack: ".chart-card",
+      opacity: 0.9,
+      scroll: false,
+      cursor: "move"
+    }).resizable({
+      minHeight: 250,
+      minWidth: 250,
+      maxHeight: 450,
+      maxWidth: 450,
+      handles: "n, e, s, w, ne, se, sw, nw"
+    });
+  });
+</script>
+
+<script>
+  // OEE Chart
+  const oeeeCtx = document.getElementById('oeeChart').getContext('2d');
+  new Chart(oeeeCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Running', 'Stop', 'Faulty', 'Idle'],
+      datasets: [{
+        data: [40, 30, 20, 10],
+        backgroundColor: ['#4285F4', '#FBBC05', '#EA4335', '#999']
+      }]
+    }
+  });
+
+  // Machine Availability Chart
+  const aavailabilityCtx = document.getElementById('availabilityChart').getContext('2d');
+  new Chart(aavailabilityCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Running', 'Stopped'],
+      datasets: [{
+        data: [70, 30],
+        backgroundColor: ['#7E57C2', '#FF7043']
+      }]
+    }
+  });
+
+  // PLC Connection Chart
+  const plcCtx = document.getElementById('plcChart').getContext('2d');
+  new Chart(plcCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Up', 'Down'],
+      datasets: [{
+        data: [60, 40],
+        backgroundColor: ['#00BFA5', '#EC407A']
+      }]
+    }
+  });
+</script>
   
+  
+   
+  <div class="dashboard-flex-wrap">
+   
+    <!-- Right Section: Filter + Bar Chart -->
+    <div class="bar-graph-section">
+      <div class="bar-chart-container wide-bar-chart">
+      <!-- Filter above graph -->
+      <div class="filter-section graph-filter">
+        <h4 class="bar-chart-title">Raw Material Analysis</h4>
+        <div class="filter-form">
+          <div class="form-group">
+            <label for="start-date">Start Date</label>
+            <input type="datetime-local" id="start-date" name="start-date">
+          </div>
+          <div class="form-group">
+            <label for="end-date">End Date</label>
+            <input type="datetime-local" id="end-date" name="end-date">
+          </div>
+          <div class="form-group button-group">
+            <button>Apply Filter</button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Bar Graph Below Filter -->
+      <div class="bar-chart-container wide-bar-chart">
+        <div class="bar-chart-box">
+          <canvas id="rawMaterialBarChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .dashboard-flex-wrap {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+  }
+  
+  /* Keep chart boxes slim and stacked */
+  .chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 300px;
+  }
+  
+  /* Group filter + bar chart on right */
+  .bar-graph-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+    min-width: 500px;
+  }
+  
+  /* Filter above graph */
+  .graph-filter {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: -10px; /* tighter to graph */
+  }
+  
+  /* Widen bar chart */
+  .wide-bar-chart {
+    width: 100%;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  
+
+.chart-box {
+width: 100%;
+padding: 12px;
+}
+
+.compact-filter {
+width: 300px;
+padding: 20px;
+}
+
+.slim-bar-chart {
+width: 340px;
+padding: 20px;
+}
+
+  /* Container for both charts */
+.chart-container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin: 50px auto;
+  max-width: 1200px;
+}
+
+/* Individual chart card */
+.chart-box {
+  /*background: linear-gradient(to bottom right, #b6dfa1, #32b9bf);*/
+  padding: 17px;
+  border-radius: 16px;
+  border: 2px solid black;
+  box-shadow: 0 8px 24px rgba(0, 51, 102, 0.1);
+  width: 320px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0, 51, 102, 0.15);
+}
+
+/* Chart title styling */
+.chart-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f3e74;
+  margin-bottom: 20px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Canvas spacing */
+.chart-canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Reset Button Styling */
+.reset-btn {
+  margin-top: 20px;
+  background-color: #1e88e5;
+  color: white;
+  padding: 8px 24px;
+  border: none;
+  border-radius: 30px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.reset-btn:hover {
+  background-color: #1565c0;
+}
+/* Bar Chart Styling */
+.bar-chart-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: white;
+  /*border: 2px solid #0077b6;*/
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
+}
+
+.bar-chart-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #023e8a;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.bar-chart-box {
+  width: 100%;
+  height: 400px;
+}
+
+/* Filter Section Styling */
+.filter-section {
+  margin: 40px auto;
+  max-width: 1000px;
+  padding: 30px;
+  border: 2px solid #0077b6;
+  border-radius: 12px;
+  background: #f0f8ff;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.15);
+  text-align: center;
+}
+
+.filter-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #023e8a;
+  margin-bottom: 25px;
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.form-group label {
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #1d3557;
+}
+
+.form-group input {
+  padding: 8px 12px;
+  border: 1.5px solid #90e0ef;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: #ffffff;
+  color: #000;
+}
+
+.button-group button {
+  margin-top: 25px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #0077b6;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.button-group button:hover {
+  background-color: #023e8a;
+}
+
+
+</style>
+<script>
+  $(function () {
+      // Enable drag and drop for status cards
+      $("#status-draggable").sortable({
+        placeholder: "ui-state-highlight",
+        revert: 200, // adds a smooth revert effect
+        start: function (e, ui) {
+          ui.item.addClass("dragging");
+        },
+        stop: function (e, ui) {
+          ui.item.removeClass("dragging");
+        }
+      });
+      $(".status-card").draggable({
+        containment: "window",
+        handle: ".label",
+        opacity: 0.8,
+        revert: "invalid"
+      }).resizable({
+        animate: true,
+        minHeight: 100,
+        minWidth: 120,
+        maxHeight: 300,
+        maxWidth: 400
+      });
+      // Enable drag and drop for chart containers
+      $(".dashboard-flex-wrap").sortable({
+          items: "> div",
+          handle: "h4, .chart-title",
+          placeholder: "ui-state-highlight",
+          revert: true
+      });
+
+      // Add some animation effects when dragging
+      $(".status-card, .chart-box, .bar-graph-section").draggable({
+          handle: "h4, .chart-title",
+          revert: "invalid",
+          opacity: 0.8,
+          containment: "window",
+          start: function () { $(this).addClass("dragging"); },
+          stop: function () { $(this).removeClass("dragging"); }
+      });
+
+      $(".status-fixed-row, .dashboard-flex-wrap").droppable({
+          accept: ".status-card, .chart-box, .bar-graph-section",
+          drop: function (event, ui) {
+              $(this).append(ui.draggable);
+          }
+      });
+  });
+</script>
+
+<style>
+.ui-state-highlight {
+  height: 100px;
+  background: rgba(0,123,255,0.2);
+  border: 2px dashed #007bff;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+.dragging {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+</style>  
   <!-- Date-Time Filter Section -->
   <!-- <div class="filter-section">
     <h4 class="filter-title">Filter by Date & Time</h4>
@@ -280,155 +764,7 @@
       }
       
   </style> -->
-  <style>
-    /* Container for both charts */
-.chart-container {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    flex-wrap: wrap;
-    margin: 50px auto;
-    max-width: 1200px;
-  }
-  
-  /* Individual chart card */
-  .chart-box {
-    background: linear-gradient(to bottom right, #b6dfa1, #32b9bf);
-    padding: 17px;
-    border-radius: 16px;
-    border: 2px solid black;
-    box-shadow: 0 8px 24px rgba(0, 51, 102, 0.1);
-    width: 320px;
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .chart-box:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 28px rgba(0, 51, 102, 0.15);
-  }
-  
-  /* Chart title styling */
-  .chart-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #0f3e74;
-    margin-bottom: 20px;
-    font-family: 'Segoe UI', sans-serif;
-  }
-  
-  /* Canvas spacing */
-  .chart-canvas {
-    max-width: 100%;
-    height: auto;
-  }
-  
-  /* Reset Button Styling */
-  .reset-btn {
-    margin-top: 20px;
-    background-color: #1e88e5;
-    color: white;
-    padding: 8px 24px;
-    border: none;
-    border-radius: 30px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .reset-btn:hover {
-    background-color: #1565c0;
-  }
-  /* Bar Chart Styling */
-.bar-chart-container {
-    max-width: 1000px;
-    margin: 40px auto;
-    padding: 20px;
-    background-color: #f0f8ff;
-    border: 2px solid #0077b6;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
-  }
-  
-  .bar-chart-title {
-    font-size: 1.6rem;
-    font-weight: 600;
-    color: #023e8a;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .bar-chart-box {
-    width: 100%;
-    height: 400px;
-  }
-  
-  /* Filter Section Styling */
-  .filter-section {
-    margin: 40px auto;
-    max-width: 1000px;
-    padding: 30px;
-    border: 2px solid #0077b6;
-    border-radius: 12px;
-    background: #f0f8ff;
-    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.15);
-    text-align: center;
-  }
-  
-  .filter-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #023e8a;
-    margin-bottom: 25px;
-  }
-  
-  .filter-form {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-  }
-  
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    min-width: 200px;
-  }
-  
-  .form-group label {
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: #1d3557;
-  }
-  
-  .form-group input {
-    padding: 8px 12px;
-    border: 1.5px solid #90e0ef;
-    border-radius: 6px;
-    font-size: 1rem;
-    background-color: #ffffff;
-    color: #000;
-  }
-  
-  .button-group button {
-    margin-top: 25px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    font-weight: bold;
-    color: #ffffff;
-    background-color: #0077b6;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  .button-group button:hover {
-    background-color: #023e8a;
-  }
-  
-  
-  </style>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const oeeCtx = document.getElementById('oeeChart').getContext('2d');
@@ -474,7 +810,7 @@
     const rawMaterialBarChart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Iron', 'Aluminum', 'Copper', 'Zinc', 'Steel', 'Plastic', 'Rubber'],
+        labels: ['Material 1', 'Material 2', 'Material 3', 'Material 4', 'Material 5', 'Material 6', 'Material 7'],
         datasets: [{
           label: 'Quantity Used (kg)',
           data: [120, 90, 150, 80, 200, 70, 60],

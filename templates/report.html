@@ -1,7 +1,86 @@
 {% extends "base.html" %}
 {% block title %}Recipe Report{% endblock %}
 {% block content %}
-<h1 style="margin-left: 450px;">Report</h1>
+<h1 style="text-align: center; font-size: 28px; font-weight: 600; color: #1d3557; margin-bottom: 20px;">Report</h1>
+<div class="enhanced-summary-section">
+    <div class="summary-box glass-box">
+      <div class="icon-wrap"><i class="fas fa-list-alt"></i></div>
+      <div class="summary-info">
+        <span class="summary-label">Total Recipes</span>
+        <span class="summary-value" id="total-recipes">--</span>
+      </div>
+    </div>
+  
+    <div class="summary-box glass-box">
+      <div class="icon-wrap"><i class="fas fa-clock"></i></div>
+      <div class="summary-info">
+        <span class="summary-label">Duration</span>
+        <span class="summary-value" id="duration">--</span>
+      </div>
+    </div>
+  
+    <div class="summary-box glass-box">
+      <div class="icon-wrap"><i class="fas fa-user-check"></i></div>
+      <div class="summary-info">
+        <span class="summary-label">Operator</span>
+        <span class="summary-value" id="operator-name">--</span>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    .enhanced-summary-section {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+        margin: 30px 10px;
+      }
+      
+      .summary-box {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        border-radius: 15px;
+        min-width: 250px;
+        transition: 0.3s ease-in-out;
+        backdrop-filter: blur(8px);
+        background: white;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .summary-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+      }
+      
+      .icon-wrap {
+        font-size: 30px;
+        color: #2563eb;
+        margin-right: 15px;
+      }
+      
+      .summary-info {
+        display: flex;
+        flex-direction: column;
+        color: #1e293b;
+      }
+      
+      .summary-label {
+        font-size: 14px;
+        color: #475569;
+        font-weight: 500;
+      }
+      
+      .summary-value {
+        font-size: 22px;
+        font-weight: bold;
+        color: #1e3a8a;
+      }
+      
+      
+  </style>
 <div class="report-filters">
     <div class="filter-container">
         <form method="POST" action="/report" id="filter-form">
@@ -33,21 +112,25 @@
     <button id="toggle-options" class="btn btn-toggle"><i class="fa-sharp fa-solid fa-plus"></i></button>
     <div id="options-menu" class="options-menu">
         <input type="text" id="search-input" class="form-control" placeholder="Search...">
-        <select id="category-filter" class="form-control" >
-            <option value="all" selected>All Columns</option>
-            <option value="0">Batch Code</option>
-            <option value="1">Timestamp</option>
-            <option value="2">Recipe Name</option>
-            <option value="3">Article No</option>
-            <option value="4">Filter Size</option>
-            <option value="5">FilterSize</option>
-            <option value="6">Ng Status</option>
-            <option value="7">Serial No</option>
-            <option value="8">Parameter 1</option>
-            <option value="9">Parameter 2</option>
-            <option value="10">Batch Completion Status</option>
-        </select>
-        <button id="apply-filter" class="btn btn-filter">Filter</button>
+        <div class="dropdown-multi-select">
+            <button class="dropdown-btn">Select Columns ▼</button>
+            <div class="dropdown-content" id="category-filter">
+              <label><input type="checkbox" value="0"> Batch Code</label>
+              <label><input type="checkbox" value="1"> Timestamp</label>
+              <label><input type="checkbox" value="2"> Recipe Name</label>
+              <label><input type="checkbox" value="3"> Article No</label>
+              <label><input type="checkbox" value="4"> Filter Size</label>
+              <label><input type="checkbox" value="5"> FilterSize</label>
+              <label><input type="checkbox" value="6"> Ng Status</label>
+              <label><input type="checkbox" value="7"> Serial No</label>
+              <label><input type="checkbox" value="8"> Parameter 1</label>
+              <label><input type="checkbox" value="9"> Parameter 2</label>
+              <label><input type="checkbox" value="10"> Batch Completion Status</label>
+            </div>
+          </div>   
+          <!-- Tags display below search -->
+        <div id="selected-tags" class="tag-container"></div>   
+            <button id="apply-filter" class="btn btn-filter">Filter</button>
         <button id="refresh-table" class="btn btn-refresh">Refresh</button>
     </div>
 </div>
@@ -88,34 +171,116 @@
 </table>
 <!-- Showing Entries Info -->
 <div class="entries-info">
-    Showing {{ (page - 1) * 5 + 1 }} to {{ ((page * 5) if (page * 5) < total_count else total_count) }} of {{ total_count }} entries
-
+    Showing <span id="entry-start">0</span> to <span id="entry-end">0</span> of <span id="entry-total">0</span> entries
 </div>
-<!-- Pagination Controls -->
-<div class="pagination-container">
-    {% if page > 1 %}
-        <a href="{{ url_for('report', page=page-1) }}" class="pagination-btn">Previous</a>
-    {% endif %}
 
-    {% for p in range(1, total_pages + 1) %}
-        <a href="{{ url_for('report', page=p) }}" class="pagination-btn {% if p == page %} active {% endif %}">{{ p }}</a>
-    {% endfor %}
 
-    {% if page < total_pages %}
-        <a href="{{ url_for('report', page=page+1) }}" class="pagination-btn">Next</a>
-    {% endif %}
-</div>
+<div class="pagination-container"></div>
+
 
 <style>
+    .dropdown-multi-select {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .dropdown-btn {
+        padding: 6px 12px;
+        border-radius: 5px;
+        background: #fff;
+        border: 1px solid #007bff;
+        color: #007bff;
+        cursor: pointer;
+      }
+      
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 250px;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        padding: 10px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 10;
+      }
+      
+      .dropdown-multi-select:hover .dropdown-content {
+        display: block;
+      }
+      
+      .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+        padding-left: 4px;
+        justify-content: flex-start;
+      }
+      
+      .tag {
+        background: #007bff;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .tag .remove-tag {
+        margin-left: 8px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      
+      
+    .multi-select-dropdown {
+        position: relative;
+        width: 250px;
+      }
+      
+      .dropdown-header {
+        background-color: #fff;
+        border: 2px solid #007bff;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: 500;
+        color: #007bff;
+      }
+      
+      .dropdown-options {
+        display: none;
+        position: absolute;
+        z-index: 1000;
+        background-color: white;
+        border: 2px solid #007bff;
+        padding: 10px;
+        border-radius: 0 0 6px 6px;
+        max-height: 200px;
+        overflow-y: auto;
+        width: 100%;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+      }
+      
+      .dropdown-options label {
+        display: block;
+        padding: 5px 0;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      
     .entries-info {
         text-align: center;
-        
         font-weight: bold;
         color: #555;
         margin-bottom: 10px;
         border-bottom: 2px solid #ddd;
         padding-bottom: 5px;
     }
+
     .pagination-container {
         display: flex;
         justify-content: center;
@@ -123,27 +288,52 @@
     }
 
     .pagination-btn {
-        /*margin: 0 5px;*/
-        padding: 10px 15px;
-        background-color: #007bff;
-        color: white;
+        padding: 6px 10px;
+        background-color: white; /* Default: white */
+        color: #007bff; /* Blue text */
         text-decoration: none;
+        border: 1px solid white; /* Blue border */
         border-radius: 5px;
-    }
-
-    .pagination-btn.active {
-        background-color: #0056b3;
-        font-weight: bold;
+        margin: 0 2px;
     }
 
     .pagination-btn:hover {
-        background-color: #0056b3;
+        background-color: #007bff;
+        color: white;
+    }
+
+    .pagination-btn.active {
+        background-color: #007bff; /* Blue background for active page */
+        color: white;
+        font-weight: bold;
+        pointer-events: none; /* Prevent clicking on current page */
+    }
+
+    .pagination-btn.disabled {
+        background-color: transparent;
+        color: #ccc;
+        border: none;
+        pointer-events: none;
     }
 </style>
+
 
 <!-- Flatpickr JS for date picker -->
 
 <script>
+    function toggleMultiDropdown() {
+        const dropdown = document.getElementById("category-filter");
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      }
+      
+      // Hide dropdown when clicking outside
+      document.addEventListener("click", function (e) {
+        const box = document.querySelector('.multi-select-dropdown');
+        const dropdown = document.getElementById("category-filter");
+        if (!box.contains(e.target)) {
+          dropdown.style.display = "none";
+        }
+      });
     document.querySelector("form").addEventListener("submit", function(event) {
         let startDate = document.getElementById("report-start-date").value;
         let endDate = document.getElementById("report-end-date").value;
@@ -177,35 +367,6 @@
         menu.style.display = menu.style.display === "flex" ? "none" : "flex";
     });
     
-    document.getElementById("search-input").addEventListener("keyup", function () {
-        var searchText = this.value.toLowerCase();
-        var selectedCategory = document.getElementById("category-filter").value;
-        var rows = document.querySelectorAll("table tbody tr");
-
-        rows.forEach(function (row) {
-            var cells = row.getElementsByTagName("td");
-            var found = false;
-
-            if (selectedCategory === "all") {
-                for (var i = 0; i < cells.length; i++) {
-                    if (cells[i].textContent.toLowerCase().includes(searchText)) {
-                        found = true;
-                        break;
-                    }
-                }
-            } else {
-                var colIndex = parseInt(selectedCategory);
-                if (cells[colIndex] && cells[colIndex].textContent.toLowerCase().includes(searchText)) {
-                    found = true;
-                }
-            }
-
-            row.style.display = found ? "" : "none";
-        });
-    });
-    
-    
-
     document.getElementById("apply-filter").addEventListener("click", function() {
         var selectedCategory = document.getElementById("category-filter").value.toLowerCase();
         var rows = document.querySelectorAll("table tbody tr");
@@ -242,46 +403,154 @@
         document.getElementById("filtered-data").value = JSON.stringify(filteredData); // Store in hidden input
         this.submit(); // Submit form
     });
+    function updateEntriesInfo(page) {
+        const start = (page - 1) * rowsPerPage + 1;
+        const end = Math.min(page * rowsPerPage, rows.length);
+        const total = rows.length;
+    
+        document.getElementById("entry-start").innerText = start;
+        document.getElementById("entry-end").innerText = end;
+        document.getElementById("entry-total").innerText = total;
+    }
+    
+    // ✅ Client-side pagination
     document.addEventListener("DOMContentLoaded", function () {
-        const rowsPerPage = 10; // Number of rows per page
-        const table = document.getElementById("reportTable");
-        const rows = Array.from(table.querySelectorAll("tbody tr"));
+        const rowsPerPage = 10;
+        const table = document.getElementById("report-table");
+        const allRows = Array.from(table.querySelectorAll("tbody tr"));
+        const paginationContainer = document.querySelector(".pagination-container");
+        const searchInput = document.getElementById("search-input");
+        const categoryFilter = document.getElementById("category-filter");
+        const entriesInfo = document.querySelector(".entries-info");
         let currentPage = 1;
-        let totalPages = Math.ceil(rows.length / rowsPerPage);
-
-        document.getElementById("totalPages").innerText = totalPages;
-
-        function showPage(page) {
+        let filteredRows = [...allRows];
+    
+        function getSearchKeywords() {
+            return searchInput.value.toLowerCase().trim().split(/\s+/);
+        }
+    
+        function filterRows() {
+            const searchInputValue = searchInput.value.toLowerCase().trim();
+            const keywords = searchInputValue.split(/\s+/).filter(Boolean);
+          
+            const selectedCheckboxes = document.querySelectorAll('#category-filter input[type="checkbox"]:checked');
+            const selectedColumns = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+          
+            filteredRows = allRows.filter(row => {
+              const cells = row.querySelectorAll("td");
+          
+              if (selectedColumns.length === 0) {
+                const fullRowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(" ");
+                return keywords.every(keyword => fullRowText.includes(keyword));
+              }
+          
+              return keywords.every(keyword => {
+                return selectedColumns.some(colIndex => {
+                  const cellText = cells[colIndex]?.textContent.toLowerCase() || "";
+                  return cellText.includes(keyword);
+                });
+              });
+            });
+          }
+          
+          function updateTags() {
+            const selectedTagsContainer = document.getElementById("selected-tags");
+            selectedTagsContainer.innerHTML = "";
+          
+            const checkboxes = document.querySelectorAll('#category-filter input[type="checkbox"]:checked');
+          
+            checkboxes.forEach(cb => {
+              const tag = document.createElement("div");
+              tag.className = "tag";
+              tag.innerHTML = `${cb.parentElement.textContent.trim()} <span class="remove-tag" data-val="${cb.value}">&times;</span>`;
+              selectedTagsContainer.appendChild(tag);
+            });
+          
+            // Add remove functionality
+            document.querySelectorAll(".remove-tag").forEach(span => {
+              span.addEventListener("click", function () {
+                const val = this.getAttribute("data-val");
+                document.querySelector(`#category-filter input[value="${val}"]`).checked = false;
+                updateTags();
+                filterRows();
+                changePage(1);
+              });
+            });
+          }
+          
+          // Hook update on change
+          document.querySelectorAll('#category-filter input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener("change", () => {
+              updateTags();
+              filterRows();
+              changePage(1);
+            });
+          });
+          
+    
+        function renderTable(page) {
             const start = (page - 1) * rowsPerPage;
             const end = start + rowsPerPage;
-
-            rows.forEach((row, index) => {
-                row.style.display = index >= start && index < end ? "" : "none";
-            });
-
-            document.getElementById("currentPage").innerText = page;
-            document.getElementById("prevPage").disabled = page === 1;
-            document.getElementById("nextPage").disabled = page === totalPages;
+    
+            allRows.forEach(row => row.style.display = "none");
+            filteredRows.slice(start, end).forEach(row => row.style.display = "");
+    
+            updatePagination(page);
+            updateEntryInfo(page);
         }
-
-        document.getElementById("prevPage").addEventListener("click", function () {
-            if (currentPage > 1) {
-                currentPage--;
-                showPage(currentPage);
+    
+        function updatePagination(activePage) {
+            paginationContainer.innerHTML = "";
+            const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+            const maxVisible = 5;
+            let start = Math.max(1, activePage - Math.floor(maxVisible / 2));
+            let end = Math.min(totalPages, start + maxVisible - 1);
+    
+            if (end - start < maxVisible - 1) {
+                start = Math.max(1, end - maxVisible + 1);
             }
-        });
-
-        document.getElementById("nextPage").addEventListener("click", function () {
-            if (currentPage < totalPages) {
-                currentPage++;
-                showPage(currentPage);
+    
+            if (activePage > 1) {
+                paginationContainer.innerHTML += `<a href="javascript:void(0)" class="pagination-btn" onclick="changePage(${activePage - 1})">Previous</a>`;
             }
+    
+            for (let i = start; i <= end; i++) {
+                paginationContainer.innerHTML += `<a href="javascript:void(0)" class="pagination-btn ${i === activePage ? 'active' : ''}" onclick="changePage(${i})">${i}</a>`;
+            }
+    
+            if (activePage < totalPages) {
+                paginationContainer.innerHTML += `<a href="javascript:void(0)" class="pagination-btn" onclick="changePage(${activePage + 1})">Next</a>`;
+            }
+        }
+    
+        function updateEntryInfo(page) {
+            if (!entriesInfo) return;
+            const start = (page - 1) * rowsPerPage + 1;
+            const end = Math.min(page * rowsPerPage, filteredRows.length);
+            entriesInfo.innerText = `Showing ${start} to ${end} of ${filteredRows.length} entries`;
+        }
+    
+        window.changePage = function (page) {
+            currentPage = page;
+            renderTable(currentPage);
+        }
+    
+        // Hook search and filter dropdown
+        searchInput.addEventListener("input", () => {
+            filterRows();
+            changePage(1);
         });
-
-        showPage(currentPage);
+    
+        categoryFilter.addEventListener("change", () => {
+            filterRows();
+            changePage(1);
+        });
+    
+        // Initial render
+        filterRows();
+        renderTable(currentPage);
     });
-   
-</script>
+    </script>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -293,6 +562,7 @@
     gap: 15px; /* Adds space between elements */
     justify-content: center; /* Centers content */
     background: #f8f9fa;
+    border: 2px solid #007bff;
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 8px;

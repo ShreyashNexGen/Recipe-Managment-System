@@ -32,7 +32,7 @@
 .sidebar ul {
     list-style-type: none;
     padding: 0;
-    margin-top: 20px;
+    /* margin-top: 20px; */
 }
 
 .sidebar ul li {
@@ -123,7 +123,7 @@
 
 .navbar {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     padding: 15px;
     background-color: #aed6ed;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -276,9 +276,11 @@ td a:hover {
     transform: translateY(-2px);
 } */
 .logo {
-    width: 75px;  /* Adjust width as per your design */
+    width: 95px;  /* Adjust width as per your design */
     height: auto;  /* Maintain aspect ratio */
-    margin-right: 50px; /* Space between the logo and text */
+    border: 2px solid black;
+    /* margin-right: 50px; */
+    border-radius: 10px;
 
 }
 /* General Styling */
