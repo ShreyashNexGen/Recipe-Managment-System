@@ -10,70 +10,83 @@
 }
 
 /* Sidebar */
-.top-navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #4b367c;
-    padding: 10px 20px;
-    color: #fff;
-    position: sticky;
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: #88c4db;
+    position: fixed;
     top: 0;
-    z-index: 100;
-}
-
-.top-navbar .logo img {
-    height: 60px;
-}
-
-.nav-links {
-    list-style: none;
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
-
-.nav-links li {
-    position: relative;
-}
-
-.nav-links a {
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-    padding: 8px 12px;
-    border-radius: 5px;
-}
-
-.nav-links a.active,
-.nav-links a:hover {
-    background-color: #342159;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #4b367c;
-    top: 100%;
     left: 0;
-    z-index: 1;
+    padding-top: 20px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.sidebar h2 {
+    text-align: center;
+    color: #4b3f72;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.sidebar ul {
+    list-style-type: none;
     padding: 0;
-    list-style: none;
-    min-width: 150px;
-    border-radius: 4px;
+    /* margin-top: 20px; */
 }
 
-.dropdown-content li a {
-    display: block;
-    padding: 10px;
+.sidebar ul li {
+    padding: 3px 20px;
+    transition: padding-left 0.3s ease;
+    margin-top: 3px;
 }
 
-.dropdown:hover .dropdown-content {
-    display: block;
+.sidebar ul li:hover {
+    padding-left: 30px;
 }
-.main-content {
-    margin-left: 0 !important;
-    padding: 20px;
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #1a191b;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 20px;  /* Initial rounded shape */
+    background: #f0f0f0;
+    transition: transform 0.3s ease, border-radius 0.3s ease, background 0.3s ease, color 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #1968df;
+    transform: translateY(-5px);  /* Moves the element 5px upward */
+    border-radius: 20px;  /* Changes shape to a rectangle */
+    color: #ffffff;
+}
+
+.sidebar .logout {
+    position: absolute;
+    bottom: 20px;
+    left: 140px;
+    color: #19181d;
+    font-size: 16px;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, #64bbd9, #0f56a3);
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.sidebar .logout:hover {
+    background-color: #0463c8;
+    color: #2e1f57;
+    transform: translateX(5px);
+}
+.sidebar ul li a.active {
+    background-color: #1968df;
+    transform: translateY(-5px);
+    color: #ffffff;
+    border-radius: 20px;
 }
 
 
