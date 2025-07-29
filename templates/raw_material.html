@@ -1,12 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Recipe Management{% endblock %}
-
+{% block breadcrumbs %}
+<div class="breadcrumb">
+        <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+        <i class="fas fa-angle-right"></i>
+        <a href="/raw-material">Raw Material</a>
+        <i class="fas fa-angle-right"></i>
+        <span>Filter</span>
+        <h1> Filter Raw Material</h1>
+    </div>
+{% endblock %}
 {% block content %}
 <div class="content-header">
-    <h1> Filter Raw Material</h1>
-    <button onclick="openAddMaterialForm()" class="add-button">+ Add Material</button>    
-</div>
 <!-- Your First Table (with collapsible feature) -->
 <div class="raw-material-section">
     <div class="raw-material-cards">
@@ -32,7 +38,8 @@
       <canvas id="shiftPieChart"></canvas>
     </div>
   </div>
-  
+  <button onclick="openAddMaterialForm()" class="add-button">+ Add Material</button>    
+</div>
   <style>
     .raw-material-section {
         display: flex;

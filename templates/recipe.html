@@ -1,7 +1,16 @@
 {% extends "base.html" %}
 
 {% block title %}Recipe Management{% endblock %}
-
+{% block breadcrumbs %}
+<div class="breadcrumb">
+        <a href="/dashboard"><i class="fas fa-home"></i>Dashboard</a>
+        <i class="fas fa-angle-right"></i>
+        <a href="/recipe">Recipe</a>
+        <i class="fas fa-angle-right"></i>
+        <span>Recipe Overview</span>
+        <h1> Recipe Overview</h1>
+    </div>
+{% endblock %}
 {% block content %}
 <div class="content-header">
     <h1>Recipe Overview</h1>

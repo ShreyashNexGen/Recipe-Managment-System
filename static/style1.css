@@ -14,21 +14,24 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #4b367c;
-    padding: 10px 20px;
+    background-color: #0056b3;
+    /* padding: 10px 20px; */
     color: #fff;
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 100;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
 }
 
-.top-navbar .logo img {
+/* .top-navbar .logo img {
     height: 60px;
-}
+} */
 
 .nav-links {
     list-style: none;
     display: flex;
+    font-size: 0.7rem;
     gap: 20px;
     align-items: center;
 }
@@ -47,37 +50,111 @@
 
 .nav-links a.active,
 .nav-links a:hover {
-    background-color: #342159;
+    background-color: #c9d5e1;
+    color: black;
+    border: 2px solid black;
+    border-radius: 20px
 }
 
 .dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #4b367c;
-    top: 100%;
-    left: 0;
-    z-index: 1;
-    padding: 0;
-    list-style: none;
-    min-width: 150px;
-    border-radius: 4px;
+  display: none;
+  position: absolute;
+  top: 170%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 86, 179, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 1;
+  padding: 5px;
+  list-style: none;
+  border-radius: 8px;
 }
 
-.dropdown-content li a {
-    display: block;
-    padding: 10px;
+.dropdown.open .dropdown-content {
+  display: block;
 }
+.dropdown-content li a {
+    white-space: nowrap;   /* keeps text in one line */
+    display: inline-block;
+    padding: 8px 14px;
+}
+.dropdown .arrow {
+    display: inline-block;
+    margin-left: 2px;
+    transition: transform 0.3s ease;
+}
+
+.dropdown.open .arrow {
+    transform: rotate(90deg);  /* ► becomes ▼ */
+}
+
 
 .dropdown:hover .dropdown-content {
     display: block;
 }
-.main-content {
-    margin-left: 0 !important;
-    padding: 20px;
+
+.breadcrumb-container {
+    position: fixed;
+    top: 45px;
+    left: 0;
+    width: 100%;
+    padding: 10px 25px;
+    background: white;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
 
+.breadcrumb a {
+    color: #007bff;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 5px;
+    transition: background 0.3s ease, color 0.3s ease;
+}
 
+.breadcrumb a:hover {
+    background: rgba(0, 123, 255, 0.1);
+    color: #0056b3;
+}
+
+.breadcrumb span {
+    background: linear-gradient(135deg, #007bff, #00c6ff);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.breadcrumb i {
+    color: #888;
+    font-size: 12px;
+}
+
+.breadcrumb-container h1 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    font-weight: 600;
+    color: #222;
+    margin: 0;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
 
 
 /*css for icons of dashboard*/
@@ -99,7 +176,9 @@
 
 /* Main Content */
 .main-content {
-    margin-left: 250px;
+    margin-left: 0 !important;
+    margin-top: 95px; /* navbar height + breadcrumb height */
+    padding: 20px;
     padding: 20px;
     background-color: #e6f1f7d4;
     min-height: 100vh;
@@ -108,13 +187,13 @@
     transition: background 0.3s ease;
 }
 
-.navbar {
+/* .navbar {
     display: flex;
     justify-content: space-between;
     padding: 15px;
     background-color: #aed6ed;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+} */
 
 .user-info {
     display: flex;
@@ -262,14 +341,7 @@ td a:hover {
     background-color: #a389e8;
     transform: translateY(-2px);
 } */
-.logo {
-    width: 95px;  /* Adjust width as per your design */
-    height: auto;  /* Maintain aspect ratio */
-    border: 2px solid black;
-    /* margin-right: 50px; */
-    border-radius: 10px;
 
-}
 /* General Styling */
 #add-recipe-section {
     position: fixed;
