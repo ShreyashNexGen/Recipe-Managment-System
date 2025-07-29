@@ -31,7 +31,7 @@
 .nav-links {
     list-style: none;
     display: flex;
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     gap: 20px;
     align-items: center;
 }
@@ -95,7 +95,7 @@
 
 .breadcrumb-container {
     position: fixed;
-    top: 45px;
+    top: 53px;
     left: 0;
     width: 100%;
     padding: 10px 25px;

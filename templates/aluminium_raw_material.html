@@ -1,20 +1,23 @@
 {% extends "base.html" %}
-
 {% block title %}Recipe Management{% endblock %}
-
+{% block breadcrumbs %}
+<div class="breadcrumb">
+        <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+        <i class="fas fa-angle-right"></i>
+        <a href="/aluminium_raw_material">Raw Material</a>
+        <i class="fas fa-angle-right"></i>
+        <span>Aluminium Raw Material</span>
+        <h1> Aluminium Raw Material</h1>
+    </div>
+{% endblock %}
 {% block content %}
-<div class="content-header">
-    <h1>Aluminium Raw Material</h1>
-    <button onclick="openAddMaterialForm()" class="add-button">+ Add Material</button>    
-</div>
 <div class="search-section">
-    
     <div class="search-bar">
         <input type="text" id="searchInput" placeholder="Search Material here..." onkeyup="searchTable()">
     </div>
 </div>
-
-<div class="entries-selector">
+<div class="content-header">
+    <div class="entries-selector">
     <label for="entriesSelect">Show</label>
     <select id="entriesSelect" onchange="updateEntries()">
         <option value="10" {% if limit == 10 %}selected{% endif %}>10</option>
@@ -25,7 +28,8 @@
     </select>
     <span>entries</span>
 </div>
-
+    <button onclick="openAddMaterialForm()" class="add-button">+ Add Material</button>    
+</div>
 <div id="add-material-section" class="pop-raw-up" style="display: none;">
     <div id="material-form" class="popup-raw-content">
         <!-- Close Button -->

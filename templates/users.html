@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block title %}User List{% endblock %}
-
+{% block breadcrumbs %}
+<div class="breadcrumb">
+        <a href="/dashboard"><i class="fas fa-home"></i> Admin</a>
+        <i class="fas fa-angle-right"></i>
+        <a href="/users"><span>List of Users</span></a>
+        <h1> List of Users</h1>
+    </div>
+{% endblock %}
 {% block content %}
 <div class="container">
     <h2 class="text-center mt-4">List of Users</h2>

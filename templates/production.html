@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Filter Log{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumb">
+        <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+        <i class="fas fa-angle-right"></i>
+        <a href="/production"><span>Production</span></a>        
+        <h1> Filter Log</h1>
+    </div>
+{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center">Filter Log</h1>    
+<div class="container mt-5">  
     <table class="table table-bordered table-striped">
         <thead class="thead-dark">
             <tr>

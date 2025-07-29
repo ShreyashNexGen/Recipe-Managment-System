@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 
 {% block title %}Event Log{% endblock %}
-
+{% block breadcrumbs %}
+<div class="breadcrumb">
+        <a href="/dashboard"><i class="fas fa-home"></i> Admin</a>
+        <i class="fas fa-angle-right"></i>
+        <a href="/event_log"><span>Event Log</span></a>
+        <h1> Event Log</h1>
+    </div>
+{% endblock %}
 {% block content %}
-<h1>Event Log</h1>
-
 <!-- User Summary Table -->
 <h2>User Activity Summary</h2>
 <table class="table">

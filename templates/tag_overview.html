@@ -10,16 +10,26 @@
     </div>
 {% endblock %}
 {% block content %}
-    <div class="content-header">
-        <h1>Tag Overview</h1>
-        <button onclick="toggleTagForm()" class="add-button">+ Add Tag</button>    
-    </div>
-    <div class="search-section">
-        
+<div class="search-section">
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="Search Tag here..." onkeyup="searchTable()">
         </div>
+</div>
+    <div class="content-header">
+        <div class="entries-selector">
+        <label for="entriesSelect">Show</label>
+        <select id="entriesSelect" onchange="updateEntries()">
+            <option value="10" {% if limit == 10 %}selected{% endif %}>10</option>
+            <option value="25" {% if limit == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
+        
+        </select>
+        <span>entries</span>
     </div>
+        <button onclick="toggleTagForm()" class="add-button">+ Add Tag</button>    
+    </div>
+    
     
     
     <style>
@@ -34,17 +44,7 @@
             padding: 8px;
         }
     </style>
-    <div class="entries-selector">
-        <label for="entriesSelect">Show</label>
-        <select id="entriesSelect" onchange="updateEntries()">
-            <option value="10" {% if limit == 10 %}selected{% endif %}>10</option>
-            <option value="25" {% if limit == 25 %}selected{% endif %}>25</option>
-            <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
-            <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
-        
-        </select>
-        <span>entries</span>
-    </div>
+
     <div id="add-tag-section" class="pop-tag-up" style="display: none;">
         <div id="tag-form" class="popup-tag-content">
             <!-- Close Button -->

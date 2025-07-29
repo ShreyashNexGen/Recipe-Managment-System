@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Recipe Report{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumb">
+        <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+        <i class="fas fa-angle-right"></i>
+        <a href="/production"><span>Report</span></a>        
+        <h1> Report Table</h1>
+    </div>
+{% endblock %}
 {% block content %}
 <h1 style="text-align: center; font-size: 28px; font-weight: 600; color: #1d3557; margin-bottom: 20px;">Report</h1>
 <div class="enhanced-summary-section">
