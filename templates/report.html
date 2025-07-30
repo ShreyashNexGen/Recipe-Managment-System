@@ -6,10 +6,9 @@
         <i class="fas fa-angle-right"></i>
         <a href="/production"><span>Report</span></a>        
         <h1> Report Table</h1>
-    </div>
+</div>
 {% endblock %}
 {% block content %}
-<h1 style="text-align: center; font-size: 28px; font-weight: 600; color: #1d3557; margin-bottom: 20px;">Report</h1>
 <div class="enhanced-summary-section">
     <div class="summary-box glass-box">
       <div class="icon-wrap"><i class="fas fa-list-alt"></i></div>
@@ -34,17 +33,15 @@
         <span class="summary-value" id="operator-name">--</span>
       </div>
     </div>
-  </div>
-  
-  <style>
+</div>
+<style>
     .enhanced-summary-section {
         display: flex;
         justify-content: center;
         gap: 30px;
         flex-wrap: wrap;
         margin: 30px 10px;
-      }
-      
+      }  
       .summary-box {
         display: flex;
         align-items: center;
@@ -57,38 +54,31 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.3);
       }
-      
       .summary-box:hover {
         transform: translateY(-5px);
         box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
       }
-      
       .icon-wrap {
         font-size: 30px;
         color: #2563eb;
         margin-right: 15px;
       }
-      
       .summary-info {
         display: flex;
         flex-direction: column;
         color: #1e293b;
       }
-      
       .summary-label {
         font-size: 14px;
         color: #475569;
         font-weight: 500;
       }
-      
       .summary-value {
         font-size: 22px;
         font-weight: bold;
         color: #1e3a8a;
       }
-      
-      
-  </style>
+</style>
 <div class="report-filters">
     <div class="filter-container">
         <form method="POST" action="/report" id="filter-form">
@@ -105,7 +95,6 @@
             <button type="submit" class="filter-btn">Filter</button>
             <button type="button" class="refresh-btn" id="reset-filters">Refresh</button>
         </form>
-        
             <!-- PDF Download Button -->
         <form method="POST" action="/download" id="download-form">
             <input type="hidden" name="filtered_data" id="filtered-data">
@@ -113,8 +102,6 @@
         </form>  
     </div>  
 </div>
-
-
 <!-- Action Button -->
 <div class="table-options-container">
     <button id="toggle-options" class="btn btn-toggle"><i class="fa-sharp fa-solid fa-plus"></i></button>
@@ -181,11 +168,7 @@
 <div class="entries-info">
     Showing <span id="entry-start">0</span> to <span id="entry-end">0</span> of <span id="entry-total">0</span> entries
 </div>
-
-
 <div class="pagination-container"></div>
-
-
 <style>
     .dropdown-multi-select {
         position: relative;
@@ -324,10 +307,7 @@
         pointer-events: none;
     }
 </style>
-
-
 <!-- Flatpickr JS for date picker -->
-
 <script>
     function toggleMultiDropdown() {
         const dropdown = document.getElementById("category-filter");
@@ -558,7 +538,7 @@
         filterRows();
         renderTable(currentPage);
     });
-    </script>
+</script>
 <style>
     .report-filters {
         display: flex;
