@@ -383,7 +383,19 @@ def get_status():
         # Update Serial Key in Plc_Table
         cursor.execute("UPDATE Plc_Table SET serial_Key = ? WHERE plcId = 1", (serial_key,))
         conn.commit()
+        cursor.execute("""
+         SELECT recipe_name 
+        FROM recipe 
+         WHERE recipe_id = (
+        SELECT TOP 1 recipe_id 
+        FROM recipe 
+        ORDER BY recipe_id DESC
+        )
+        """)
+        result = cursor.fetchone()
+        last_Recipe = result[0] if result else "N/A"
 
+        conn.commit()
         # Internet and PLC connection statuses
         internet_connected = check_internet_connection()
         plc_connected = check_plc_connection(plc_ip)
@@ -395,7 +407,7 @@ def get_status():
             try:
                 recipe_name = client.get_node(recipe_name_field_path).get_value()
             except Exception as e:
-                recipe_name = f"Error fetching Recipe Name: {e}"
+                recipe_name = "Error Retrieving"
             client.disconnect()
         else:
             recipe_name = "Not Connected to OPC UA Server"
@@ -409,7 +421,8 @@ def get_status():
             "No_Of_Logs_Created": logs_count,
             "Interval_Time_Of_Log_Entry": interval_time,
             "Serial_Key": serial_key,
-            "Recipe_Name": recipe_name
+            "Recipe_Name": recipe_name,
+            "Last_Recipe": last_Recipe
         })
     except pyodbc.Error as e:
         return jsonify({"error": f"Database error: {str(e)}"})
@@ -705,109 +718,7 @@ def get_recipe_log():
 # import datetime
 # from opcua import Client, ua
 BASE_NODE = 'ns=3;s="dbRecipe1"."Recipe"'
-# def update_batch_status():
-#     """Fetch and update batch status based on PLC values."""
-#     while True:
-#         conn = get_db_connection()
-#         if not conn:
-#             continue  # Skip iteration if DB connection fails
 
-#         cursor1 = conn.cursor()
-#         cursor2 = conn.cursor()
-        
-#         cursor1.execute("""
-#             SELECT Batch_Code, Recipe_Name, Article_No, SerialNo, Parameter1, Parameter2 
-#             FROM Recipe_Log 
-#             WHERE Batch_Completion_Status IN ('Pending')
-#         """)
-#         recipe_logs = cursor1.fetchall()
-
-#         client = Client(ENDPOINT_URL)
-#         client.session_timeout = 30000  # Adjust timeout as needed
-
-#         try:
-#             client.connect()
-            
-#             for log in recipe_logs:
-#                 batch_code, recipe_name, article_no, serial_no, param1, param2 = log
-
-#                 # PLC field paths (replace with actual paths)
-#                 # quantity_field_path = f'{BASE_NODE}."actBatchQty"'
-#                 machine_state_field_path = f'ns=3;s="dbRecipe"."Recipe"."decoilerSelection"[13]'
-#                 # total_quantity_path = f'{BASE_NODE}."BatchQty"'
-#                 filter_complete_field_path = f'ns=3;s="dbReport"."filterComplete"'
-#                 pack_number_field_path =f'ns=3;s="dbReport"."packNumber"'                                       
-
-#                 # Fetch values from PLC
-#                 # current_quantity = client.get_node(quantity_field_path).get_value()
-#                 # machine_state = client.get_node(machine_state_field_path).get_value()
-#                 # total_quantity = client.get_node(total_quantity_path).get_value()
-#                 ###
-#                 # filter_complete = 1;
-#                 # pack_number=123;
-#                 filter_complete = client.get_node(filter_complete_field_path).get_value()
-#                 pack_number = client.get_node(pack_number_field_path).get_value()
-#                 ###
-#                 # Generate Serial Number in YYMMDD format
-#                 today_date = datetime.now().strftime("%y%m%d")
-#                 new_serial_number = f"{today_date}{pack_number}"
-
-#                 # Calculate completion percentage
-#                 # completion_percentage = (current_quantity / total_quantity) * 100
-
-#                 # Determine running status
-#                 # running_status = "Pending" if machine_state == 0 else "Running"
-                
-#                 # Determine completion status
-#                 # if completion_percentage < 100:
-#                 #     completion_status = "Pending"
-#                 # elif 60 <= completion_percentage < 100:
-#                 #     completion_status = "Partially Completed"
-#                 # else:
-#                     # completion_status = "Completed"
-#                     # running_status = "Completed"
-
-#                     # Set `machineState` to `0` in PLC
-#                     # node = client.get_node(machine_state_field_path)
-#                     # variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
-#                     # node.set_value(variant)
-
-#                 # **If `filterComplete` is `1`, call `printData()` and update status**
-#                 print("filter_complete",filter_complete)
-#                 if filter_complete == True:
-#                     printdata(recipe_name, article_no, new_serial_number)  # Call function
-                    
-#                     # Mark batch as completed
-#                     completion_status = "Completed"
-#                     running_status = "Completed"
-
-#                     #Reset `filterComplete` in PLC
-#                     filter_complete_node = client.get_node(filter_complete_field_path)
-#                     filter_complete_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
-#                     # Machine_state_node = client.get_node(machine_state_field_path)
-#                     # Machine_state_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
-#                     #old machine_satate hich was intger ,,, new machine state for testing it is boolean which 13th value
-#                     # node = client.get_node(machine_state_field_path)
-#                     # variant = ua.DataValue(ua.Variant(0, ua.VariantType.Int32))
-#                     # node.set_value(variant)
-#                     cursor2.execute("""
-#                     UPDATE Recipe_Log
-#                     SET Batch_Completion_Status = ?, SerialNo = ?
-#                     WHERE Batch_Code = ?
-#                 """, ( completion_status, new_serial_number, batch_code))
-
-#                 conn.commit()
-                 
-#                 # Update MSSQL database
-                
-
-#         except Exception as e:
-#             print(f"Error updating batch status: {e}")
-#         finally:
-#             client.disconnect()
-#             cursor1.close()
-#             cursor2.close()
-#             conn.close()
 
 def update_batch_status():
     """Continuously reads OPC UA values and inserts data into recipe_log."""
@@ -1813,9 +1724,11 @@ def plc():
         cursor.execute("SELECT * FROM Plc_Table")  # Adjust query as per your DB schema
         plc_tags = cursor.fetchall()
 
-        # Fetch Machine data
-        cursor.execute("SELECT * FROM Machine_Table")  # Adjust query as per your DB schema
-        machine_tags = cursor.fetchall()
+        # # Fetch Machine data
+        # cursor.execute("SELECT * FROM Machine_Table")  # Adjust query as per your DB schema
+        # machine_tags = cursor.fetchall()
+        
+        machine_tags = [{"machineId":"1", "machineName":"Machine1","URL":"192.168.1.2"}]
 
     except pyodbc.Error as e:
         print(f"Database error: {e}")
@@ -1826,7 +1739,7 @@ def plc():
         conn.close()
 
     # Render the template with the PLC and Machine data
-    return render_template('plc.html', plc_tags=plc_tags, machine_tags=machine_tags)
+    return render_template('plc.html', plc_tags=plc_tags,machine_tags=machine_tags)
 
     
 @app.route('/raw-material', methods=['GET', 'POST'])

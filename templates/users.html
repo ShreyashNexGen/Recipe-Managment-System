@@ -24,10 +24,11 @@
         <tbody>
             {% for user in users %}
             <tr>
-                <td>{{ user[0] }}</td>  <!-- User ID -->
-                <td>{{ user[1] }}</td>  <!-- Username -->
-                <td>{{ user[2] }}</td>  <!-- Email -->
-                <td>{{ 'Admin' if user[3] == 1 else 'User' }}</td>  <!-- Admin Status -->
+                <td>{{ user['id'] }}</td>  <!-- User ID -->
+                
+                <td>{{ user['username'] }}</td>  <!-- Email -->
+                <td>{{ user['email'] }}</td>  <!-- Email -->
+                <td>{{ 'Admin' if user['is_admin'] == 1 else 'User' }}</td>  <!-- Admin Status -->
                 <td>
                     <!-- Reset Password Button -->
                     <button 
@@ -73,3 +74,5 @@
     }
 </script>
 {% endblock %}
+
+
