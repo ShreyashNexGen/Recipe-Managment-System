@@ -78,14 +78,18 @@
     display: inline-block;
     padding: 8px 14px;
 }
-.dropdown .arrow {
-    display: inline-block;
-    margin-left: 2px;
+ /* Rotate arrow on hover */
+.dropdown:hover .arrow {
+    transform: rotate(90deg);
     transition: transform 0.3s ease;
 }
 
-.dropdown.open .arrow {
-    transform: rotate(90deg);  /* ► becomes ▼ */
+/* Reset arrow style */
+.arrow {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 10px;
+    transition: transform 0.3s ease;
 }
 
 
