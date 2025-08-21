@@ -22,51 +22,51 @@
   <ul class="nav-links">
     {% if session.get('username') %}
       {% if 'dashboard' in session.get('user_roles', []) %}
-        <li><a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a></li>
+        <li><a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
       {% endif %}
       {% if 'production' in session.get('user_roles', []) %}
-        <li><a href="/production" class="{% if request.path == '/production' %}active{% endif %}">Production Log</a></li>
+        <li><a href="/production" class="{% if request.path == '/production' %}active{% endif %}"><i class="fa-solid fa-list-check"></i> Production Log</a></li>
       {% endif %}
       {% if 'raw_material' in session.get('user_roles', []) %}
         <li class="dropdown">
-          <a href="#" class="{% if request.path.startswith('/raw-material') or request.path.startswith('/alu-raw-material')or request.path.startswith('/h-raw-material') %}active{% endif %}">Raw Material <span class="arrow">&#8250;</span></a>
+          <a href="javascript:void(0);" class="{% if request.path.startswith('/raw-material') or request.path.startswith('/alu-raw-material')or request.path.startswith('/h-raw-material') %}active{% endif %}"><i class="fa-solid fa-cubes"></i> Raw Material <span class="arrow">&#8250;</span></a>
           <ul class="dropdown-content">
-            <li><a href="/raw-material" class="{% if request.path == '/raw-material' %}active{% endif %}">Filter</a></li>
-            <li><a href="/alu-raw-material" class="{% if request.path == '/alu-raw-material' %}active{% endif %}">Aluminium</a></li>
-            <li><a href="/h-raw-material" class="{% if request.path == '/h-raw-material' %}active{% endif %}">Housing</a></li>
+            <li><a href="/raw-material" class="{% if request.path == '/raw-material' %}active{% endif %}"><i class="fa-solid fa-filter"></i> Filter</a></li>
+            <li><a href="/alu-raw-material" class="{% if request.path == '/alu-raw-material' %}active{% endif %}"><i class="fa-solid fa-gem"></i> Aluminium</a></li>
+            <li><a href="/h-raw-material" class="{% if request.path == '/h-raw-material' %}active{% endif %}"><i class="fa-solid fa-house"></i> Housing</a></li>
           </ul>
         </li>
       {% endif %}
       {% if 'recipe' in session.get('user_roles', []) %}
-        <li><a href="/recipe" class="{% if request.path == '/recipe' %}active{% endif %}">Recipe</a></li>
+        <li><a href="/recipe" class="{% if request.path == '/recipe' %}active{% endif %}"><i class="fa-solid fa-clipboard-list"></i> Recipe</a></li>
       {% endif %}
       {% if 'report' in session.get('user_roles', []) %}
-        <li><a href="/report" class="{% if request.path == '/report' %}active{% endif %}">Report</a></li>
+        <li><a href="/report" class="{% if request.path == '/report' %}active{% endif %}"><i class="fa-solid fa-file-lines"></i> Report</a></li>
       {% endif %}
       {% if 'tag' in session.get('user_roles', []) %}
         <li class="dropdown">
-          <a href="#" class="{% if request.path.startswith('/tag') or request.path.startswith('/live-tag') %}active{% endif %}">Tags <span class="arrow">&#8250;</span></a>
+          <a href="javascript:void(0);" class="{% if request.path.startswith('/tag') or request.path.startswith('/live-tag') %}active{% endif %}"><i class="fa-solid fa-tags"></i> Tags <span class="arrow">&#8250;</span></a>
           <ul class="dropdown-content">
-            <li><a href="/tag-overview" class="{% if request.path == '/tag-overview' %}active{% endif %}">Tag Overview</a></li>
-            <li><a href="/live-tag" class="{% if request.path == '/live-tag' %}active{% endif %}">Live Tag</a></li>
+            <li><a href="/tag-overview" class="{% if request.path == '/tag-overview' %}active{% endif %}"><i class="fa-solid fa-table-list"></i> Tag Overview</a></li>
+            <li><a href="/live-tag" class="{% if request.path == '/live-tag' %}active{% endif %}"><i class="fa-solid fa-circle-dot"></i> Live Tag</a></li>
           </ul>
         </li>
       {% endif %}
       {% if session.get('username') == 'Admin' %}
         <li class="dropdown">
-          <a href="#"class="{% if request.path == '/' %}active{% endif %}">Admin <i class="fa-solid fa-user"></i><span class="arrow">&#8250;</span></a>
+          <a href="javascript:void(0);"class="{% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-user"></i> Admin<span class="arrow">&#8250;</span></a>
           <ul class="dropdown-content">
-            <li><a href="/plc" class="{% if request.path == '/dashboard' %}active{% endif %}">PLC</a></li>
-            <li><a href="/users"class="{% if request.path == '/users' %}active{% endif %}">Users</a></li>
-            <li><a href="/role"class="{% if request.path == '/role' %}active{% endif %}">Assign Role</a></li>
-            <li><a href="/event_log"class="{% if request.path == '/event_log' %}active{% endif %}">Event Log</a></li>
+            <li><a href="/plc" class="{% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-microchip"></i> PLC</a></li>
+            <li><a href="/users"class="{% if request.path == '/users' %}active{% endif %}"><i class="fa-solid fa-user-group"></i> Users</a></li>
+            <li><a href="/role"class="{% if request.path == '/role' %}active{% endif %}"><i class="fa-solid fa-user-gear"></i> Assign Role</a></li>
+            <li><a href="/event_log"class="{% if request.path == '/event_log' %}active{% endif %}"><i class="fa-solid fa-clock-rotate-left"></i> Event Log</a></li>
           </ul>
         </li>
       {% endif %}
-      <li><a href="/logout"class="{% if request.path == '/logout' %}active{% endif %}">Logout <i class="fas fa-sign-out-alt"></i></a></li>
+      <li><a href="/logout"class="{% if request.path == '/logout' %}active{% endif %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
     {% else %}
-      <li><a href="/login"class="{% if request.path == '/login' %}active{% endif %}">Login</a></li>
-      <li><a href="/register"class="{% if request.path == '/register' %}active{% endif %}">Register</a></li>
+      <li><a href="/login"class="{% if request.path == '/login' %}active{% endif %}"><i class="fa-solid fa-right-to-bracket"></i> Login</a></li>
+      <li><a href="/register"class="{% if request.path == '/register' %}active{% endif %}"><i class="fa-solid fa-user-plus"></i> Register</a></li>
     {% endif %}
   </ul>
 </nav>

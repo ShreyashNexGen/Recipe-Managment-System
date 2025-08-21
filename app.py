@@ -45,7 +45,7 @@ CORS(app)  # Enable CORS for frontend communication
 # Connection details
 # server = 'DESKTOP-9G39B01\WINCC'
 # database = 'A2Z_DB'
-server = 'SHREYASHNEXGEN\WINCCFLEX2014'
+server = 'DESKTOP-A3U7BTA'
 database = 'Shreyash'
 conn = pyodbc.connect(
     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
