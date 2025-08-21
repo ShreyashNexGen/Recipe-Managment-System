@@ -224,7 +224,26 @@
       <span class="pagination-btn disabled">Next</span>
     {% endif %}
 </div>
+  <style>
+body {
+    background-image: url("{{ url_for('static', filename='images/img1.PNG') }}");
+    background-size:80%;    /* Makes image cover the whole screen */
+    background-repeat: no-repeat;  /* Prevents tiling */
+    background-attachment: scroll;  /* Keeps background fixed on scroll */
+    background-position: center;   /* Centers the image */
+}
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255,0); /* White transparent overlay */
+    z-index: -1;
+}
 
+</style>
 <style>
     /* Center align all table cells */
     #rawMaterialTable th, #rawMaterialTable td {
@@ -234,7 +253,7 @@
 
     /* Optional: Adjust padding for a cleaner look */
     #rawMaterialTable th, #rawMaterialTable td {
-        padding: 8px;
+        padding: 6px;
     }
 </style>
   <style>
@@ -599,5 +618,6 @@ function updateTableRow(material_Id, type, width,part_no, make, user, materialTy
     });
   </script>
   
-  
+
+
 {% endblock %}

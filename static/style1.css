@@ -57,22 +57,15 @@
 }
 
 .dropdown-content {
-  display: none;
-  position: absolute;
-  top: 170%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 86, 179, 0.6);
-  backdrop-filter: blur(8px);
-  z-index: 1;
-  padding: 5px;
-  list-style: none;
-  border-radius: 8px;
+    display: none;
+    position: absolute;
+    top: 140%;      /* drop directly below parent */
+    left: 0;
+    min-width: 160px;
+    background: rgba(0, 86, 179, 0.6); backdrop-filter: blur(8px);
+    padding: 5px; list-style: none; border-radius: 8px;
 }
 
-.dropdown.open .dropdown-content {
-  display: block;
-}
 .dropdown-content li a {
     white-space: nowrap;   /* keeps text in one line */
     display: inline-block;
@@ -103,8 +96,8 @@
     left: 0;
     width: 100%;
     padding: 10px 25px;
-    background: white;
-    backdrop-filter: blur(8px);
+    
+    background-color: rgba(255, 255, 255, 0.5);;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     z-index: 999;
     display: flex;
@@ -181,10 +174,10 @@
 /* Main Content */
 .main-content {
     margin-left: 0 !important;
-    margin-top: 95px; /* navbar height + breadcrumb height */
+    margin-top: 75px; /* navbar height + breadcrumb height */
     padding: 20px;
     padding: 20px;
-    background-color: #e6f1f7d4;
+  
     min-height: 100vh;
     font-size: 11px;
     color: #333;
@@ -246,13 +239,13 @@
 /* Table */
 .table-container {
     overflow-x: auto;
-    margin-top: 20px;
+    /* margin-top: 20px; */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #fff;
+    background-color:rgba(255, 255, 255, 0.60);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     overflow: hidden;
@@ -274,7 +267,7 @@ th {
 
 td {
     font-size: 13px;
-    color: #333;
+    color: #0a0a0a;
 }
 
 td a {
@@ -288,7 +281,19 @@ td a:hover {
     color: #6d5da4;
     text-decoration: underline;
 }
+/* Alternating row shades */
+tbody tr:nth-child(even) {
+    background-color: rgba(173, 216, 230, 0.2); /* Light blue shade */
+}
 
+tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.4); /* White/light shade */
+}
+
+/* Optional hover effect */
+tbody tr:hover {
+    background-color: rgba(173, 216, 230, 0.4);
+}
 /* Add Recipe Form */
 /* #recipe-form {
     background-color: #fff;
@@ -665,17 +670,18 @@ select {
     justify-content: center;
     align-items: center;
     gap: 8px;
-    margin: 20px 0;
+    margin: 5px 0;
     font-family: Arial, sans-serif;
   }
   
   .pagination-btn {
     padding: 8px 12px;
     font-size: 14px;
-    color: #333;
+    color: #010101;
     text-decoration: none;
     border: 1px solid #ddd;
     border-radius: 4px;
+    background-color: #daeef4;
     transition: background-color 0.3s, color 0.3s;
     cursor: pointer;
   }
@@ -822,7 +828,7 @@ label {
 
 input[type="text"],
 select {
-    width: 100%;
+    width: 30%;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
