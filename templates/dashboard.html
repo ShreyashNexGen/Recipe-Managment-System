@@ -14,9 +14,7 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 
 <div class="container mt-4">
-    <!-- <h1 style="font-size: 30px; color: #3d2758; text-align: center; font-weight: bold;">Dashboard</h1> -->
     
-    <!-- <h2 style="font-size: 20px; color: #333;text-align: center; font-weight: 500;">Current Running Recipe No.: 1234</h2> -->
      
      <!-- Status Overview Section -->
 <div class="status-overview container mt-5">
@@ -25,52 +23,45 @@
     <div class="status-card" id="plc-ip-card">
         <i class="fas fa-network-wired icon"></i>
         <p class="label">PLC IP</p>
-        <p class="value" id="plc-ip">192.168.0.1</p>
+        <p class="value" id="plc-ip">Loading...</p>
         <p class="label">PLC Status</p>
-        <p class="value" id="plc-connected">Not Connected</p>
+        <p class="value" id="plc-connected">Loading...</p>
        
     </div>
     <div class="status-card" id="plc-connected-card">
         <i class="fas fa-server icon"></i>
           <p class="label">Total Logs</p>
-        <p class="value" id="logs-count">0</p>
+        <p class="value" id="logs-count">Loading...</p>
         <p class="label">Total Tags</p>
-        <p class="value" id="tags-count">0</p>
+        <p class="value" id="tags-count">Loading...</p>
     </div>
     <div class="status-card" id="logs-card">
         <i class="fas fa-database icon"></i>
          <p class="label">Internet Status</p>
-        <p class="value" id="internet-connected">Connected</p>
+        <p class="value" id="internet-connected">Loading...</p>
         <p class="label">Interval Logging</p>
-        <p class="value" id="interval-time">20s</p>
+        <p class="value" id="interval-time">Loading...</p>
     </div>
     <div class="status-card" id="serial-key-card">
         <i class="fas fa-key icon"></i>
         <p class="label">Serial Key</p>
-        <p class="value" id="serial-key">DESKTOP-2NDPVUP</p>
-        <p class="label">Database Status</p>
-        <p class="value" id="plc-connected2">Connected</p>
+        <p class="value" id="serial-key">Loading...</p>
+          <p class="label">Database Connected</p>
+        <p class="value" id="db_connected">Connected</p>
+       
     </div>
     <div class="status-card" id="recipe-name-card">
         <i class="fas fa-cogs icon"></i>
         <p class="label">Running Recipe</p>
-        <p class="value" id="recipe-name">Not Connected</p>
+        <p class="value" id="recipe-name">Loading...</p>
          <p class="label">Last Recipe</p>
-        <p class="value" id="recipe-name2">Recipe 8</p>
+        <p class="value" id="last_recipe">Loading...</p>
     </div>
 </div>
   
     </div>
 
-    <!-- Update Interval Time -->
-    <!-- <div class="update-interval-container">
-        <div class="update-card">
-            <i class="fas fa-clock interval-icon"></i>
-            <h3>Set Log Interval Time</h3>
-            <input type="number" id="interval-time1" class="form-control" placeholder="Enter Interval Time">
-            <button id="update-interval-btn" class="btn btn-update">Update</button>
-        </div>
-    </div> -->
+   
 </div>
 <style>
   .status-card p {
@@ -574,66 +565,7 @@ padding: 20px;
   box-shadow: 0 0 20px rgba(0,0,0,0.3);
 }
 </style>  
-  <!-- Date-Time Filter Section -->
-  <!-- <div class="filter-section">
-    <h4 class="filter-title">Filter by Date & Time</h4>
-    <div class="filter-form">
-      <div class="form-group">
-        <label for="start-date">Start Date</label>
-        <input type="datetime-local" id="start-date" name="start-date">
-      </div>
-      <div class="form-group">
-        <label for="end-date">End Date</label>
-        <input type="datetime-local" id="end-date" name="end-date">
-      </div>
-      <div class="form-group button-group">
-        <button>Apply Filter</button>
-      </div>
-    </div>
-  </div> -->
-  
-  <!-- <style>
-    .chart-container {
-        display: flex;
-        justify-content: center;
-        gap: 40px;
-        flex-wrap: wrap;
-        margin-top: 20px;
-        padding: 10px;
-        background-color: #d1edd7;
-      }
-      
-      .chart-box {
-        background: #aac3af;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        width: 300px;
-        text-align: center;
-      }
-      
-      .chart-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 15px;
-      }
-      
-      .reset-btn {
-        margin-top: 15px;
-        background-color: #dc3545;
-        color: white;
-        padding: 6px 18px;
-        border: none;
-        border-radius: 20px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-      }
-      
-      .reset-btn:hover {
-        background-color: #bd2130;
-      }
-      
-  </style> -->
+
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
@@ -741,17 +673,6 @@ padding: 20px;
     });
   </script>
 
-    <!-- <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Product ID</th>
-                <th>Product Name</th>
-                <th>Timestamp</th>
-            </tr>
-        </thead>
-    </table> -->
-
-<!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
@@ -795,12 +716,14 @@ padding: 20px;
                 document.getElementById('interval-time').innerText = data.Interval_Time_Of_Log_Entry;
                 document.getElementById('serial-key').innerText = data.Serial_Key;
                 document.getElementById('recipe-name').innerText = data.Recipe_Name;
+                document.getElementById('last_recipe').innerText = data.Last_Recipe;
+
             })
             .catch(error => console.error('Error fetching system status:', error));
     }
 
     let pieChartInstance; // Global variable to store the chart instance
- fetchSystemStatus();
+
     setInterval(fetchSystemStatus, 2000); // Refresh every 5 seconds
     let internetChart = null;
     let plcChart = null;
@@ -869,6 +792,9 @@ function rePrint(serialNo) {
 fetchStatusSummary1();
 setInterval(fetchStatusSummary1, 60000);
 
+</script>
+<script>
+  window.onload = fetchSystemStatus;
 </script>
 <style>/* Status Overview Section */
         .print-btn {
