@@ -43,10 +43,10 @@ CORS(app)  # Enable CORS for frontend communication
 # socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 # OPC UA connection options
 # Connection details
-# server = 'DESKTOP-9G39B01\WINCC'
-# database = 'A2Z_DB'
-server = 'DESKTOP-A3U7BTA'
-database = 'Shreyash'
+server = 'DESKTOP-9G39B01\WINCC'
+database = 'A2Z_DB'
+# server = 'SHREYASHNEXGEN\WINCCFLEX2014'
+# database = 'Shreyash'
 conn = pyodbc.connect(
     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
     f"SERVER={server};"
@@ -673,6 +673,12 @@ def recipe_list():
     total_count = cursor.fetchone()[0]
     total_pages = (total_count + per_page - 1) // per_page
 
+    # ✅ Fetch last Recipe_ID
+    cursor.execute("SELECT ISNULL(MAX(Recipe_ID), 0) FROM Recipe")
+    last_recipe_id = cursor.fetchone()[0]
+    next_recipe_id = last_recipe_id + 1  # default next ID
+
+
     conn.close()
 
     return render_template(
@@ -683,7 +689,8 @@ def recipe_list():
         h_values=h_values,
         page=page,
         per_page=per_page,
-        total_pages=total_pages
+        total_pages=total_pages,
+        next_recipe_id=next_recipe_id   # ✅ pass to template
     )
 
 @app.route('/api/recipe_log', methods=['GET'])

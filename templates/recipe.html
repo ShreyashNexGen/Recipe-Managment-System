@@ -47,8 +47,10 @@
             <!-- Step 1: Basic Recipe Details -->
             <div class="form-step" id="step1">
                 <div class="form-row">
-                    <label for="recipe_id">Recipe ID:</label>
-                    <input type="text" id="recipe_id" name="recipe_id" required>
+                   <label for="recipe_id">Recipe ID:</label>
+                   <input type="number" name="recipe_id" id="recipe_id" value="{{ next_recipe_id }}" readonly>
+
+          
         
                     <label for="recipe_name">Recipe Name:</label>
                     <input type="text" id="recipe_name" name="recipe_name" required>
@@ -70,44 +72,55 @@
             </div>
         
             <!-- Step 2: Roll Positions -->
-            <div class="form-step" id="step2" style="display:none;">
-                <h1 style="text-align: center; padding:10px">Roll Positions</h1>
-                <div class="form-row1">
-                    {% for i in range(1, 10) %}
-                        <label for="pos{{ i }}">Roll Position{{ i }}:</label>
-                        <select id="pos{{ i }}" name="pos{{ i }}" style="width: 125px;">
-                            <option value="" disabled selected>Select value</option>
-                            {% for value in pos_values %}
-                                <option value="{{ value }}">{{ value }}</option>
-                            {% endfor %}
-                        </select>
-                    {% endfor %}
-            
-                    <!-- Alu_Mat Dropdown -->
-                    <label for="alu_mat">Alu_Materials:</label>
-                    <select id="alu_mat" name="alu_mat" style="width: 125px;">
-                        <option value="" disabled selected>Select value</option>
-                        {% for value in alu_values %}
-                            <option value="{{ value }}">{{ value }}</option>
-                        {% endfor %}
-                    </select>
-            
-                    <!-- House_Mat Dropdown -->
-                    <label for="house_mat">House_Materials:</label>
-                    <select id="house_mat" name="house_mat" style="width: 125px;">
-                        <option value="" disabled selected>Select value</option>
-                        {% for value in h_values %}
-                            <option value="{{ value }}">{{ value }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            
-                <div class="form-buttons">
-                    <button type="button" onclick="loadLastPLCValues()">Upload Settings</button>
-                    <button type="button" onclick="prevStep()">Back</button>
-                    <button type="button" onclick="nextStep()">Next</button>
-                </div>
-            </div>
+<div class="form-step" id="step2" style="display:none;">
+    <h1 style="text-align: center; padding:10px">Roll Positions</h1>
+    <div class="form-row1">
+
+        <!-- Roll Positions -->
+        {% for i in range(1, 10) %}
+            <label for="pos{{ i }}">Roll Position {{ i }}:</label>
+            <select id="pos{{ i }}" name="pos{{ i }}" class="roll-select" style="width: 125px;">
+                <option value="" disabled selected>Select value</option>
+                {% for value in pos_values %}
+                    <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+        {% endfor %}
+
+        <!-- Separator Line -->
+         <div class="separator"></div> <div class="separator"></div> <div class="separator"></div>
+            <div class="separator"></div>
+             <div class="separator"></div>
+              <div class="separator"></div>
+
+        
+
+        <!-- Alu_Mat Dropdown -->
+        <label for="alu_mat">Alu_Materials:</label>
+        <select id="alu_mat" name="alu_mat" class="roll-select" style="width: 125px;">
+            <option value="" disabled selected>Select value</option>
+            {% for value in alu_values %}
+                <option value="{{ value }}">{{ value }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- House_Mat Dropdown -->
+        <label for="house_mat">House_Materials:</label>
+        <select id="house_mat" name="house_mat" class="roll-select" style="width: 125px;">
+            <option value="" disabled selected>Select value</option>
+            {% for value in h_values %}
+                <option value="{{ value }}">{{ value }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-buttons">
+        <button type="button" onclick="loadLastPLCValues()">Upload Settings</button>
+        <button type="button" onclick="prevStep()">Back</button>
+        <button type="button" onclick="nextStep()">Next</button>
+    </div>
+</div>
+
             
             <!-- Step 3: Machine Settings -->
             <div class="form-step" id="step3" style="display:none;">
@@ -381,6 +394,7 @@
         
     </div>
 </div>
+
 <div id="update-recipe-section" style="display: none;">
     <div id="update-recipe-form">
         <div class="popup-recipe-header">
@@ -416,7 +430,7 @@
             <div class="form-row1">
             {% for i in range(1, 10) %}
             <label for="update_pos{{ i }}">Roll Positions{{ i }}:</label>
-            <select id="update_pos{{ i }}" name="pos{{ i }}" style="width: 125px;" >
+            <select  class="roll-select" id="update_pos{{ i }}" name="pos{{ i }}" style="width: 125px;" >
                 <option value="" disabled selected>Select a value</option>
                 {% for value in pos_values %}
                 <option value="{{ value }}">{{ value }}</option>
@@ -424,7 +438,7 @@
             </select>
             {% endfor %}
             <label for="update_alu_mat">Alu_Materials:</label>
-            <select id="update_alu_mat" name="alu_mat" style="width: 125px;">
+            <select class="roll-select" id="update_alu_mat" name="alu_mat" style="width: 125px;">
                 <option value="" disabled selected>Select value</option>
                 {% for value in alu_values %}
                     <option value="{{ value }}">{{ value }}</option>
@@ -433,7 +447,7 @@
     
             <!-- House_Mat Dropdown -->
             <label for="update_house_mat">House_Materials:</label>
-            <select id="update_house_mat" name="house_mat" style="width: 125px;">
+            <select class="roll-select" id="update_house_mat" name="house_mat" style="width: 125px;">
                 <option value="" disabled selected>Select value</option>
                 {% for value in h_values %}
                     <option value="{{ value }}">{{ value }}</option>
@@ -1019,57 +1033,6 @@
     background-color: #f2f2f2;
 }
 
-/*.dropdown-container {
-    min-width: 150px;
-    padding: 3px; 
-    position: relative;
-    display: flex;
-    align-items: center;
-    padding: 5px;
-    margin-bottom: 10px;
-    min-width: 150px;
-}
-
-
-.dropdown-container input {
-    font-size: small;
-    padding: 5px; 
-    outline: none;
-    background-color: #ffffff;
-    flex: 1;
-    padding: 8px;
-    cursor: pointer;
-}
-
-
-.dropdown-icon {
-    cursor: pointer;
-    padding: 5px;
-    margin-bottom: 20px;
-}
-
-.dropdown-list {
-    font-size: 12px; 
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #ccc;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-    max-height: 200px;
-    overflow-y: auto;
-    display: none;
-    border-radius: 5px;
-}
-
-
-.dropdown-item {
-    padding: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s ease-in-out;
-}
 
 /* Hover effect */
 .dropdown-item:hover {
@@ -1086,6 +1049,7 @@ label[for="load_recipe_id"] {
 </style>
 
 <script>
+const nextRecipeId = "{{ next_recipe_id }}";
 function loadRecipe() {
     const recipeId = document.getElementById("load_recipe_id").value;
     const recipeName = document.getElementById("load_recipe_name").value;
@@ -1107,7 +1071,7 @@ function loadRecipe() {
 
             if (data.success) {
                 // Populate form fields with the response data
-                document.getElementById("recipe_id").value = data.recipe_id;
+                document.getElementById("recipe_id").value = nextRecipeId;
                 document.getElementById("recipe_name").value = data.recipe_name;
                 document.getElementById("filter_size").value = data.filter_size;
                 document.getElementById("filter_code").value = data.filter_code;
@@ -1163,12 +1127,7 @@ function loadRecipe() {
             posSelect.value = posValue || "";  // Set empty if no value exists
         }
     }
-                // document.getElementById("Alu_coil_width").value = data.Alu_coil_width;
-                // document.getElementById("Alu_roller_type").value = data.Alu_roller_type;
-                // document.getElementById("Spacer").value = data.Spacer;
-                // document.getElementById("Motor_speed").value = data.Motor_speed;
-                // document.getElementById("Motor_stroke").value = data.Motor_stroke;
-                // document.getElementById("Motor_force").value = data.Motor_force;
+        
 
                 alert("Recipe loaded successfully!");
             } else {
@@ -1180,22 +1139,7 @@ function loadRecipe() {
             alert("An error occurred while loading the recipe.");
         });
 }
-// function loadLastPLCValues() {
-//     fetch('/get_last_plc_values')  // Replace with your actual endpoint
-//         .then(response => response.json())
-//         .then(data => {
-//             console.log("Last PLC Values:", data);
-//             document.getElementById("Motor_speed").value = data.Motor_speed || "";
-//             document.getElementById("Motor_stroke").value = data.Motor_stroke || "";
-//             document.getElementById("Motor_force").value = data.Motor_force || "";
-//             document.getElementById("Alu_coil_width").value = data.coil_Width || "";
-//             alert("Last PLC values loaded successfully!");
-//         })
-//         .catch(error => {
-//             console.error("Error fetching PLC values:", error);
-//             alert("Failed to load last PLC values.");
-//         });
-// }
+
 // /* Update function in recipe page*/
 function loadLastPLCValues() {
     fetch('/get_last_plc_values')  // Replace with your actual endpoint
@@ -1413,6 +1357,48 @@ function populateDropdown(inputId, dropdownId, recipes, key) {
     #recipetablee tr:nth-child(even) {
         background-color: #e0e0e0; /* slightly darker grey */
     }
+
+
 </style>
+<style>
+    /* Dull style */
+    
+.separator {
+    border: none;              /* remove default */
+    border-top: 2px dashed #666; /* dashed gray line */
+    margin: 20px 0;
+    width: 100%;
+    opacity: 0.8;              /* force visibility */
+}
+
+
+    .roll-select {
+        background-color: #f8f8f8;
+        border: 1px solid #ccc;
+        transition: 0.3s;
+    }
+
+    /* Highlight when filled */
+    .roll-select.filled {
+        background-color: #d4edda; /* light green */
+        border-color: #28a745;     /* green */
+        font-weight: bold;
+    }
+</style>
+
+<script>
+    // Highlight selected roll positions
+    document.querySelectorAll(".roll-select").forEach(select => {
+        select.addEventListener("change", function () {
+            if (this.value) {
+                this.classList.add("filled");  // highlight
+            } else {
+                this.classList.remove("filled"); // back to dull
+            }
+        });
+    });
+    
+</script>
+
 {% endblock %}
 
