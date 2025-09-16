@@ -771,24 +771,7 @@ padding: 20px;
         .catch(error => console.error('Error fetching status summary:', error));
 }
 
-// Function to handle Re-Print button click
-function rePrint(serialNo) {
-    console.log("Re-Printing for SerialNo:", serialNo);
 
-    fetch(`/api/print_recipe/${serialNo}`, {
-        method: 'POST'
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Print Response:", data);
-        if (data.success) {
-            alert('Printing successfully initiated!');
-        } else {
-            alert('Failed to initiate printing.');
-        }
-    })
-    .catch(error => console.error('Error during re-print:', error));
-}
 fetchStatusSummary1();
 setInterval(fetchStatusSummary1, 60000);
 

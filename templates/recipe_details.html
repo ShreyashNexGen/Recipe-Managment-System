@@ -48,86 +48,119 @@
 
 <div id="submenu-section" class="submenu-section">
     <h2>Sub Menu</h2>
-    <table class="details-table">
-        <thead>
-            <tr>
-                <th>Motor Speed</th>
-                <th>Motor Stroke</th>
-                <th>Other Speed Force</th>
-                <th>Alu Coil Width</th>
-                <th>Corr1 Feed Length</th>
-                <th>Corr2 Feed Length</th>
-            </tr>
-            <tr>
-                <td>{{ sub_menu['motor_speed'] }}</td>
-                <td>{{ sub_menu['motor_stroke'] }}</td>
-                <td>{{ sub_menu['other_speed_force'] }}</td>
-                <td>{{ sub_menu['alu_coil_width'] }}</td>
-                <td>{{ sub_menu['Corr1Feed_length'] }}</td>
-                <td>{{ sub_menu['Corr2feed_length'] }}</td>
-                
-            </tr>
-            <tr>
-                <th>Pleat Height</th>
-                <th>Blade Opening</th>
-                <th>Left Blade Media Thickness</th>
-                <th>Right Blade Media Thickness</th>
-                <th>Soft Touch</th>
-                <th>Press Touch</th>
-            </tr>
-            <tr>
-                <td>{{ sub_menu['Pleat_Height'] }}</td>
-                <td>{{ sub_menu['Blade_opening'] }}</td>
-                <td>{{ sub_menu['Left_Blade_MediaTHickness'] }}</td>
-                <td>{{ sub_menu['Right_Blade_MediaThickness'] }}</td>
-                <td>{{ sub_menu['Soft_Touch'] }}</td>
-                <td>{{ sub_menu['Press_Touch'] }}</td>
-            </tr>
-            </tr>
-            <tr>
-                <th>Puller Start Position</th>
-                <th>Puller End Position</th>
-                <th>Puller2 Feed Correction</th>
-                <th>Filter Box Height</th>
-                <th>Filter Box Width</th>
-                <th>Filter Box Length</th>
-            </tr>
-            <tr>
-                
-                <td>{{ sub_menu['Puller_Start_pos'] }}</td>
-                <td>{{ sub_menu['Puller_End_pos'] }}</td>
-                <td>{{ sub_menu['Puller2_Feed_Correction'] }}</td>
-                <td>{{ sub_menu['Filter_Box_Height'] }}</td>
-                <td>{{ sub_menu['Filter_Box_Width'] }}</td>
-                <td>{{ sub_menu['Filter_Box_Length'] }}</td>
-            </tr>
-            <tr>
-                <th>Set Pleat Count</th>
-                <th>Set Pleat Pitch</th>
-                <th>Set Batch Count</th>
-                <th>Machine Speed Reference</th>
-                <th>Decoiler Set Point</th>
-                <th>Low Dia Set</th>
-            </tr>
-            <tr>
-                <td>{{ sub_menu['Set_Pleat_Count'] }}</td>
-                <td>{{ sub_menu['Set_Pleat_Pitch'] }}</td>
-                <td>{{ sub_menu['Set_Batch_COunt'] }}</td>
-                <td>{{ sub_menu['Machine_Speed_Ref'] }}</td>
-                <td>{{ sub_menu['Decoiler_Set_point'] }}</td>
-                <td>{{ sub_menu['Low_Dia_Set'] }}</td>
-                </tr>
-                <tr>
-                    <th>Cutter Park Position</th>
-                <th>Cutter Forward Position</th>
-                </tr>
-                <tr>
-                    <td>{{ sub_menu['Cutter_Park_pos'] }}</td>
-                <td>{{ sub_menu['Cutter_Fwd_Pos'] }}</td>
-            
-                </tr>
-        </tbody> 
-    </table>
+<table class="details-table">
+  <thead>
+    <tr>
+      <th>Recipe ID</th>
+      <th>Pleat Height</th>
+      <th>Soft Touch</th>
+      <th>Feeder1 Media Thickness</th>
+      <th>Feeder1 Park Position</th>
+      <th>Foil1 Length</th>
+    </tr>
+    <tr>
+      <td>{{ sub_menu['Recipe_ID'] }}</td>
+      <td>{{ sub_menu['Pleat_Height'] }}</td>
+      <td>{{ sub_menu['Soft_Touch'] }}</td>
+      <td>{{ sub_menu['Feeder1_Media_Thickness'] }}</td>
+      <td>{{ sub_menu['Feeder1_Park_Position'] }}</td>
+      <td>{{ sub_menu['Foil1_Length'] }}</td>
+    </tr>
+
+    <tr>
+      <th>Foil1 Length Offset</th>
+      <th>Foil1 Width</th>
+      <th>Puller Start Position</th>
+      <th>Autofeeding Offset</th>
+      <th>Filter Box Height</th>
+      <th>Filter Box Length</th>
+    </tr>
+    <tr>
+      <td>{{ sub_menu['Foil1_Length_Offset'] }}</td>
+      <td>{{ sub_menu['Foil1_Width'] }}</td>
+      <td>{{ sub_menu['Puller_Start_Position'] }}</td>
+      <td>{{ sub_menu['Autofeeding_Offset'] }}</td>
+      <td>{{ sub_menu['Filter_Box_Height'] }}</td>
+      <td>{{ sub_menu['Filter_Box_Length'] }}</td>
+    </tr>
+
+    <tr>
+      <th>Pleat Pitch</th>
+      <th>Pleat Counts</th>
+      <th>Foil Low Diameter</th>
+      <th>Feeding Conveyor Speed</th>
+      <th>Pack Transfer Rev Position</th>
+      <th>Foil1 Tension Set Point</th>
+    </tr>
+    <tr>
+      <td>{{ sub_menu['Pleat_Pitch'] }}</td>
+      <td>{{ sub_menu['Pleat_Counts'] }}</td>
+      <td>{{ sub_menu['Foil_Low_Diameter'] }}</td>
+      <td>{{ sub_menu['Feeding_Conveyor_Speed'] }}</td>
+      <td>{{ sub_menu['Pack_Transfer_Rev_Position'] }}</td>
+      <td>{{ sub_menu['Foil1_Tension_Set_Point'] }}</td>
+    </tr>
+
+    <tr>
+      <th>Foil2 Tension Set Point</th>
+      <th>Blade Opening</th>
+      <th>Press Touch</th>
+      <th>Feeder2 Media Thickness</th>
+      <th>Feeder2 Park Position</th>
+      <th>Foil2 Length</th>
+    </tr>
+    <tr>
+      <td>{{ sub_menu['Foil2_Tension_Set_Point'] }}</td>
+      <td>{{ sub_menu['Blade_Opening'] }}</td>
+      <td>{{ sub_menu['Press_Touch'] }}</td>
+      <td>{{ sub_menu['Feeder2_Media_Thickness'] }}</td>
+      <td>{{ sub_menu['Feeder2_Park_Position'] }}</td>
+      <td>{{ sub_menu['Foil2_Length'] }}</td>
+    </tr>
+
+    <tr>
+      <th>Foil2 Length Offset</th>
+      <th>Foil2 Width</th>
+      <th>Puller End Position</th>
+      <th>Puller2 Feed Correction</th>
+      <th>Puller Extra Stroke Enable</th>
+      <th>Filter Box Width</th>
+    </tr>
+    <tr>
+      <td>{{ sub_menu['Foil2_Length_Offset'] }}</td>
+      <td>{{ sub_menu['Foil2_Width'] }}</td>
+      <td>{{ sub_menu['Puller_End_Position'] }}</td>
+      <td>{{ sub_menu['Puller2_Feed_Correction'] }}</td>
+      <td>{{ sub_menu['Puller_Extra_Stroke_Enable'] }}</td>
+      <td>{{ sub_menu['Filter_Box_Width'] }}</td>
+    </tr>
+
+    <tr>
+      <th>Lid Placement Enable</th>
+      <th>Lid Placement Position</th>
+      <th>Sync Table Start Position</th>
+      <th>Batch Count</th>
+      <th>Discharge Conveyor Speed</th>
+      <th>Pack Transfer Park Position</th>
+    </tr>
+    <tr>
+      <td>{{ sub_menu['Lid_Placement_Enable'] }}</td>
+      <td>{{ sub_menu['Lid_Placement_Position'] }}</td>
+      <td>{{ sub_menu['Sync_Table_Start_Position'] }}</td>
+      <td>{{ sub_menu['Batch_Count'] }}</td>
+      <td>{{ sub_menu['Discharge_Conveyor_Speed'] }}</td>
+      <td>{{ sub_menu['Pack_Transfer_Park_Position'] }}</td>
+    </tr>
+
+    <tr>
+      <th>Media Tension Set Point</th>
+    </tr>
+    <tr>
+      <td>{{ sub_menu['Media_Tension_Set_Point'] }}</td>
+    </tr>
+  </thead>
+</table>
+
     <h2>Air Inspection Settings</h2>
     <table class="details-table">
         <thead>
@@ -211,110 +244,113 @@
 <div id="recipe-popup" class="popup">
     <div class="popup-content">
         <div class="popup-header">
-            <h3>Recipe ID: <span id="recipe-Id">{{sub_menu.Recipe_ID}}</span></h3>
+            <h3>Recipe ID: <span id="recipe-Id">{{ sub_menu.Recipe_ID }}</span></h3>
             <h2>Production Details</h2>
             <button type="button" class="close-button" onclick="toggleRecipePopup()">X</button>
         </div>
 
-        <div class="popup-body" style="max-height: 650px;">
+        <div class="popup-body" style="max-height: 650px; overflow-y: auto;">
             <table class="details-table1">
                 <tr>
                     <td>Quantity:</td>
-                    <td><input type="text" id="quantity" placeholder="Enter Quantity" value=""></td>
-                    <td>Motor Speed:</td>
-                    <td><input type="text" id="motor-speed" value="{{ sub_menu.motor_speed }}" readonly></td>
-                    <td>Motor Stroke:</td>
-                    <td><input type="text" id="motor-stroke" value="{{ sub_menu.motor_stroke }}" readonly></td>
-                    <td>Other Speed Force:</td>
-                    <td><input type="text" id="speed-force" value="{{ sub_menu.other_speed_force }}" readonly></td>
-                    <td>Alu Coil Width:</td>
-                    <td><input type="text" id="coil-width" value="{{ sub_menu.alu_coil_width }}" readonly></td>
-                    <td>Corr1 Feed Length:</td>
-                    <td><input type="text" id="corr1-feed-length" value="{{ sub_menu.Corr1Feed_length }}" readonly></td>
-                </tr>
-                <tr>    
-                    <td>Corr2 Feed Length:</td>
-                    <td><input type="text" id="corr2-feed-length" value="{{ sub_menu.Corr2feed_length }}" readonly></td>
+                    <td><input type="text" id="quantity" placeholder="Enter Quantity"></td>
                     <td>Pleat Height:</td>
-                    <td><input type="text" id="pleat-height" value="{{ sub_menu.Pleat_Height }}" readonly></td>
-                    <td>Blade Opening:</td>
-                    <td><input type="text" id="blade-opening" value="{{ sub_menu.Blade_opening }}" readonly></td>
-                    <td>Left Blade Media Thickness:</td>
-                    <td><input type="text" id="left-blade-media-thickness" value="{{ sub_menu.Left_Blade_MediaTHickness }}" readonly></td>
-                    <td>Right Blade Media Thickness:</td>
-                    <td><input type="text" id="right-blade-media-thickness" value="{{ sub_menu.Right_Blade_MediaThickness }}" readonly></td>
+                    <td><input type="text" value="{{ sub_menu.Pleat_Height }}" readonly></td>
                     <td>Soft Touch:</td>
-                    <td><input type="text" id="soft-touch" value="{{ sub_menu.Soft_Touch }}" readonly></td>
+                    <td><input type="text" value="{{ sub_menu.Soft_Touch }}" readonly></td>
+                    <td>Feeder1 Media Thickness:</td>
+                    <td><input type="text" value="{{ sub_menu.Feeder1_Media_Thickness }}" readonly></td>
                 </tr>
-                <tr>    
-                    <td>Press Touch:</td>
-                    <td><input type="text" id="press-touch" value="{{ sub_menu.Press_Touch }}" readonly></td>
+                <tr>
+                    <td>Feeder1 Park Position:</td>
+                    <td><input type="text" value="{{ sub_menu.Feeder1_Park_Position }}" readonly></td>
+                    <td>Foil1 Length:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil1_Length }}" readonly></td>
+                    <td>Foil1 Length Offset:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil1_Length_Offset }}" readonly></td>
+                    <td>Foil1 Width:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil1_Width }}" readonly></td>
+                </tr>
+                <tr>
                     <td>Puller Start Position:</td>
-                    <td><input type="text" id="puller-start-pos" value="{{ sub_menu.Puller_Start_pos }}" readonly></td>
-                    <td>Puller End Position:</td>
-                    <td><input type="text" id="puller-end-pos" value="{{ sub_menu.Puller_End_pos }}" readonly></td>
-                    <td>Puller2 Feed Correction:</td>
-                    <td><input type="text" id="puller2-feed-correction" value="{{ sub_menu.Puller2_Feed_Correction }}" readonly></td>
+                    <td><input type="text" value="{{ sub_menu.Puller_Start_Position }}" readonly></td>
+                    <td>Autofeeding Offset:</td>
+                    <td><input type="text" value="{{ sub_menu.Autofeeding_Offset }}" readonly></td>
                     <td>Filter Box Height:</td>
-                    <td><input type="text" id="filter-box-height" value="{{ sub_menu.Filter_Box_Height }}" readonly></td>
-                    <td>Filter Box Width:</td>
-                    <td><input type="text" id="filter-box-width" value="{{ sub_menu.Filter_Box_Width }}" readonly></td>
-                </tr>
-                <tr>    
+                    <td><input type="text" value="{{ sub_menu.Filter_Box_Height }}" readonly></td>
                     <td>Filter Box Length:</td>
-                    <td><input type="text" id="filter-box-length" value="{{ sub_menu.Filter_Box_Length }}" readonly></td>
-                    <td>Set Pleat Count:</td>
-                    <td><input type="text" id="set-pleat-count" value="{{ sub_menu.Set_Pleat_Count }}" readonly></td>
-                    <td>Set Pleat Pitch:</td>
-                    <td><input type="text" id="set-pleat-pitch" value="{{ sub_menu.Set_Pleat_Pitch }}" readonly></td>
-                    <td>Set Batch Count:</td>
-                    <td><input type="text" id="set-batch-count" value="{{ sub_menu.Set_Batch_COunt }}" readonly></td>
-                    <td>Machine Speed Reference:</td>
-                    <td><input type="text" id="machine-speed-ref" value="{{ sub_menu.Machine_Speed_Ref }}" readonly></td>
-                    <td>Decoiler Set Point:</td>
-                    <td><input type="text" id="decoiler-set-point" value="{{ sub_menu.Decoiler_Set_point }}" readonly></td>
+                    <td><input type="text" value="{{ sub_menu.Filter_Box_Length }}" readonly></td>
                 </tr>
-                <tr>    
-                    <td>Low Dia Set:</td>
-                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
-                    <td>Cutter Park Position:</td>
-                    <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
-                    <td>Cutter Forward Position:</td>
-                    <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
-                    <td>DataBase :</td>
-                    <td><input type="text" id="set-pleat-pitch" value="{{ sub_menu.Set_Pleat_Pitch }}" readonly></td>
-                    <td>Width:</td>
-                    <td><input type="text" id="set-batch-count" value="{{ sub_menu.Set_Batch_COunt }}" readonly></td>
-                    <td>Height:</td>
-                    <td><input type="text" id="machine-speed-ref" value="{{ sub_menu.Machine_Speed_Ref }}" readonly></td>
+                <tr>
+                    <td>Pleat Pitch:</td>
+                    <td><input type="text" value="{{ sub_menu.Pleat_Pitch }}" readonly></td>
+                    <td>Pleat Counts:</td>
+                    <td><input type="text" value="{{ sub_menu.Pleat_Counts }}" readonly></td>
+                    <td>Foil Low Diameter:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil_Low_Diameter }}" readonly></td>
+                    <td>Feeding Conveyor Speed:</td>
+                    <td><input type="text" value="{{ sub_menu.Feeding_Conveyor_Speed }}" readonly></td>
                 </tr>
-                <tr>    
-                    <td>Depth:</td>
-                    <td><input type="text" id="decoiler-set-point" value="{{ sub_menu.Decoiler_Set_point }}" readonly></td>
-                    <td>Art No.:</td>
-                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
-                    <td>Air Flow set:</td>
-                    <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
-                    <td>Pressure Drop Setpoint:</td>
-                    <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
-                    <td>Lower Tolerance1:</td>
-                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
-                    <td>Lower Tolerance2:</td>
-                    <td><input type="text" id="cutter-park-pos" value="{{ sub_menu.Cutter_Park_pos }}" readonly></td>
+                <tr>
+                    <td>Pack Transfer Rev Position:</td>
+                    <td><input type="text" value="{{ sub_menu.Pack_Transfer_Rev_Position }}" readonly></td>
+                    <td>Foil1 Tension Set Point:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil1_Tension_Set_Point }}" readonly></td>
+                    <td>Foil2 Tension Set Point:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil2_Tension_Set_Point }}" readonly></td>
+                    <td>Blade Opening:</td>
+                    <td><input type="text" value="{{ sub_menu.Blade_Opening }}" readonly></td>
                 </tr>
-                <tr>    
-                    <td>Upper Tolerance1:</td>
-                    <td><input type="text" id="cutter-fwd-pos" value="{{ sub_menu.Cutter_Fwd_Pos }}" readonly></td>
-                    <td>Upper Tolerance2:</td>
-                    <td><input type="text" id="low-dia-set" value="{{ sub_menu.Low_Dia_Set }}" readonly></td>
+                <tr>
+                    <td>Press Touch:</td>
+                    <td><input type="text" value="{{ sub_menu.Press_Touch }}" readonly></td>
+                    <td>Feeder2 Media Thickness:</td>
+                    <td><input type="text" value="{{ sub_menu.Feeder2_Media_Thickness }}" readonly></td>
+                    <td>Feeder2 Park Position:</td>
+                    <td><input type="text" value="{{ sub_menu.Feeder2_Park_Position }}" readonly></td>
+                    <td>Foil2 Length:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil2_Length }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Foil2 Length Offset:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil2_Length_Offset }}" readonly></td>
+                    <td>Foil2 Width:</td>
+                    <td><input type="text" value="{{ sub_menu.Foil2_Width }}" readonly></td>
+                    <td>Puller End Position:</td>
+                    <td><input type="text" value="{{ sub_menu.Puller_End_Position }}" readonly></td>
+                    <td>Puller2 Feed Correction:</td>
+                    <td><input type="text" value="{{ sub_menu.Puller2_Feed_Correction }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Puller Extra Stroke Enable:</td>
+                    <td><input type="text" value="{{ sub_menu.Puller_Extra_Stroke_Enable }}" readonly></td>
+                    <td>Filter Box Width:</td>
+                    <td><input type="text" value="{{ sub_menu.Filter_Box_Width }}" readonly></td>
+                    <td>Lid Placement Enable:</td>
+                    <td><input type="text" value="{{ sub_menu.Lid_Placement_Enable }}" readonly></td>
+                    <td>Lid Placement Position:</td>
+                    <td><input type="text" value="{{ sub_menu.Lid_Placement_Position }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Sync Table Start Position:</td>
+                    <td><input type="text" value="{{ sub_menu.Sync_Table_Start_Position }}" readonly></td>
+                    <td>Batch Count:</td>
+                    <td><input type="text" value="{{ sub_menu.Batch_Count }}" readonly></td>
+                    <td>Discharge Conveyor Speed:</td>
+                    <td><input type="text" value="{{ sub_menu.Discharge_Conveyor_Speed }}" readonly></td>
+                    <td>Pack Transfer Park Position:</td>
+                    <td><input type="text" value="{{ sub_menu.Pack_Transfer_Park_Position }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Media Tension Set Point:</td>
+                    <td><input type="text" value="{{ sub_menu.Media_Tension_Set_Point }}" readonly></td>
                 </tr>
             </table>
+
             <div class="popup-footer">
-                <button id="final_submit" type="button"  class="start-button" onclick="startRecipe('{{ sub_menu.Recipe_ID }}')" >Start</button>
+                <button id="final_submit" type="button" class="start-button" onclick="startRecipe('{{ sub_menu.Recipe_ID }}')">Start</button>
             </div>
         </div>
-
-       
     </div>
 </div>
 
