@@ -209,6 +209,7 @@ def init_db():
 );
 
             """,
+            
             "Inspection_Settings": """
 
                  CREATE TABLE Inspection_Settings (
@@ -725,7 +726,8 @@ def get_recipe_log():
 # import datetime
 # from opcua import Client, ua
 BASE_NODE = 'ns=3;s="dbRecipe1"."Recipe"'
-
+from datetime import datetime
+import time
 
 def update_batch_status():
     """Continuously reads OPC UA values and inserts data into recipe_log."""
@@ -747,12 +749,13 @@ def update_batch_status():
                 # machine_state = client.get_node(machine_state_field_path).get_value()
                 # total_quantity = client.get_node(total_quantity_path).get_value()
                 ###
-                # filter_complete = 1;
+                filter_complete = 1;
                 # pack_number=123;
                 filter_complete = client.get_node(filter_complete_field_path).get_value()
                 
 
                 if filter_complete == True:  # When filterComplete is True
+                   
                     recipe_id = client.get_node(NODE_RECIPE_ID).get_value()
                     recipe_name = client.get_node(NODE_RECIPE_NAME).get_value()
                     pack_number = client.get_node(pack_number_field_path).get_value()
@@ -762,6 +765,7 @@ def update_batch_status():
 
                     # Generate Serial Number
                     today_date = datetime.now().strftime("%y%m%d")
+
                     serial_no = f"{today_date}{pack_number}"
                     batch_code = f"BATCH-{recipe_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
                     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -784,6 +788,7 @@ def update_batch_status():
                                (batch_code,timestamp, recipe_id, recipe_name, article_number, filter_size, filter_code,"NA",serial_no, "NA", "NA", "Completed"))
 
                             conn.commit()
+                            print("Going for print")
                             printdata(recipe_name, article_number, serial_no)
                             print(f"Inserted into Recipe_Log: {recipe_id}, {recipe_name}, {serial_no}")
 
@@ -841,13 +846,15 @@ def opcua_monitoring():
 
                     # Step 1: Read Serial Number
 
-                    serial_no = client.get_node(f'{Test_Complete}"qrCodeDropAir"').get_value()
+                    serial_no = client.get_node(f'{Test_Complete}"qrCodeDropAir_1"').get_value()
 
                     avgAirFlow = client.get_node(f'{Test_Complete}"avgAirFlow"').get_value()
 
                     avgResult = client.get_node(f'{Test_Complete}"avgResult"').get_value()
 
                     testResult = client.get_node(f'{Test_Complete}"testResult"').get_value()
+
+                    print(serial_no)
 
                     
 
@@ -869,109 +876,22 @@ def opcua_monitoring():
 
                     # Step 2: Fetch Recipe_ID using serial_no from recipe_log
 
-                    recipe_id = None
+                    recipe_id = 0
 
                     conn = get_db_connection()
 
                     cursor = conn.cursor()
-
+                    
                     
 
                     cursor.execute("SELECT Recipe_ID FROM recipe_log WHERE SerialNo = ?", (serial_no,))
 
                     row = cursor.fetchone()
-
+                   
                     if row:
 
                         recipe_id = row[0]
 
-
-
-                    if recipe_id:
-
-                        # Step 3: Fetch inspection settings for the Recipe_ID
-
-                        cursor.execute("""
-
-                            SELECT databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, 
-
-                                   Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, 
-
-                                   Upper_Tolerance1, Upper_Tolerance2
-
-                            FROM Inspection_Settings WHERE Recipe_ID = ?
-
-                        """, (recipe_id,))
-
-                        settings = cursor.fetchone()
-
-
-
-                        if settings:
-
-                            # Step 4: Write these values to OPC UA after ensuring correct data type forAirDropTest
-
-                            opcua_nodes = [
-
-                                "databaseAvailable", "Width", "Height", "Depth", "Art No.",
-
-                                "Air Flow set", "Pressure Drop Setpoint", "Lower_Tolerance1",
-
-                                "Lower_Tolerance2", "Upper_Tolerance1", "Upper_Tolerance2"
-
-                            ]
-
-
-
-                            for i, submenu_value in enumerate(settings):
-
-                                node = client.get_node(f'{Test_Complete1}"{opcua_nodes[i]}"')                  
-
-                                # Get node data type
-
-                                data_type = node.get_data_type_as_variant_type()
-
-                                
-
-                                # Convert value based on data type
-
-                                if data_type == ua.VariantType.Float:
-
-                                    value = float(submenu_value)
-
-                                elif data_type == ua.VariantType.Int32 or data_type == ua.VariantType.Int16:
-
-                                    value = int(submenu_value)
-
-                                elif data_type == ua.VariantType.Boolean:
-
-                                    value = bool(submenu_value)
-
-                                else:
-
-                                    print(f"Skipping {opcua_nodes[i]} due to unknown data type: {data_type}")
-
-                                    continue  # Skip unknown types
-
-
-
-                                # Write to OPC UA
-
-                                node.set_value(ua.DataValue(ua.Variant(value, data_type)))
-
-
-
-                            print("Inspection settings written to OPC UA successfully.")
-
-                        
-
-                        else:
-
-                            print("No Inspection Settings found for Recipe_ID:", recipe_id)
-
-
-
-                    # Step 5: Reset testComplete to False
 
                     test_complete_node = client.get_node(f'{Test_Complete}"testComplete"')
 
@@ -981,7 +901,7 @@ def opcua_monitoring():
 
                     # Step 6: Update Recipe Log
 
-                    update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status)
+                    update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status,recipe_id)
 
 
 
@@ -1014,9 +934,221 @@ def opcua_monitoring():
         client.disconnect()
 
         print("Disconnected from OPC UA Server")
-from datetime import datetime
 
-def update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status):
+def opcua_qrcode_monitoring():
+    """Continuously reads qrCodeDropAir, fetches Recipe ID, writes inspection settings, and resets qrCodeDropAir."""
+
+    client = Client(ENDPOINT_URL)
+
+    try:
+        client.connect()
+        print("✅ Connected to OPC UA Server (qrCode monitoring)")
+
+        while True:
+            try:
+                # Step 1: Read qrCodeDropAir
+                qr_code_node = client.get_node(f'{Test_Complete}"qrCodeDropAir"')
+                
+                qr_code_value = qr_code_node.get_value()
+
+                if qr_code_value and qr_code_value!="NO READ" and qr_code_value!="NO READ                       ":  # Not empty / not zero
+                    print(f"📌 New QR Code detected: {qr_code_value}")
+                    qr_code2_node = client.get_node(f'{Test_Complete}"qrCodeDropAir_1"')
+                    qr_code2_node.set_value(ua.DataValue(ua.Variant(qr_code_value, ua.VariantType.String)))
+                    print(f"➡️ QR Code copied to qrCode2: {qr_code_value}")
+                    # Step 2: Fetch Recipe_ID using qr_code_value
+                    recipe_id = 0
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+
+                    cursor.execute("SELECT Recipe_ID FROM recipe_log WHERE SerialNo = ?", (qr_code_value,))
+                    row = cursor.fetchone()
+
+                    if row:
+                        recipe_id = row[0]
+
+                    if recipe_id:
+                        # Step 3: Fetch inspection settings for the Recipe_ID
+                        cursor.execute("""
+                            SELECT databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, 
+                                   Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, 
+                                   Upper_Tolerance1, Upper_Tolerance2
+                            FROM Inspection_Settings WHERE Recipe_ID = ?
+                        """, (recipe_id,))
+                        settings = cursor.fetchone()
+
+                        if settings:
+                            # Step 4: Write inspection settings to PLC
+                            opcua_nodes = [
+                                "databaseAvailable", "Width", "Height", "Depth", "Art No.",
+                                "Air Flow set", "Pressure Drop Setpoint", "Lower_Tolerance1",
+                                "Lower_Tolerance2", "Upper_Tolerance1", "Upper_Tolerance2"
+                            ]
+
+                            for i, submenu_value in enumerate(settings):
+                                node = client.get_node(f'{Test_Complete1}"{opcua_nodes[i]}"')
+                                data_type = node.get_data_type_as_variant_type()
+
+                                if data_type == ua.VariantType.Float:
+                                    value = float(submenu_value)
+                                elif data_type in (ua.VariantType.Int32, ua.VariantType.Int16):
+                                    value = int(submenu_value)
+                                elif data_type == ua.VariantType.Boolean:
+                                    value = bool(submenu_value)
+                                else:
+                                    print(f"⚠️ Skipping {opcua_nodes[i]} due to unknown data type: {data_type}")
+                                    continue
+
+                                node.set_value(ua.DataValue(ua.Variant(value, data_type)))
+
+                            print(f"✅ Inspection settings written for Recipe_ID {recipe_id}")
+                        else:
+                            print(f"⚠️ No Inspection Settings found for Recipe_ID {recipe_id}")
+
+                    conn.close()
+
+                    # Step 5: Reset qrCodeDropAir → 0
+                    qr_code_node.set_value(ua.DataValue(ua.Variant("", ua.VariantType.String)))
+                    print("🔄 qrCodeDropAir reset to 0")
+
+                time.sleep(1)
+
+            except Exception as e:
+                print(f"❌ Error in qrCode monitoring: {e}")
+                time.sleep(2)
+
+    except Exception as e:
+        print(f"❌ OPC UA Connection Error: {e}")
+
+    finally:
+        client.disconnect()
+        print("🔌 Disconnected from OPC UA Server (qrCode monitoring)")
+
+# def opcua_monitoring_combined():
+#     """Continuously checks qrCodeDropAir, then testComplete, and executes logic accordingly."""
+
+#     client = Client(ENDPOINT_URL)
+
+#     try:
+#         client.connect()
+#         print("✅ Connected to OPC UA Server (Combined Monitoring)")
+
+#         while True:
+#             try:
+#                 # Step 1: Read qrCodeDropAir
+#                 qr_code_node = client.get_node(f'{Test_Complete}"qrCodeDropAir"')
+#                 qr_code_value = qr_code_node.get_value()
+
+#                 if qr_code_value and qr_code_value!="NO READ":  # Not empty / not zero
+#                     print(f"📌 New QR Code detected: {qr_code_value}")
+#                     qr_code2_node = client.get_node(f'{Test_Complete}"qrCode2"')
+#                     qr_code2_node.set_value(ua.DataValue(ua.Variant(qr_code_value, ua.VariantType.String)))
+#                     print(f"➡️ QR Code copied to qrCode2: {qr_code_value}")
+
+#                     # Step 2: Wait 1 sec before checking testComplete
+#                     print("waiting for 5 sec")
+#                     time.sleep(5)
+
+#                     testComplete = client.get_node(f'{Test_Complete}"testComplete"').get_value()
+
+#                     if testComplete:
+#                         # 🔹 TestComplete Logic
+#                         serial_no = qr_code_value
+#                         avgAirFlow = client.get_node(f'{Test_Complete}"avgAirFlow"').get_value()
+#                         avgResult = client.get_node(f'{Test_Complete}"avgResult"').get_value()
+#                         testResult = client.get_node(f'{Test_Complete}"testResult"').get_value()
+
+#                         if testResult == 0:
+#                             ng_status = 'no_Result'
+#                         elif testResult == 1:
+#                             ng_status = 'Ok'
+#                         else:
+#                             ng_status = 'Not Ok'
+
+#                         conn = get_db_connection()
+#                         cursor = conn.cursor()
+#                         cursor.execute("SELECT Recipe_ID FROM recipe_log WHERE SerialNo = ?", (serial_no,))
+#                         row = cursor.fetchone()
+#                         recipe_id = row[0] if row else 0
+
+#                         update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status, recipe_id)
+#                         conn.close()
+
+#                         # Reset testComplete
+#                         test_complete_node = client.get_node(f'{Test_Complete}"testComplete"')
+#                         test_complete_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+#                         qr_code_node.set_value(ua.DataValue(ua.Variant("", ua.VariantType.String)))
+#                         print("🔄 qrCodeDropAir reset to empty")
+#                         print("✅ Test complete logic executed")
+
+#                     else:
+#                         # 🔹 QR Code Logic
+#                         recipe_id = 0
+#                         conn = get_db_connection()
+#                         cursor = conn.cursor()
+
+#                         cursor.execute("SELECT Recipe_ID FROM recipe_log WHERE SerialNo = ?", (qr_code_value,))
+#                         row = cursor.fetchone()
+#                         if row:
+#                             recipe_id = row[0]
+
+#                         if recipe_id:
+#                             cursor.execute("""
+#                                 SELECT databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, 
+#                                        Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, 
+#                                        Upper_Tolerance1, Upper_Tolerance2
+#                                 FROM Inspection_Settings WHERE Recipe_ID = ?
+#                             """, (recipe_id,))
+#                             settings = cursor.fetchone()
+
+#                             if settings:
+#                                 opcua_nodes = [
+#                                     "databaseAvailable", "Width", "Height", "Depth", "Art No.",
+#                                     "Air Flow set", "Pressure Drop Setpoint", "Lower_Tolerance1",
+#                                     "Lower_Tolerance2", "Upper_Tolerance1", "Upper_Tolerance2"
+#                                 ]
+
+#                                 for i, submenu_value in enumerate(settings):
+#                                     node = client.get_node(f'{Test_Complete1}"{opcua_nodes[i]}"')
+#                                     data_type = node.get_data_type_as_variant_type()
+
+#                                     if data_type == ua.VariantType.Float:
+#                                         value = float(submenu_value)
+#                                     elif data_type in (ua.VariantType.Int32, ua.VariantType.Int16):
+#                                         value = int(submenu_value)
+#                                     elif data_type == ua.VariantType.Boolean:
+#                                         value = bool(submenu_value)
+#                                     else:
+#                                         print(f"⚠️ Skipping {opcua_nodes[i]} (unknown type: {data_type})")
+#                                         continue
+
+#                                     node.set_value(ua.DataValue(ua.Variant(value, data_type)))
+
+#                                 print(f"✅ Inspection settings written for Recipe_ID {recipe_id}")
+#                             else:
+#                                 print(f"⚠️ No Inspection Settings found for Recipe_ID {recipe_id}")
+
+#                         conn.close()
+
+#                         # Reset qrCodeDropAir
+#                         qr_code_node.set_value(ua.DataValue(ua.Variant("", ua.VariantType.String)))
+#                         print("🔄 qrCodeDropAir reset to empty")
+
+#                 # Always wait before next cycle
+#                 time.sleep(1)
+
+#             except Exception as e:
+#                 print(f"❌ Error in Combined Monitoring Loop: {e}")
+#                 time.sleep(2)
+
+#     except Exception as e:
+#         print(f"❌ OPC UA Connection Error: {e}")
+
+#     finally:
+#         client.disconnect()
+#         print("🔌 Disconnected from OPC UA Server")
+
+def update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status,recipe_id):
     """Updates the MSSQL recipe_log table and triggers printing. If serial number is not found, inserts a new record."""
     try:
         conn = get_db_connection()
@@ -1037,13 +1169,21 @@ def update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status):
             print(f"Updated record for Serial No: {serial_no}")
         else:
             # Generate batch_code
-            
+            batch_code = f"BATCH-{recipe_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"    
             
             # Insert a new record with default values
             cursor.execute("""
-                INSERT INTO Recipe_Log (Batch_Code, Timestamp,Recipe_Id, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
-                VALUES (?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?)
-            """, ('NA', datetime.now(),'NA', 'NA', 'NA', 'NA', 'NA', ng_status, serial_no, avgAirFlow, avgResult, 'Completed'))
+    INSERT INTO Recipe_Log 
+    (Batch_Code, Timestamp, Recipe_Id, Recipe_Name, Article_No, 
+     Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, 
+     Batch_Completion_Status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+""", (
+    batch_code, datetime.now(), None,  # Recipe_Id = NULL (not 'NA')
+    'NA', 'NA', 'NA', 'NA',
+    ng_status, serial_no, avgAirFlow, avgResult, 'Completed'
+))
+
             conn.commit()
             print(f"Inserted new record for Serial No: {serial_no}")
 
@@ -1769,6 +1909,8 @@ def raw_material():
             # barcode = f"-{type_code}-{lot_no}"  # Example barcode
             material_type= f"{type1}x{width}:{part_no}"
             barcode=material_type
+            if not type1 or not width or not part_no:
+               return jsonify({"error": "All fields are required"}), 400
 
 
             # Connect to MSSQL database
@@ -1955,6 +2097,8 @@ def raw_material1():
             type1 = request.form['thickness']
             width = request.form['width']
             part_no = request.form['part_no']
+            if not type1 or not width or not part_no:
+               return jsonify({"error": "All fields are required"}), 400
 
             # Auto-generate fields
             make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -2149,6 +2293,8 @@ def raw_material2():
             width = request.form['width']
             height = request.form['height']
             part_no = request.form['part_no']
+            if not depth or not width or not part_no or not height:
+                return jsonify({"error": "All fields are required"}), 400
 
             # Auto-generate fields
             make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -2539,189 +2685,68 @@ def compare_pos():
 @app.route('/update_recipe', methods=['POST'])
 def update_recipe():
     """Update an existing recipe with new details."""
-    
+
     # Ensure user is logged in
     if 'username' not in session:
         flash("Please log in to update recipes.", "warning")
         return redirect(url_for('login'))
 
+    # -------------------------
+    # Extract recipe info
+    # -------------------------
     recipe_id = request.form.get('recipe_id')
     recipe_name = request.form.get('recipe_name')
     filter_size = request.form.get('filter_size')
     filter_code = request.form.get('filter_code')
     art_no = request.form.get('art_no')
 
-    alu_coil_width = request.form.get('Alu_coil_width')
-    alu_roller_type = request.form.get('Alu_roller_type')
-    spacer = request.form.get('Spacer')
-    motor_speed = request.form.get('Motor_speed')
-    motor_stroke = request.form.get('Motor_stroke')
-    motor_force = request.form.get('Motor_force')
+    # Helper for numeric values
+    def clean_numeric(value):
+        if value is None or value.strip() == "":
+            return None
+        return value
 
-    # Extract newly added fields
-    corr1_feed_length = request.form.get('Corr1Feed_length')
-    corr2_feed_length = request.form.get('Corr2feed_length')
-    pleat_height = request.form.get('Pleat_Height')
-    blade_opening = request.form.get('Blade_opening')
-    left_blade_media_thickness = request.form.get('Left_Blade_MediaTHickness')
-    right_blade_media_thickness = request.form.get('Right_Blade_MediaThickness')
-    soft_touch = request.form.get('Soft_Touch')
-    press_touch = request.form.get('Press_Touch')
-    puller_start_pos = request.form.get('Puller_Start_pos')
-    puller_end_pos = request.form.get('Puller_End_pos')
-    puller2_feed_correction = request.form.get('Puller2_Feed_Correction')
-    filter_box_height = request.form.get('Filter_Box_Height')
-    filter_box_width = request.form.get('Filter_Box_Width')
-    filter_box_length = request.form.get('Filter_Box_Length')
-    set_pleat_count = request.form.get('Set_Pleat_Count')
-    set_pleat_pitch = request.form.get('Set_Pleat_Pitch')
-    set_batch_count = request.form.get('Set_Batch_Count')
-    machine_speed_ref = request.form.get('Machine_Speed_Ref')
-    decoiler_set_point = request.form.get('Decoiler_Set_point')
-    low_dia_set = request.form.get('Low_Dia_Set')
-    cutter_park_pos = request.form.get('Cutter_Park_pos')
-    cutter_fwd_pos = request.form.get('Cutter_Fwd_Pos')
-    databaseAvailable = request.form.get('databaseAvailable')
-    Width = request.form.get('Width')
-    Height = request.form.get('Height')
-    Depth = request.form.get('Depth')
-    Art_Num = request.form.get('Art_Num')
-    Air_Flow_Set = request.form.get('Air_Flow_Set')
-    Pressure_Drop_Setpoint = request.form.get('Pressure_Drop_Setpoint')
-    Lower_Tolerance1 = request.form.get('Lower_Tolerance1')
-    Lower_Tolerance2 = request.form.get('Lower_Tolerance2')
-    Upper_Tolerance1 = request.form.get('Upper_Tolerance1')
-    Upper_Tolerance2 = request.form.get('Upper_Tolerance2')
-    
-    # Extract POS values (1-9)
-    pos_values = [request.form.get(f'pos{i}', None) for i in range(1, 10)]
-    alu_material = request.form.get('alu_mat', None)
-    house_material = request.form.get('house_mat', None)
+    # -------------------------
+    # Extract fields (same as add_recipe)
+    # -------------------------
+    pleat_height = clean_numeric(request.form.get('Pleat_Height'))
+    soft_touch = clean_numeric(request.form.get('Soft_Touch'))
+    feeder1_media_thickness = clean_numeric(request.form.get('Feeder1_Media_Thickness'))
+    feeder1_park_position = clean_numeric(request.form.get('Feeder1_Park_Position'))
+    foil1_length = clean_numeric(request.form.get('Foil1_Length'))
+    foil1_length_offset = clean_numeric(request.form.get('Foil1_Length_Offset'))
+    foil1_width = clean_numeric(request.form.get('Foil1_Width'))
+    puller_start_position = clean_numeric(request.form.get('Puller_Start_Position'))
+    autofeeding_offset = clean_numeric(request.form.get('Autofeeding_Offset'))
+    filter_box_height = clean_numeric(request.form.get('Filter_Box_Height'))
+    filter_box_length = clean_numeric(request.form.get('Filter_Box_Length'))
+    pleat_pitch = clean_numeric(request.form.get('Pleat_Pitch'))
+    pleat_counts = clean_numeric(request.form.get('Pleat_Counts'))
+    foil_low_diameter = clean_numeric(request.form.get('Foil_Low_Diameter'))
+    feeding_conveyor_speed = clean_numeric(request.form.get('Feeding_Conveyor_Speed'))
+    pack_transfer_rev_position = clean_numeric(request.form.get('Pack_Transfer_Rev_Position'))
+    foil1_tension_set_point = clean_numeric(request.form.get('Foil1_Tension_Set_Point'))
+    foil2_tension_set_point = clean_numeric(request.form.get('Foil2_Tension_Set_Point'))
+    blade_opening = clean_numeric(request.form.get('Blade_Opening'))
+    press_touch = clean_numeric(request.form.get('Press_Touch'))
+    feeder2_media_thickness = clean_numeric(request.form.get('Feeder2_Media_Thickness'))
+    feeder2_park_position = clean_numeric(request.form.get('Feeder2_Park_Position'))
+    foil2_length = clean_numeric(request.form.get('Foil2_Length'))
+    foil2_length_offset = clean_numeric(request.form.get('Foil2_Length_Offset'))
+    foil2_width = clean_numeric(request.form.get('Foil2_Width'))
+    puller_end_position = clean_numeric(request.form.get('Puller_End_Position'))
+    puller2_feed_correction = clean_numeric(request.form.get('Puller2_Feed_Correction'))
+    puller_extra_stroke_enable = clean_numeric(request.form.get('Puller_Extra_Stroke_Enable'))
+    filter_box_width = clean_numeric(request.form.get('Filter_Box_Width'))
+    lid_placement_enable = clean_numeric(request.form.get('Lid_Placement_Enable'))
+    lid_placement_position = clean_numeric(request.form.get('Lid_Placement_Position'))
+    sync_table_start_position = clean_numeric(request.form.get('Sync_Table_Start_Position'))
+    batch_count = clean_numeric(request.form.get('Batch_Count'))
+    discharge_conveyor_speed = clean_numeric(request.form.get('Discharge_Conveyor_Speed'))
+    pack_transfer_park_position = clean_numeric(request.form.get('Pack_Transfer_Park_Position'))
+    media_tension_set_point = clean_numeric(request.form.get('Media_Tension_Set_Point'))
 
-    # Validate required fields
-    required_fields = [recipe_id, recipe_name, filter_size, filter_code, art_no, alu_coil_width, motor_speed]
-    if any(field is None or field == "" for field in required_fields):
-        flash("All fields are required.", "danger")
-        return redirect(url_for('recipe_list'))
-
-    conn = get_db_connection()
-    if not conn:
-        flash("Database connection failed.", "danger")
-        return redirect(url_for('recipe_list'))
-
-    try:
-        cursor = conn.cursor()
-
-        # Update `Recipe` table
-        cursor.execute(
-            '''UPDATE Recipe 
-               SET Recipe_Name = ?, Filter_Size = ?, Filter_Code = ?, Art_No = ?
-               WHERE Recipe_ID = ?''',
-            (recipe_name, filter_size, filter_code, art_no, recipe_id)
-        )
-
-        # Update `Recipe_Details1` table
-        cursor.execute(
-            '''UPDATE Recipe_Details1 
-               SET Pos1 = ?, Pos2 = ?, Pos3 = ?, Pos4 = ?, Pos5 = ?, 
-                   Pos6 = ?, Pos7 = ?, Pos8 = ?, Pos9 = ?, Alu_coil_width = ?,Alu_roller_type = ?, Spacer = ?,Alu_Material = ?,House_Material = ?
-               WHERE Recipe_ID = ?''',
-            (*pos_values, alu_coil_width,alu_roller_type,spacer,alu_material,house_material,recipe_id)
-        )
-
-        # Update `Sub_Menu` table
-        cursor.execute('''
-       UPDATE Sub_Menu 
-            SET Motor_speed = ?, Motor_stroke = ?, other_speed_force = ?, 
-                alu_coil_width = ?, Corr1Feed_length = ?, Corr2feed_length = ?, Pleat_Height = ?, 
-                Blade_opening = ?, Left_Blade_MediaTHickness = ?, Right_Blade_MediaThickness = ?, 
-                Soft_Touch = ?, Press_Touch = ?, Puller_Start_pos = ?, Puller_End_pos = ?, 
-                Puller2_Feed_Correction = ?, Filter_Box_Height = ?, Filter_Box_Width = ?, 
-                Filter_Box_Length = ?, Set_Pleat_Count = ?, Set_Pleat_Pitch = ?, Set_Batch_Count = ?, 
-                Machine_Speed_Ref = ?, Decoiler_Set_point = ?, Low_Dia_Set = ?, Cutter_Park_pos = ?, 
-                Cutter_Fwd_Pos = ?
-            WHERE Recipe_ID = ?
-    ''', ( motor_speed, motor_stroke, motor_force, alu_coil_width, corr1_feed_length, corr2_feed_length, pleat_height,
-          blade_opening, left_blade_media_thickness, right_blade_media_thickness, soft_touch, press_touch,
-          puller_start_pos, puller_end_pos, puller2_feed_correction, filter_box_height, filter_box_width,
-          filter_box_length, set_pleat_count, set_pleat_pitch, set_batch_count, machine_speed_ref,
-          decoiler_set_point, low_dia_set, cutter_park_pos, cutter_fwd_pos,recipe_id))
-
-
-         # Update Inspection_Settings
-        cursor.execute('''
-        UPDATE Inspection_Settings 
-        SET databaseAvailable = ?, Width = ?, Height = ?, Depth = ?, Art_No = ?, 
-            Air_Flow_Set = ?, Pressure_Drop_Setpoint = ?, Lower_Tolerance1 = ?, 
-            Lower_Tolerance2 = ?, Upper_Tolerance1 = ?, Upper_Tolerance2 = ? 
-        WHERE Recipe_ID = ?
-    ''', (databaseAvailable, Width, Height, Depth, Art_Num, Air_Flow_Set, Pressure_Drop_Setpoint,
-          Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2, recipe_id))
-
-
-        # Commit changes
-        conn.commit()
-
-        flash("Recipe updated successfully!", "success")
-
-    except pyodbc.Error as e:
-        print(f"Database error: {str(e)}", "danger")
-        conn.rollback()  # Rollback in case of error
-
-    except Exception as e:
-        print(f"Unexpected error: {str(e)}", "danger")
-
-    finally:
-        conn.close()
-
-    return redirect(url_for('recipe_list'))
-
-@app.route('/add_recipe', methods=['POST'])
-def add_recipe():
-    """Add a new recipe to the database."""
-    
-    # Ensure user is logged in
-    if 'username' not in session:
-        flash("Please log in to add recipes.", "warning")
-        return redirect(url_for('login'))
-
-    # Extract form data
-    recipe_id = request.form.get('recipe_id')
-    recipe_name = request.form.get('recipe_name')
-    filter_size = request.form.get('filter_size')
-    filter_code = request.form.get('filter_code')
-    art_no = request.form.get('art_no')
-
-    alu_coil_width = request.form.get('Alu_coil_width')
-    alu_roller_type = request.form.get('Alu_roller_type')
-    spacer = request.form.get('Spacer')
-    motor_speed = request.form.get('Motor_speed')
-    motor_stroke = request.form.get('Motor_stroke')
-    motor_force = request.form.get('Motor_force')
-
-    # Extract newly added fields
-    corr1_feed_length = request.form.get('Corr1Feed_length')
-    corr2_feed_length = request.form.get('Corr2feed_length')
-    pleat_height = request.form.get('Pleat_Height')
-    blade_opening = request.form.get('Blade_opening')
-    left_blade_media_thickness = request.form.get('Left_Blade_MediaTHickness')
-    right_blade_media_thickness = request.form.get('Right_Blade_MediaThickness')
-    soft_touch = request.form.get('Soft_Touch')
-    press_touch = request.form.get('Press_Touch')
-    puller_start_pos = request.form.get('Puller_Start_pos')
-    puller_end_pos = request.form.get('Puller_End_pos')
-    puller2_feed_correction = request.form.get('Puller2_Feed_Correction')
-    filter_box_height = request.form.get('Filter_Box_Height')
-    filter_box_width = request.form.get('Filter_Box_Width')
-    filter_box_length = request.form.get('Filter_Box_Length')
-    set_pleat_count = request.form.get('Set_Pleat_Count')
-    set_pleat_pitch = request.form.get('Set_Pleat_Pitch')
-    set_batch_count = request.form.get('Set_Batch_Count')
-    machine_speed_ref = request.form.get('Machine_Speed_Ref')
-    decoiler_set_point = request.form.get('Decoiler_Set_point')
-    low_dia_set = request.form.get('Low_Dia_Set')
-    cutter_park_pos = request.form.get('Cutter_Park_pos')
-    cutter_fwd_pos = request.form.get('Cutter_Fwd_Pos')
+    # Extra Inspection
     databaseAvailable = request.form.get('databaseAvailable')
     Width = request.form.get('Width')
     Height = request.form.get('Height')
@@ -2736,85 +2761,246 @@ def add_recipe():
     alu_value = request.form.get('alu_mat', None)
     house_value = request.form.get('house_mat', None)
 
-
-    print("Received Form Data:", recipe_id, databaseAvailable, Width, Height, Depth)
-    
-    # Extract POS values (1-9)
+    # POS values
     pos_values = [request.form.get(f'pos{i}', None) for i in range(1, 10)]
- 
-    # Validate required fields
-    # required_fields = [recipe_id, recipe_name, filter_size, filter_code, art_no, alu_coil_width, motor_speed, motor_stroke, motor_force]
-    # if any(field is None or field.strip() == "" for field in required_fields):
-    #     flash("All required fields must be filled!", "danger")
-    #     return redirect(url_for('recipe_list'))
 
     conn = get_db_connection()
-    print("Got Connection")
-    
     try:
         cursor = conn.cursor()
 
-        # Insert into `Recipe` table
+        # Update Recipe
+        cursor.execute(
+            '''UPDATE Recipe 
+               SET Recipe_Name = ?, Filter_Size = ?, Filter_Code = ?, Art_No = ?
+               WHERE Recipe_ID = ?''',
+            (recipe_name, filter_size, filter_code, art_no, recipe_id)
+        )
+
+        # Update Recipe_Details1
+        cursor.execute(
+            '''UPDATE Recipe_Details1 
+               SET Pos1=?, Pos2=?, Pos3=?, Pos4=?, Pos5=?, Pos6=?, Pos7=?, Pos8=?, Pos9=?, Alu_Material=?, House_Material=? 
+               WHERE Recipe_ID = ?''',
+            (*pos_values, alu_value, house_value, recipe_id)
+        )
+
+        # Update Sub_Menu
+        cursor.execute(
+            '''UPDATE Sub_Menu 
+               SET Pleat_Height=?, Soft_Touch=?, Feeder1_Media_Thickness=?, Feeder1_Park_Position=?,
+                   Foil1_Length=?, Foil1_Length_Offset=?, Foil1_Width=?, Puller_Start_Position=?, Autofeeding_Offset=?,
+                   Filter_Box_Height=?, Filter_Box_Length=?, Pleat_Pitch=?, Pleat_Counts=?, Foil_Low_Diameter=?,
+                   Feeding_Conveyor_Speed=?, Pack_Transfer_Rev_Position=?, Foil1_Tension_Set_Point=?, Foil2_Tension_Set_Point=?,
+                   Blade_Opening=?, Press_Touch=?, Feeder2_Media_Thickness=?, Feeder2_Park_Position=?,
+                   Foil2_Length=?, Foil2_Length_Offset=?, Foil2_Width=?, Puller_End_Position=?,
+                   Puller2_Feed_Correction=?, Puller_Extra_Stroke_Enable=?, Filter_Box_Width=?,
+                   Lid_Placement_Enable=?, Lid_Placement_Position=?, Sync_Table_Start_Position=?,
+                   Batch_Count=?, Discharge_Conveyor_Speed=?, Pack_Transfer_Park_Position=?, Media_Tension_Set_Point=? 
+               WHERE Recipe_ID = ?''',
+            (pleat_height, soft_touch, feeder1_media_thickness, feeder1_park_position,
+             foil1_length, foil1_length_offset, foil1_width, puller_start_position, autofeeding_offset,
+             filter_box_height, filter_box_length, pleat_pitch, pleat_counts, foil_low_diameter,
+             feeding_conveyor_speed, pack_transfer_rev_position, foil1_tension_set_point, foil2_tension_set_point,
+             blade_opening, press_touch, feeder2_media_thickness, feeder2_park_position,
+             foil2_length, foil2_length_offset, foil2_width, puller_end_position,
+             puller2_feed_correction, puller_extra_stroke_enable, filter_box_width,
+             lid_placement_enable, lid_placement_position, sync_table_start_position,
+             batch_count, discharge_conveyor_speed, pack_transfer_park_position, media_tension_set_point, recipe_id)
+        )
+
+        # Update Inspection_Settings
+        cursor.execute(
+            '''UPDATE Inspection_Settings 
+               SET databaseAvailable=?, Width=?, Height=?, Depth=?, Art_No=?, Air_Flow_Set=?, Pressure_Drop_Setpoint=?, 
+                   Lower_Tolerance1=?, Lower_Tolerance2=?, Upper_Tolerance1=?, Upper_Tolerance2=? 
+               WHERE Recipe_ID=?''',
+            (databaseAvailable, Width, Height, Depth, Art_Num, Air_Flow_Set,
+             Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2, recipe_id)
+        )
+
+        conn.commit()
+        flash("Recipe updated successfully!", "success")
+
+    except pyodbc.Error as e:
+        conn.rollback()
+        flash(f"Database error: {str(e)}", "danger")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Unexpected error: {str(e)}", "danger")
+    finally:
+        conn.close()
+
+    return redirect(url_for('recipe_list'))
+
+@app.route('/add_recipe', methods=['POST'])
+def add_recipe():
+    """Add a new recipe to the database."""
+    data = request.form.to_dict()
+    print("Form data received:", data)   # Debug
+
+    # Ensure user is logged in
+    if 'username' not in session:
+        flash("Please log in to add recipes.", "warning")
+        return redirect(url_for('login'))
+
+    # -------------------------
+    # Helper to clean numeric inputs
+    # -------------------------
+    def clean_numeric(value):
+        if value is None or value.strip() == "":
+            return None
+        return value
+
+    # -------------------------
+    # Extract main recipe info
+    # -------------------------
+    recipe_id = request.form.get('recipe_id')
+    recipe_name = request.form.get('recipe_name')
+    filter_size = request.form.get('filter_size')
+    filter_code = request.form.get('filter_code')
+    art_no = request.form.get('art_no')
+
+    # -------------------------
+    # Machine Settings Fields (cleaned)
+    # -------------------------
+    pleat_height = clean_numeric(request.form.get('Pleat_Height'))
+    soft_touch = clean_numeric(request.form.get('Soft_Touch'))
+    feeder1_media_thickness = clean_numeric(request.form.get('Feeder1_Media_Thickness'))
+    feeder1_park_position = clean_numeric(request.form.get('Feeder1_Park_Position'))
+    foil1_length = clean_numeric(request.form.get('Foil1_Length'))
+    foil1_length_offset = clean_numeric(request.form.get('Foil1_Length_Offset'))
+    foil1_width = clean_numeric(request.form.get('Foil1_Width'))
+    puller_start_position = clean_numeric(request.form.get('Puller_Start_Position'))
+    autofeeding_offset = clean_numeric(request.form.get('Autofeeding_Offset'))
+    filter_box_height = clean_numeric(request.form.get('Filter_Box_Height'))
+    filter_box_length = clean_numeric(request.form.get('Filter_Box_Length'))
+    pleat_pitch = clean_numeric(request.form.get('Pleat_Pitch'))
+    pleat_counts = clean_numeric(request.form.get('Pleat_Counts'))
+    foil_low_diameter = clean_numeric(request.form.get('Foil_Low_Diameter'))
+    feeding_conveyor_speed = clean_numeric(request.form.get('Feeding_Conveyor_Speed'))
+    pack_transfer_rev_position = clean_numeric(request.form.get('Pack_Transfer_Rev_Position'))
+    foil1_tension_set_point = clean_numeric(request.form.get('Foil1_Tension_Set_Point'))
+    foil2_tension_set_point = clean_numeric(request.form.get('Foil2_Tension_Set_Point'))
+    blade_opening = clean_numeric(request.form.get('Blade_Opening'))
+    press_touch = clean_numeric(request.form.get('Press_Touch'))
+    feeder2_media_thickness = clean_numeric(request.form.get('Feeder2_Media_Thickness'))
+    feeder2_park_position = clean_numeric(request.form.get('Feeder2_Park_Position'))
+    foil2_length = clean_numeric(request.form.get('Foil2_Length'))
+    foil2_length_offset = clean_numeric(request.form.get('Foil2_Length_Offset'))
+    foil2_width = clean_numeric(request.form.get('Foil2_Width'))
+    puller_end_position = clean_numeric(request.form.get('Puller_End_Position'))
+    puller2_feed_correction = clean_numeric(request.form.get('Puller2_Feed_Correction'))
+    puller_extra_stroke_enable = clean_numeric(request.form.get('Puller_Extra_Stroke_Enable'))
+    filter_box_width = clean_numeric(request.form.get('Filter_Box_Width'))
+    lid_placement_enable = clean_numeric(request.form.get('Lid_Placement_Enable'))
+    lid_placement_position = clean_numeric(request.form.get('Lid_Placement_Position'))
+    sync_table_start_position = clean_numeric(request.form.get('Sync_Table_Start_Position'))
+    batch_count = clean_numeric(request.form.get('Batch_Count'))
+    discharge_conveyor_speed = clean_numeric(request.form.get('Discharge_Conveyor_Speed'))
+    pack_transfer_park_position = clean_numeric(request.form.get('Pack_Transfer_Park_Position'))
+    media_tension_set_point = clean_numeric(request.form.get('Media_Tension_Set_Point'))
+
+    # -------------------------
+    # Extra Inspection Fields
+    # -------------------------
+    databaseAvailable = request.form.get('databaseAvailable')
+    Width = request.form.get('Width')
+    Height = request.form.get('Height')
+    Depth = request.form.get('Depth')
+    Art_Num = request.form.get('Art_Num')
+    Air_Flow_Set = request.form.get('Air_Flow_Set')
+    Pressure_Drop_Setpoint = request.form.get('Pressure_Drop_Setpoint')
+    Lower_Tolerance1 = request.form.get('Lower_Tolerance1')
+    Lower_Tolerance2 = request.form.get('Lower_Tolerance2')
+    Upper_Tolerance1 = request.form.get('Upper_Tolerance1')
+    Upper_Tolerance2 = request.form.get('Upper_Tolerance2')
+    alu_value = request.form.get('alu_mat', None)
+    house_value = request.form.get('house_mat', None)
+
+    # POS values
+    pos_values = [request.form.get(f'pos{i}', None) for i in range(1, 10)]
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+
+        print("👉 Inserting into Recipe table...")
         cursor.execute(
             '''INSERT INTO Recipe (Recipe_ID, Recipe_Name, Filter_Size, Filter_Code, Art_No) 
                VALUES (?, ?, ?, ?, ?)''',
             (recipe_id, recipe_name, filter_size, filter_code, art_no)
         )
+        print("✅ Inserted into Recipe")
 
-        # Insert into `Recipe_Details1` table
+        print("👉 Inserting into Recipe_Details1 table...")
         cursor.execute(
             '''INSERT INTO Recipe_Details1 
-               (Recipe_ID, Pos1, Pos2, Pos3, Pos4, Pos5, Pos6, Pos7, Pos8, Pos9, Alu_coil_width, Alu_roller_type, Spacer,Alu_Material,House_Material) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)''',
-            (recipe_id, *pos_values, alu_coil_width, alu_roller_type, spacer,alu_value,house_value)
+               (Recipe_ID, Pos1, Pos2, Pos3, Pos4, Pos5, Pos6, Pos7, Pos8, Pos9, Alu_Material, House_Material) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (recipe_id, *pos_values, alu_value, house_value)
         )
+        print("✅ Inserted into Recipe_Details1")
 
-        # Insert into `Sub_Menu` table with new fields
+        print("👉 Inserting into Sub_Menu table...")
         cursor.execute(
             '''INSERT INTO Sub_Menu 
-               (Recipe_ID, Motor_speed, Motor_stroke, other_speed_force,alu_coil_width, Corr1Feed_length, Corr2feed_length, Pleat_Height, 
-                Blade_opening, Left_Blade_MediaTHickness, Right_Blade_MediaThickness, Soft_Touch, Press_Touch, 
-                Puller_Start_pos, Puller_End_pos, Puller2_Feed_Correction, Filter_Box_Height, Filter_Box_Width, 
-                Filter_Box_Length, Set_Pleat_Count, Set_Pleat_Pitch, Set_Batch_COunt, Machine_Speed_Ref, 
-                Decoiler_Set_point, Low_Dia_Set, Cutter_Park_pos, Cutter_Fwd_Pos) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)''',
-            (recipe_id, motor_speed, motor_stroke, motor_force,alu_coil_width, corr1_feed_length, corr2_feed_length, pleat_height, 
-             blade_opening, left_blade_media_thickness, right_blade_media_thickness, soft_touch, press_touch, 
-             puller_start_pos, puller_end_pos, puller2_feed_correction, filter_box_height, filter_box_width, 
-             filter_box_length, set_pleat_count, set_pleat_pitch, set_batch_count, machine_speed_ref, 
-             decoiler_set_point, low_dia_set, cutter_park_pos, cutter_fwd_pos)
+               (Recipe_ID, Pleat_Height, Soft_Touch, Feeder1_Media_Thickness, Feeder1_Park_Position,
+                Foil1_Length, Foil1_Length_Offset, Foil1_Width, Puller_Start_Position, Autofeeding_Offset,
+                Filter_Box_Height, Filter_Box_Length, Pleat_Pitch, Pleat_Counts, Foil_Low_Diameter,
+                Feeding_Conveyor_Speed, Pack_Transfer_Rev_Position, Foil1_Tension_Set_Point, Foil2_Tension_Set_Point,
+                Blade_Opening, Press_Touch, Feeder2_Media_Thickness, Feeder2_Park_Position,
+                Foil2_Length, Foil2_Length_Offset, Foil2_Width, Puller_End_Position,
+                Puller2_Feed_Correction, Puller_Extra_Stroke_Enable, Filter_Box_Width,
+                Lid_Placement_Enable, Lid_Placement_Position, Sync_Table_Start_Position,
+                Batch_Count, Discharge_Conveyor_Speed, Pack_Transfer_Park_Position, Media_Tension_Set_Point) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (recipe_id, pleat_height, soft_touch, feeder1_media_thickness, feeder1_park_position,
+             foil1_length, foil1_length_offset, foil1_width, puller_start_position, autofeeding_offset,
+             filter_box_height, filter_box_length, pleat_pitch, pleat_counts, foil_low_diameter,
+             feeding_conveyor_speed, pack_transfer_rev_position, foil1_tension_set_point, foil2_tension_set_point,
+             blade_opening, press_touch, feeder2_media_thickness, feeder2_park_position,
+             foil2_length, foil2_length_offset, foil2_width, puller_end_position,
+             puller2_feed_correction, puller_extra_stroke_enable, filter_box_width,
+             lid_placement_enable, lid_placement_position, sync_table_start_position,
+             batch_count, discharge_conveyor_speed, pack_transfer_park_position, media_tension_set_point)
         )
-        cursor.execute(
-              '''INSERT INTO Inspection_Settings 
-               (Recipe_ID, databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, Pressure_Drop_Setpoint, 
-                 Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (recipe_id, databaseAvailable, Width, Height, Depth, Art_Num, Air_Flow_Set, Pressure_Drop_Setpoint, 
-                  Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2)
-        )
+        print("✅ Inserted into Sub_Menu")
 
-        # Commit changes
+        print("👉 Inserting into Inspection_Settings table...")
+        cursor.execute(
+            '''INSERT INTO Inspection_Settings 
+               (Recipe_ID, databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, Pressure_Drop_Setpoint, 
+                Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (recipe_id, databaseAvailable, Width, Height, Depth, Art_Num, Air_Flow_Set,
+             Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2)
+        )
+        print("✅ Inserted into Inspection_Settings")
+
         conn.commit()
-        print("Recipe added successfully!")
+        print("🎉 All inserts committed successfully!")
         flash("Recipe added successfully!", "success")
 
     except pyodbc.Error as e:
+        print(f"❌ Database error occurred: {str(e)}")
+        conn.rollback()
         flash(f"Database error: {str(e)}", "danger")
-        print(f"Here is the issue: {str(e)}")
-
-        conn.rollback()  # Rollback changes on error
 
     except Exception as e:
+        print(f"❌ Unexpected error occurred: {str(e)}")
+        conn.rollback()
         flash(f"Unexpected error: {str(e)}", "danger")
 
     finally:
-        conn.close()  # Close connection safely
+        conn.close()
+        print("🔒 Connection closed.")
 
     return redirect(url_for('recipe_list'))
 
 def update_plc_with_values(pos_values, submenu_values, recipe_info):
     """
- Update PLC with POS values, Recipe Name, Recipe ID, and submenu values.
+    Update PLC with POS values, Recipe Name, Recipe ID, and submenu values
+    using the latest PLC tag mapping.
     """
     from opcua import Client, ua
 
@@ -2828,24 +3014,30 @@ def update_plc_with_values(pos_values, submenu_values, recipe_info):
         recipe_name = recipe_info[3]  # 'Recipe6'
         recipe_id = recipe_info[4]    # 6
 
-    
+        # ✅ Write POS values (expects dict)
         for i in range(1, 10):
-            pos_value = pos_values[i-1]  # Access by index (0-based for lists)
+            key = f"Pos{i}"
+            if key not in pos_values:
+                print(f"⚠️ Missing {key} in POS values, skipping...")
+                continue
+
+            pos_value = pos_values[key]
             node_id1 = f'ns=3;s="dbRecipe1"."Recipe"."decoilerSelection"[{i}]'
             node_id2 = f'ns=3;s="dbRecipe1"."Recipe"."decolerRoll"[{i}]'
 
             try:
-                
                 node1 = client.get_node(node_id1)
                 node1.set_value(ua.DataValue(ua.Variant(bool(pos_value), ua.VariantType.Boolean)))
-                node2 = client.get_node(node_id2)
-                node2.set_value(ua.DataValue(ua.Variant(pos_value, ua.VariantType.String)))
-                
-                print(f"Skipping update for index {i} due to None value in pos_values")
-            except Exception as node_error:
-                print(f"Error processing Node ID {node_id1}: {node_error}")
 
-        # Write Recipe Name and Recipe ID to PLC
+                node2 = client.get_node(node_id2)
+                node2.set_value(ua.DataValue(ua.Variant(str(pos_value), ua.VariantType.String)))
+
+                print(f"✔️ POS[{i}] = {pos_value} written successfully.")
+
+            except Exception as node_error:
+                print(f"❌ Error processing POS[{i}] Node: {node_error}")
+
+        # ✅ Write Recipe Name and Recipe ID
         try:
             recipe_name_node = client.get_node('ns=3;s="dbRecipe1"."Recipe"."RecipeName"')
             recipe_id_node = client.get_node('ns=3;s="dbRecipe1"."Recipe"."RecipeID"')
@@ -2853,57 +3045,89 @@ def update_plc_with_values(pos_values, submenu_values, recipe_info):
             recipe_name_node.set_value(ua.DataValue(ua.Variant(recipe_name, ua.VariantType.String)))
             recipe_id_node.set_value(ua.DataValue(ua.Variant(recipe_id, ua.VariantType.Int32)))
 
-            print(f"Recipe Name ({recipe_name}) and Recipe ID ({recipe_id}) written to PLC.")
+            print(f"✔️ Recipe Name ({recipe_name}) and Recipe ID ({recipe_id}) written to PLC.")
         except Exception as recipe_error:
-            print(f"Error writing Recipe Name and Recipe ID: {recipe_error}")
+            print(f"❌ Error writing Recipe Name and Recipe ID: {recipe_error}")
 
-        # Submenu fields
-        submenu_fields = [
-            "Corr1Feed_length", "Corr2feed_length", "Pleat_Height", "Blade_opening",
-            "Left_Blade_MediaTHickness", "Right_Blade_MediaThickness", "Soft_Touch", "Press_Touch",
-            "Puller_Start_pos", "Puller_End_pos", "Puller2_Feed_Correction", "Filter_Box_Height",
-            "Filter_Box_Width", "Filter_Box_Length", "Set_Pleat_Count", "Set_Pleat_Pitch",
-            "Set_Batch_COunt", "Machine_Speed_Ref", "Decoiler_Set_point", "Low_Dia_Set",
-            "Cutter_Park_pos", "Cutter_Fwd_Pos"
-        ]
+        # ✅ Updated submenu tag mapping
+        db_to_plc_map = {
+            "Pleat_Height": "Pleat_Height",
+            "Soft_Touch": "Soft_Touch",
+            "Feeder1_Media_Thickness": "Left_Blade_MediaTHickness",
+            "Feeder1_Park_Position": "Left_Blade_Start_pos",
+            "Foil1_Length": "Corr1Feed_length",
+            "Foil1_Length_Offset": "Corr1feed_length_offset",
+            "Foil1_Width": "Corr1feed_length_width",
+            "Puller_Start_Position": "Puller_Start_pos",
+            "Autofeeding_Offset": "Auto_Feeding_Offset",
+            "Filter_Box_Height": "Filter_Box_Height",
+            "Filter_Box_Length": "Filter_Box_Length",
+            "Pleat_Pitch": "Set_Pleat_Pitch",
+            "Pleat_Counts": "Set_Pleat_Count",
+            "Foil_Low_Diameter": "Low_Dia_Set",
+            "Feeding_Conveyor_Speed": "Feeding_Conveyor_Speed",
+            "Pack_Transfer_Rev_Position": "Filter_Transfer_pos_rev",
+            "Foil1_Tension_Set_Point": "Corr_1_Set_point",
+            "Foil2_Tension_Set_Point": "Corr_2_Set_point",
+            "Blade_Opening": "Blade_opening",
+            "Press_Touch": "Press_Touch",
+            "Feeder2_Media_Thickness": "Right_Blade_MediaThickness",
+            "Feeder2_Park_Position": "Right_Blade_Start_pos",
+            "Foil2_Length": "Corr2feed_length",
+            "Foil2_Length_Offset": "Corr2feed_length_offset",
+            "Foil2_Width": "Corr2feed_length_width",
+            "Puller_End_Position": "Puller_End_pos",
+            "Puller2_Feed_Correction": "Puller2_Feed_Correction",
+            "Puller_Extra_Stroke_Enable": "PULLER_Extra stoke_Enable",
+            "Filter_Box_Width": "Filter_Box_Width",
+            "Lid_Placement_Enable": "Lid_Placement_Enable",
+            "Lid_Placement_Position": "Lid_Placement_Pos",
+            "Sync_Table_Start_Position": "Sync_Table_Start_Counts",
+            "Batch_Count": "Set_Batch_COunt",
+            "Discharge_Conveyor_Speed": "Discharge_COnvyor_Speed",
+            "Pack_Transfer_Park_Position": "Filter_Transfer_pos_fwd",
+            "Media_Tension_Set_Point": "Media_puller_2_SP"
+        }
 
-        # Write submenu values to PLC nodes
-        for field_name, submenu_value in zip(submenu_fields, submenu_values):
-            submenu_node_id = f'ns=3;s="dbRecipe1"."Recipe"."{field_name}"'
+        # ✅ Write submenu values
+        for db_field, plc_tag in db_to_plc_map.items():
+            if db_field not in submenu_values:
+                print(f"⚠️ Missing {db_field} in provided values, skipping...")
+                continue
+
+            value = submenu_values[db_field]
+            submenu_node_id = f'ns=3;s="dbRecipe1"."Recipe"."{plc_tag}"'
 
             try:
                 node = client.get_node(submenu_node_id)
                 data_type = node.get_data_type_as_variant_type()
-                
-                # Convert value based on data type
+
                 if data_type == ua.VariantType.Float:
-                    value = float(submenu_value)
+                    plc_value = float(value)
                 elif data_type == ua.VariantType.Int32:
-                    value = int(submenu_value)
+                    plc_value = int(value)
                 elif data_type == ua.VariantType.Boolean:
-                    value = bool(submenu_value)
+                    plc_value = bool(value)
                 else:
-                    raise ValueError(f"Unsupported data type for {field_name}: {data_type}")
+                    plc_value = str(value)
 
-                node.set_value(ua.DataValue(ua.Variant(value, data_type)))
+                node.set_value(ua.DataValue(ua.Variant(plc_value, data_type)))
+                print(f"✔️ Wrote {db_field} ({plc_tag}) = {plc_value}")
+
             except Exception as submenu_error:
-                print(f"Error processing Submenu Node ID {submenu_node_id}: {submenu_error}")
+                print(f"❌ Error writing {db_field} ({plc_tag}): {submenu_error}")
 
-        print("POS values, Recipe Name, Recipe ID, and Submenu values written successfully to PLC.")
-    
+        print("✅ POS values, Recipe Name, Recipe ID, and all Submenu values written successfully to PLC.")
+
     except Exception as e:
-        print(f"Error updating PLC: {e}")
-    
+        print(f"❌ Error updating PLC: {e}")
+
     finally:
         client.disconnect()
 
-
-from datetime import datetime
 @app.route('/start_recipe/<int:recipe_id>', methods=['POST'])
 def start_recipe(recipe_id):
     """ Start a recipe batch and log the process """
-    # Check if user is logged in
-    
     if 'username' not in session:
         flash("Please log in to start a recipe.", "warning")
         return redirect(url_for('login'))
@@ -2912,84 +3136,73 @@ def start_recipe(recipe_id):
     if not conn:
         flash("Database connection failed.", "danger")
         return redirect(url_for('recipe_list'))
-    
+
     try:
         cursor = conn.cursor()
-        print("1")
-        # Fetch Recipe Details
-        # Fetch Recipe Details from Recipe Table
-        cursor.execute("SELECT Filter_Size, Filter_Code, Art_No, Recipe_Name,Recipe_ID FROM Recipe WHERE Recipe_ID = ?", (recipe_id,))
+
+        # Fetch Recipe Info
+        cursor.execute(
+            "SELECT Filter_Size, Filter_Code, Art_No, Recipe_Name, Recipe_ID "
+            "FROM Recipe WHERE Recipe_ID = ?", 
+            (recipe_id,)
+        )
         recipe_info = cursor.fetchone()
-        print(r"recipe_info",recipe_info)
+
+        # Fetch Recipe Details
         cursor.execute("SELECT * FROM Recipe_Details1 WHERE Recipe_ID = ?", (recipe_id,))
-        recipe_details = cursor.fetchone()
-        print(recipe_details)
+        recipe_details_row = cursor.fetchone()
+        recipe_details = row_to_dict(cursor, recipe_details_row)
         cursor.execute("SELECT * FROM Sub_Menu WHERE Recipe_ID = ?", (recipe_id,))
-        sub_menu = cursor.fetchone()
-        print(sub_menu)
-        if not recipe_details or not sub_menu:
+        sub_menu_row = cursor.fetchone()
+
+        if not recipe_details_row or not sub_menu_row:
             flash("Recipe details not found!", "danger")
             return redirect(url_for('recipe_details', recipe_id=recipe_id))
-        # Extract Position and Submenu Values
-        pos_values = extract_pos_values([recipe_details])
-        submenu_values = extract_submenu_vaues([sub_menu])
+
+        # ✅ Convert to dicts
+       
+        sub_menu = row_to_dict(cursor, sub_menu_row)
+
+        print("Recipe Details Dict:", recipe_details)
+        print("Sub Menu Dict:", sub_menu)
+        print("Recipe Info Row:", recipe_info)
+       
+
         
-        print("pos_valuues: ",pos_values)
-        print("submenu_valuess: ",submenu_values)
-        update_plc_with_values(pos_values, submenu_values,recipe_info)
-        # Get JSON Payload
+
+        # ✅ Supply dict values to PLC
+        update_plc_with_values(recipe_details, sub_menu, recipe_info)
+
+        # Handle JSON payload
         data = request.get_json()
         if not data:
             return jsonify({"error": "Invalid JSON payload"}), 400
-        print("5")
+
         quantity = data.get('quantity')
         if not quantity:
             return jsonify({"error": "Quantity is required"}), 400
-        print("6")
-        # Generate Batch Code and Timestamp
+
+        # Batch info
         batch_code = f"BATCH-{recipe_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print("7")
-        # Insert into `Recipe_Log` Table
-#         cursor.execute(
-#     '''
-#     INSERT INTO Recipe_Log 
-#     (Batch_Code, Timestamp, Recipe_Name, Article_No, Filter_Size, FilterSize, NgStatus, SerialNo, Parameter1, Parameter2, Batch_Completion_Status)
-#     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-#     ''',
-#     (
-#         batch_code,
-#         timestamp,
-#         recipe_info[3],
-#         recipe_info[2],
-#         recipe_info[0], 
-#         recipe_info[1],  
-#         'NA',  
-#         'NA',
-#         'NA',
-#         'NA',
-#         'Pending'
-#     )
-# )
 
-       
-#         print("8")
-#         conn.commit()
         flash(f"Recipe batch started successfully!", "success")
-        print("9")
+
     except pyodbc.Error as e:
-        conn.rollback()  # Rollback changes on error
+        conn.rollback()
         flash(f"Database error: {str(e)}", "danger")
         return jsonify({"error": f"Database error: {str(e)}"}), 500
     except Exception as e:
         flash(f"Unexpected error: {str(e)}", "danger")
-        return jsonify({"error in last": f"Unexpected error: {str(e)}"}), 500
-
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
     finally:
         conn.close()
 
     return jsonify({"message": "Recipe batch started successfully", "batch_code": batch_code})
-# shreyash's new changes 
+
+def row_to_dict(cursor, row):
+    columns = [col[0] for col in cursor.description]
+    return {col: row[i] if i < len(row) else None for i, col in enumerate(columns)}
 
 @app.route('/addTag', methods=['POST'])
 def add_tag():
@@ -3807,7 +4020,7 @@ def get_recipe():
     recipe_id = request.args.get('recipe_id')
     recipe_name = request.args.get('recipe_name')
 
-    print("📌 Recipe ID received:", recipe_id, "Recipe Name:", recipe_name)  # Debug log
+    print("📌 Recipe ID received:", recipe_id, "Recipe Name:", recipe_name)
 
     if not recipe_id and not recipe_name:
         return jsonify({"success": False, "message": "Recipe ID or Recipe Name is required"})
@@ -3815,115 +4028,129 @@ def get_recipe():
     try:
         cursor = conn.cursor()
 
-        # Fetch data from Recipe table by ID or Name
+        # Fetch data from Recipe table
         if recipe_id:
             cursor.execute("SELECT * FROM Recipe WHERE recipe_id = ?", (recipe_id,))
         else:
             cursor.execute("SELECT * FROM Recipe WHERE recipe_name = ?", (recipe_name,))
         recipe_main = cursor.fetchone()
-        # print("recipe_main: ",recipe_main)
+
         if not recipe_main:
             return jsonify({"success": False, "message": "Recipe not found"})
 
-               # Extract column names
+        # Extract column names
         columns = [column[0] for column in cursor.description]
-
-        # Convert recipe_main tuple to a dictionary
         recipe_main_dict = dict(zip(columns, recipe_main))
-        print("recipe_main_dict: ",recipe_main_dict)
 
-        # Fetch data from Recipe_Details1 (contains Spacer & Alu_roller_type)
+        # Fetch Recipe_Details1 (Spacer, Alu_roller_type, materials, positions)
         cursor.execute("SELECT * FROM Recipe_Details1 WHERE recipe_id = ?", (recipe_main_dict["Recipe_ID"],))
         recipe_pos = cursor.fetchall()
         recipe_pos_list = [{column[0]: value for column, value in zip(cursor.description, row)} for row in recipe_pos]
-        print("📌 Fetched Recipe Positions:", recipe_pos_list)  # Debug log
 
-        # Fetch data from Sub_Menu (contains motor-related details)
+        # Fetch Sub_Menu (machine settings)
         cursor.execute("SELECT * FROM Sub_Menu WHERE recipe_id = ?", (recipe_main_dict["Recipe_ID"],))
         recipe_motor = cursor.fetchone()
         recipe_motor_dict = {column[0]: value for column, value in zip(cursor.description, recipe_motor)} if recipe_motor else {}
-        
-        # Fetch data from Inspection_Settings
+
+        # Fetch Inspection_Settings
         cursor.execute("SELECT * FROM Inspection_Settings WHERE Recipe_ID = ?", (recipe_main_dict["Recipe_ID"],))
         inspection_data = cursor.fetchone()
         inspection_data_dict = {column[0]: value for column, value in zip(cursor.description, inspection_data)} if inspection_data else {}
 
-        # Build the response data
-
-        # Build the response data
+        # Build unified response
         data = {
-           "recipe_id": recipe_main_dict.get("Recipe_ID"),
-           "recipe_name": recipe_main_dict.get("Recipe_Name"),
-           "filter_size": recipe_main_dict.get("Filter_Size"),
-           "filter_code": recipe_main_dict.get("Filter_Code"),
+            "recipe_id": recipe_main_dict.get("Recipe_ID"),
+            "recipe_name": recipe_main_dict.get("Recipe_Name"),
+            "filter_size": recipe_main_dict.get("Filter_Size"),
+            "filter_code": recipe_main_dict.get("Filter_Code"),
             "art_no": recipe_main_dict.get("Art_No"),
-            "Alu_coil_width": recipe_motor_dict.get("alu_coil_width", ""),
-            "Alu_roller_type": "",  # Default, will be overwritten
-            "Spacer": "",  # Default, will be overwritten
-            "Motor_speed": recipe_motor_dict.get("motor_speed", ""),
-            "Motor_stroke": recipe_motor_dict.get("motor_stroke", ""),
-            "Motor_force": recipe_motor_dict.get("other_speed_force", ""),
-            "Corr1Feed_length": recipe_motor_dict.get("Corr1Feed_length", ""),
-    "Corr2feed_length": recipe_motor_dict.get("Corr2feed_length", ""),
-    "Pleat_Height": recipe_motor_dict.get("Pleat_Height", ""),
-    "Blade_opening": recipe_motor_dict.get("Blade_opening", ""),
-    "Left_Blade_MediaTHickness": recipe_motor_dict.get("Left_Blade_MediaTHickness", ""),
-    "Right_Blade_MediaThickness": recipe_motor_dict.get("Right_Blade_MediaThickness", ""),
-    "Soft_Touch": recipe_motor_dict.get("Soft_Touch", ""),
-    "Press_Touch": recipe_motor_dict.get("Press_Touch", ""),
-    "Puller_Start_pos": recipe_motor_dict.get("Puller_Start_pos", ""),
-    "Puller_End_pos": recipe_motor_dict.get("Puller_End_pos", ""),
-    "Puller2_Feed_Correction": recipe_motor_dict.get("Puller2_Feed_Correction", ""),
-    "Filter_Box_Height": recipe_motor_dict.get("Filter_Box_Height", ""),
-    "Filter_Box_Width": recipe_motor_dict.get("Filter_Box_Width", ""),
-    "Filter_Box_Length": recipe_motor_dict.get("Filter_Box_Length", ""),
-    "Set_Pleat_Count": recipe_motor_dict.get("Set_Pleat_Count", ""),
-    "Set_Pleat_Pitch": recipe_motor_dict.get("Set_Pleat_Pitch", ""),
-    "Set_Batch_Count": recipe_motor_dict.get("Set_Batch_COunt", ""),
-    "Machine_Speed_Ref": recipe_motor_dict.get("Machine_Speed_Ref", ""),
-    "Decoiler_Set_point": recipe_motor_dict.get("Decoiler_Set_point", ""),
-    "Low_Dia_Set": recipe_motor_dict.get("Low_Dia_Set", ""),
-    "Cutter_Park_pos": recipe_motor_dict.get("Cutter_Park_pos", ""),
-    "Cutter_Fwd_Pos": recipe_motor_dict.get("Cutter_Fwd_Pos", ""),
-    "databaseAvailable": inspection_data_dict.get("databaseAvailable", ""),
-    "Width": inspection_data_dict.get("Width", ""),
-    "Height": inspection_data_dict.get("Height", ""),
-    "Depth": inspection_data_dict.get("Depth", ""),
-    "Art_Num": inspection_data_dict.get("Art_No", ""),
-    "Air_Flow_Set": inspection_data_dict.get("Air_Flow_Set", ""),
-    "Pressure_Drop_Setpoint": inspection_data_dict.get("Pressure_Drop_Setpoint", ""),
-    "Lower_Tolerance1": inspection_data_dict.get("Lower_Tolerance1", ""),
-    "Lower_Tolerance2": inspection_data_dict.get("Lower_Tolerance2", ""),
-    "Upper_Tolerance1": inspection_data_dict.get("Upper_Tolerance1", ""),
-    "Upper_Tolerance2": inspection_data_dict.get("Upper_Tolerance2", ""),
-};
 
-        # Overwrite Alu_roller_type and Spacer from `recipe_pos` table
+            # Machine settings
+            "Pleat_Height": recipe_motor_dict.get("Pleat_Height", ""),
+            "Blade_Opening": recipe_motor_dict.get("Blade_Opening", ""),
+            "Soft_Touch": recipe_motor_dict.get("Soft_Touch", ""),
+            "Press_Touch": recipe_motor_dict.get("Press_Touch", ""),
+
+            "Feeder1_Media_Thickness": recipe_motor_dict.get("Feeder1_Media_Thickness", ""),
+            "Feeder1_Park_Position": recipe_motor_dict.get("Feeder1_Park_Position", ""),
+            "Feeder2_Media_Thickness": recipe_motor_dict.get("Feeder2_Media_Thickness", ""),
+            "Feeder2_Park_Position": recipe_motor_dict.get("Feeder2_Park_Position", ""),
+
+            "Foil1_Length": recipe_motor_dict.get("Foil1_Length", ""),
+            "Foil1_Length_Offset": recipe_motor_dict.get("Foil1_Length_Offset", ""),
+            "Foil1_Width": recipe_motor_dict.get("Foil1_Width", ""),
+            "Foil1_Tension_Set_Point": recipe_motor_dict.get("Foil1_Tension_Set_Point", ""),
+
+            "Foil2_Length": recipe_motor_dict.get("Foil2_Length", ""),
+            "Foil2_Length_Offset": recipe_motor_dict.get("Foil2_Length_Offset", ""),
+            "Foil2_Width": recipe_motor_dict.get("Foil2_Width", ""),
+            "Foil2_Tension_Set_Point": recipe_motor_dict.get("Foil2_Tension_Set_Point", ""),
+
+            "Puller_Start_Position": recipe_motor_dict.get("Puller_Start_Position", ""),
+            "Puller_End_Position": recipe_motor_dict.get("Puller_End_Position", ""),
+            "Puller2_Feed_Correction": recipe_motor_dict.get("Puller2_Feed_Correction", ""),
+            "Puller_Extra_Stroke_Enable": recipe_motor_dict.get("Puller_Extra_Stroke_Enable", ""),
+
+            "Autofeeding_Offset": recipe_motor_dict.get("Autofeeding_Offset", ""),
+            "Sync_Table_Start_Position": recipe_motor_dict.get("Sync_Table_Start_Position", ""),
+            "Pack_Transfer_Rev_Position": recipe_motor_dict.get("Pack_Transfer_Rev_Position", ""),
+            "Pack_Transfer_Park_Position": recipe_motor_dict.get("Pack_Transfer_Park_Position", ""),
+
+            "Filter_Box_Height": recipe_motor_dict.get("Filter_Box_Height", ""),
+            "Filter_Box_Width": recipe_motor_dict.get("Filter_Box_Width", ""),
+            "Filter_Box_Length": recipe_motor_dict.get("Filter_Box_Length", ""),
+
+            "Pleat_Pitch": recipe_motor_dict.get("Pleat_Pitch", ""),
+            "Pleat_Counts": recipe_motor_dict.get("Pleat_Counts", ""),
+            "Batch_Count": recipe_motor_dict.get("Batch_Count", ""),
+
+            "Foil_Low_Diameter": recipe_motor_dict.get("Foil_Low_Diameter", ""),
+            "Media_Tension_Set_Point": recipe_motor_dict.get("Media_Tension_Set_Point", ""),
+            "Feeding_Conveyor_Speed": recipe_motor_dict.get("Feeding_Conveyor_Speed", ""),
+            "Discharge_Conveyor_Speed": recipe_motor_dict.get("Discharge_Conveyor_Speed", ""),
+
+            "Lid_Placement_Enable": recipe_motor_dict.get("Lid_Placement_Enable", ""),
+            "Lid_Placement_Position": recipe_motor_dict.get("Lid_Placement_Position", ""),
+
+            # Air Inspection Settings
+            "databaseAvailable": inspection_data_dict.get("databaseAvailable", ""),
+            "Width": inspection_data_dict.get("Width", ""),
+            "Height": inspection_data_dict.get("Height", ""),
+            "Depth": inspection_data_dict.get("Depth", ""),
+            "Art_Num": inspection_data_dict.get("Art_No", ""),
+            "Air_Flow_Set": inspection_data_dict.get("Air_Flow_Set", ""),
+            "Pressure_Drop_Setpoint": inspection_data_dict.get("Pressure_Drop_Setpoint", ""),
+            "Lower_Tolerance1": inspection_data_dict.get("Lower_Tolerance1", ""),
+            "Lower_Tolerance2": inspection_data_dict.get("Lower_Tolerance2", ""),
+            "Upper_Tolerance1": inspection_data_dict.get("Upper_Tolerance1", ""),
+            "Upper_Tolerance2": inspection_data_dict.get("Upper_Tolerance2", ""),
+        }
+
+        # Overwrite materials + positions from Recipe_Details1
         for pos in recipe_pos_list:
             data["Alu_roller_type"] = pos.get("Alu_roller_type", "")
             data["Spacer"] = pos.get("Spacer", "")
             data["Alu_Material"] = pos.get("Alu_Material", "")
             data["House_Material"] = pos.get("House_Material", "")
-            # Add positions dynamically
-            for i in range(1, 10):  # Pos1 to Pos9
+            for i in range(1, 10):
                 pos_key = f"Pos{i}"
                 if pos_key in pos:
                     data[pos_key] = pos[pos_key]
 
-        print("📌 Final response data:", data)  # Debug log
-
+        print("📌 Final response data:", data)
         return jsonify({"success": True, **data})
 
     except pyodbc.Error as db_error:
-        print(f"❌ Database error: {db_error}")  # Debug log
+        print(f"❌ Database error: {db_error}")
         return jsonify({"success": False, "message": f"Database error: {str(db_error)}"})
 
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")  # Debug log
+        print(f"❌ Unexpected error: {e}")
         return jsonify({"success": False, "message": str(e)})
 
     finally:
-        conn.close()  # Ensure the connection is closed
+        conn.close()
+
 #report aap.py code
 # Sample data for the report
 @app.route("/report", methods=["GET", "POST"])
@@ -4076,49 +4303,69 @@ def download():
         print("Error Occurred:", str(e))  # Debugging output
         return f"Internal Server Error: {str(e)}", 500  # Send error message
 
+frontend_to_plc_map = {
+    # Step 3: Machine Settings
+    "Pleat_Height": "Pleat_Height",
+    "Soft_Touch": "Soft_Touch",
+    "Feeder1_Media_Thickness": "Left_Blade_MediaTHickness",
+    "Feeder1_Park_Position": "Left_Blade_Start_pos",
+    "Foil1_Length": "Corr1Feed_length",
+    "Foil1_Length_Offset": "Corr1feed_length_offset",
+    "Foil1_Width": "Corr1feed_length_width",
+    "Puller_Start_Position": "Puller_Start_pos",
+    "Autofeeding_Offset": "Auto_Feeding_Offset",
+    "Filter_Box_Height": "Filter_Box_Height",
+    "Filter_Box_Length": "Filter_Box_Length",
+    "Pleat_Pitch": "Set_Pleat_Pitch",
+    "Pleat_Counts": "Set_Pleat_Count",
+    "Foil_Low_Diameter": "Low_Dia_Set",
+    "Feeding_Conveyor_Speed": "Feeding_Conveyor_Speed",
+    "Pack_Transfer_Rev_Position": "Filter_Transfer_pos_rev",
+    "Foil1_Tension_Set_Point": "Corr_1_Set_point",
+    "Foil2_Tension_Set_Point": "Corr_2_Set_point",
+    "Blade_Opening": "Blade_opening",
+    "Press_Touch": "Press_Touch",
+    "Feeder2_Media_Thickness": "Right_Blade_MediaThickness",
+    "Feeder2_Park_Position": "Right_Blade_Start_pos",
+    "Foil2_Length": "Corr2feed_length",
+    "Foil2_Length_Offset": "Corr2feed_length_offset",
+    "Foil2_Width": "Corr2feed_length_width",
+    "Puller_End_Position": "Puller_End_pos",
+    "Puller2_Feed_Correction": "Puller2_Feed_Correction",
+    "Puller_Extra_Stroke_Enable": "PULLER_Extra stoke_Enable",
+    "Filter_Box_Width": "Filter_Box_Width",
+    "Lid_Placement_Enable": "Lid_Placement_Enable",
+    "Lid_Placement_Position": "Lid_Placement_Pos",
+    "Sync_Table_Start_Position": "Sync_Table_Start_Counts",
+    "Batch_Count": "Set_Batch_COunt",
+    "Discharge_Conveyor_Speed": "Discharge_COnvyor_Speed",
+    "Pack_Transfer_Park_Position": "Filter_Transfer_pos_fwd",
+    "Media_Tension_Set_Point": "Media_puller_2_SP",
+}
+
 
 @app.route('/get_last_plc_values', methods=['GET'])
 def get_last_plc_values():
-    client = Client(ENDPOINT_URL)  # OPC UA client
+    from opcua import Client
+    
+    client = Client(ENDPOINT_URL)
     try:
-        # Connect to OPC UA server
         client.connect()
         print("Connected to OPC UA Server")
 
-        # Base node for fetching values
         base_node = 'ns=3;s="dbRecipe1"."Recipe".'
-        # base_node2='ns=3;s="dbRecipe"."Recipe".'
-        
 
-        # Fetch values from OPC UA
-        last_plc_values = {
-            "Motor_speed": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
-            "Motor_stroke": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
-            "Motor_force": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
-            "coil_Width": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
-            "Corr1Feed_length": str(client.get_node(f'{base_node}"Corr1Feed_length"').get_value()),
-            "Corr2feed_length": str(client.get_node(f'{base_node}"Corr2feed_length"').get_value()),
-            "Pleat_Height": str(client.get_node(f'{base_node}"Pleat_Height"').get_value()),
-            "Blade_opening": str(client.get_node(f'{base_node}"Blade_opening"').get_value()),
-            "Left_Blade_MediaTHickness": str(client.get_node(f'{base_node}"Left_Blade_MediaTHickness"').get_value()),
-            "Right_Blade_MediaThickness": str(client.get_node(f'{base_node}"Right_Blade_MediaThickness"').get_value()),
-            "Soft_Touch": str(client.get_node(f'{base_node}"Soft_Touch"').get_value()),
-            "Press_Touch": str(client.get_node(f'{base_node}"Press_Touch"').get_value()),
-            "Puller_Start_pos": str(client.get_node(f'{base_node}"Puller_Start_pos"').get_value()),
-            "Puller_End_pos": str(client.get_node(f'{base_node}"Puller_End_pos"').get_value()),
-            "Puller2_Feed_Correction": str(client.get_node(f'{base_node}"Puller2_Feed_Correction"').get_value()),
-            "Filter_Box_Height": str(client.get_node(f'{base_node}"Filter_Box_Height"').get_value()),
-            "Filter_Box_Width": str(client.get_node(f'{base_node}"Filter_Box_Width"').get_value()),
-            "Filter_Box_Length": str(client.get_node(f'{base_node}"Filter_Box_Length"').get_value()),
-            "Set_Pleat_Count": str(client.get_node(f'{base_node}"Set_Pleat_Count"').get_value()),
-            "Set_Pleat_Pitch": str(client.get_node(f'{base_node}"Set_Pleat_Pitch"').get_value()),
-            "Set_Batch_Count": str(client.get_node(f'{base_node}"Set_Batch_COunt"').get_value()),
-            "Machine_Speed_Ref": str(client.get_node(f'{base_node}"Machine_Speed_Ref"').get_value()),
-            "Decoiler_Set_point": str(client.get_node(f'{base_node}"Decoiler_Set_point"').get_value()),
-            "Low_Dia_Set": str(client.get_node(f'{base_node}"Low_Dia_Set"').get_value()),
-            "Cutter_Park_pos": str(client.get_node(f'{base_node}"Cutter_Park_pos"').get_value()),
-            "Cutter_Fwd_Pos": str(client.get_node(f'{base_node}"Cutter_Fwd_Pos"').get_value())
-        }
+        last_plc_values = {}
+
+        for frontend_field, plc_field in frontend_to_plc_map.items():
+            node_id = f'{base_node}"{plc_field}"'
+            try:
+                node = client.get_node(node_id)
+                value = node.get_value()
+                last_plc_values[frontend_field] = str(value)
+            except Exception as e:
+                print(f"Error fetching {frontend_field} ({node_id}): {e}")
+                last_plc_values[frontend_field] = None
 
         return jsonify(last_plc_values)
 
@@ -4128,6 +4375,7 @@ def get_last_plc_values():
     finally:
         client.disconnect()
         print("Disconnected from OPC UA Server")
+
 def run_periodic_update1():
     while True:
         
@@ -4206,12 +4454,14 @@ def start_periodic_update():
 if __name__ == '__main__':
     print("Starting Flask app...")
     # schedule_live_log_upload_background(interval=10000)
-    threading.Thread(target=run_periodic_update1, daemon=True).start()
-    threading.Thread(target=run_periodic_update3, daemon=True).start()
+    # threading.Thread(target=run_periodic_update1, daemon=True).start()
+    # threading.Thread(target=run_periodic_update3, daemon=True).start()
     thread = threading.Thread(target=opcua_monitoring, daemon=True).start()
+    thread = threading.Thread(target=opcua_qrcode_monitoring, daemon=True).start()
+    
     threading.Thread(target=log_status, daemon=True).start()
     # socketio.run(app, host='0.0.0.0', port=5000)
     start_periodic_update()
-    webbrowser.open("http://127.0.0.1:5000")
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    # webbrowser.open("http://127.0.0.1:5000")
+    app.run(host='127.0.0.1', port=5000, debug=False)
 
