@@ -4,12 +4,20 @@
 
 {% block content %}
 
-<div class="content-header">
-    <h1>Recipe Details for Recipe ID: {{ recipe_details[0][15] }}</h1>  <!-- Adjust index as needed -->
-    <button id="start-recipe-btn" class="add-button">
-        <i class="fas fa-play"></i> Start Recipe 
-    </button>
+<div class="content-header d-flex align-items-center">
+    <h1 class="me-3">Recipe Name/Id: {{ Recipe_Name }}/{{ recipe_details[0][15] }}</h1>
+
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('export_recipe', recipe_id=recipe_id) }}" class="add-button">
+            <i class="fas fa-file-excel"></i> Export
+        </a>
+
+        <button id="start-recipe-btn" class="add-button">
+            <i class="fas fa-play"></i> Start Recipe
+        </button>
+    </div>
 </div>
+
 
 <div id="details-section" class="details-section" >
     <h2>Recipe Details</h2>
@@ -47,7 +55,7 @@
 </div>
 
 <div id="submenu-section" class="submenu-section">
-    <h2>Sub Menu</h2>
+    <h2>Setting Parameters</h2>
 <table class="details-table">
   <thead>
     <tr>
@@ -171,6 +179,7 @@
                 <th>Depth</th>
                 <th>Art No.</th>
                 <th>Air Flow Set</th>
+                <th>Pressure Drop Setpoint</th>
             </tr>
             <tr>
 
@@ -185,6 +194,7 @@
                 <td>{{ inspection_menu['Art_No'] }}</td>
 
                 <td>{{ inspection_menu['Air_Flow_Set'] }}</td>
+                <td>{{ inspection_menu['Pressure_Drop_Setpoint'] }}</td>
 
                 
 
@@ -192,7 +202,7 @@
 
             <tr>
 
-                <th>Pressure Drop Setpoint</th>
+              
 
                 <th>Lower Tolerance 1</th>
 
@@ -202,11 +212,15 @@
 
                 <th>Upper Tolerance 2</th>
 
+                <th>Lower_Fan_Speed</th>
+
+                <th>Upper_Fan_Speed</th>
+
             </tr>
 
             <tr>
 
-                <td>{{ inspection_menu['Pressure_Drop_Setpoint'] }}</td>
+              
 
                 <td>{{inspection_menu['Lower_Tolerance1'] }}</td>
 
@@ -215,6 +229,10 @@
                 <td>{{ inspection_menu['Upper_Tolerance1'] }}</td>
 
                 <td>{{ inspection_menu['Upper_Tolerance2'] }}</td>
+
+                <td>{{ inspection_menu['Lower_Fan_Speed'] }}</td>
+
+                <td>{{ inspection_menu['Upper_Fan_Speed'] }}</td>
 
             </tr>           
         </tbody>
@@ -252,8 +270,9 @@
         <div class="popup-body" style="max-height: 650px; overflow-y: auto;">
             <table class="details-table1">
                 <tr>
-                    <td>Quantity:</td>
-                    <td><input type="text" id="quantity" placeholder="Enter Quantity"></td>
+                   <td>Quantity:</td>
+                   <td><input type="text" id="quantity" value="1" placeholder="Enter Quantity"></td>
+
                     <td>Pleat Height:</td>
                     <td><input type="text" value="{{ sub_menu.Pleat_Height }}" readonly></td>
                     <td>Soft Touch:</td>
@@ -611,10 +630,13 @@ function startRecipe(recipeId) {
     .then((response) => response.json()) // Parse JSON response
     .then((data) => {
         if (data.error) {
-            alert(`Error by shreyash: ${data.error}`); // Show error from backend
+            alert(`Error in Starting : ${data.error}`); // Show error from backend
         } else {
             alert("Recipe started successfully! Batch Code: " + data.batch_code);
-            // toggleRecipePopup(); // Close popup after success
+           
+ // ✅ Close popup after success
+        const popup = document.getElementById("recipe-popup");
+        popup.style.display = "none";
         }
     })
     .catch((error) => {

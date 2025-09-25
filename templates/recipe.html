@@ -80,7 +80,7 @@
         {% for i in range(1, 10) %}
             <label for="pos{{ i }}">Roll Position {{ i }}:</label>
             <select id="pos{{ i }}" name="pos{{ i }}" class="roll-select" style="width: 125px;">
-                <option value="" disabled selected>Select value</option>
+                <option value="">No Selection</option>
                 {% for value in pos_values %}
                     <option value="{{ value }}">{{ value }}</option>
                 {% endfor %}
@@ -98,7 +98,7 @@
         <!-- Alu_Mat Dropdown -->
         <label for="alu_mat">Alu_Materials:</label>
         <select id="alu_mat" name="alu_mat" class="roll-select" style="width: 125px;">
-            <option value="" disabled selected>Select value</option>
+                <option value="">No Selection</option>
             {% for value in alu_values %}
                 <option value="{{ value }}">{{ value }}</option>
             {% endfor %}
@@ -107,7 +107,7 @@
         <!-- House_Mat Dropdown -->
         <label for="house_mat">House_Materials:</label>
         <select id="house_mat" name="house_mat" class="roll-select" style="width: 125px;">
-            <option value="" disabled selected>Select value</option>
+                <option value="">No Selection</option>
             {% for value in h_values %}
                 <option value="{{ value }}">{{ value }}</option>
             {% endfor %}
@@ -125,245 +125,274 @@
             <!-- Step 3: Machine Settings -->
 <!-- Step 3: Machine Settings -->
 <!-- Step 3: Machine Settings -->
+<style>
+/* New value inputs → Yellowish */
+input[type="text"]:not([readonly]) {
+  background-color: #fff8d6; /* light yellow */
+  border: 1px solid #ccc;
+}
+
+/* Old value inputs → Bluish */
+input[readonly] {
+  background-color: #d6e9ff; /* light blue */
+  border: 1px solid #aaa;
+}
+</style>
+
 <div class="form-step" id="step3" style="display:none;">
   <h1 style="text-align: center; margin-bottom: 15px;">Machine Settings</h1>
   <div class="form-row3">
 
     <!-- 1. PLEAT HEIGHT -->
     <div class="field-group">
-      <label for="Pleat_Height">PLEAT HEIGHT :</label>
+      <label for="Pleat_Height">PLEAT HEIGHT (mm):</label>
       <input type="text" id="Pleat_Height" name="Pleat_Height" placeholder="New Value">
-      <input type="text" id="Pleat_Height_old" name="Pleat_Height_old" placeholder="Old Value" readonly>
+      <input type="text" id="Pleat_Height_old" name="Pleat_Height_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 2. BLADE OPENING -->
     <div class="field-group">
-      <label for="Blade_Opening">BLADE OPENING :</label>
+      <label for="Blade_Opening">BLADE OPENING (mm):</label>
       <input type="text" id="Blade_Opening" name="Blade_Opening" placeholder="New Value">
-      <input type="text" id="Blade_Opening_old" name="Blade_Opening_old" placeholder="Old Value" readonly>
+      <input type="text" id="Blade_Opening_old" name="Blade_Opening_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 3. SOFT TOUCH -->
     <div class="field-group">
-      <label for="Soft_Touch">SOFT TOUCH :</label>
+      <label for="Soft_Touch">SOFT TOUCH (mm):</label>
       <input type="text" id="Soft_Touch" name="Soft_Touch" placeholder="New Value">
-      <input type="text" id="Soft_Touch_old" name="Soft_Touch_old" placeholder="Old Value" readonly>
+      <input type="text" id="Soft_Touch_old" name="Soft_Touch_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 4. PRESS TOUCH -->
     <div class="field-group">
-      <label for="Press_Touch">PRESS TOUCH :</label>
+      <label for="Press_Touch">PRESS TOUCH (mm):</label>
       <input type="text" id="Press_Touch" name="Press_Touch" placeholder="New Value">
-      <input type="text" id="Press_Touch_old" name="Press_Touch_old" placeholder="Old Value" readonly>
+      <input type="text" id="Press_Touch_old" name="Press_Touch_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 5. FEEDER 1 MEDIA THICKNESS -->
     <div class="field-group">
-      <label for="Feeder1_Media_Thickness">FEEDER 1 MEDIA THICKNESS :</label>
+      <label for="Feeder1_Media_Thickness">FEEDER 1 MEDIA THICKNESS (mm):</label>
       <input type="text" id="Feeder1_Media_Thickness" name="Feeder1_Media_Thickness" placeholder="New Value">
-      <input type="text" id="Feeder1_Media_Thickness_old" name="Feeder1_Media_Thickness_old" placeholder="Old Value" readonly>
+      <input type="text" id="Feeder1_Media_Thickness_old" name="Feeder1_Media_Thickness_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 6. FEEDER 2 MEDIA THICKNESS -->
     <div class="field-group">
-      <label for="Feeder2_Media_Thickness">FEEDER 2 MEDIA THICKNESS :</label>
+      <label for="Feeder2_Media_Thickness">FEEDER 2 MEDIA THICKNESS (mm):</label>
       <input type="text" id="Feeder2_Media_Thickness" name="Feeder2_Media_Thickness" placeholder="New Value">
-      <input type="text" id="Feeder2_Media_Thickness_old" name="Feeder2_Media_Thickness_old" placeholder="Old Value" readonly>
+      <input type="text" id="Feeder2_Media_Thickness_old" name="Feeder2_Media_Thickness_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 7. FEEDER 1 PARK POSITION -->
     <div class="field-group">
-      <label for="Feeder1_Park_Position">FEEDER 1 PARK POSITION :</label>
+      <label for="Feeder1_Park_Position">FEEDER 1 PARK POSITION (mm):</label>
       <input type="text" id="Feeder1_Park_Position" name="Feeder1_Park_Position" placeholder="New Value">
-      <input type="text" id="Feeder1_Park_Position_old" name="Feeder1_Park_Position_old" placeholder="Old Value" readonly>
+      <input type="text" id="Feeder1_Park_Position_old" name="Feeder1_Park_Position_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 8. FEEDER 2 PARK POSITION -->
     <div class="field-group">
-      <label for="Feeder2_Park_Position">FEEDER 2 PARK POSITION :</label>
+      <label for="Feeder2_Park_Position">FEEDER 2 PARK POSITION (mm):</label>
       <input type="text" id="Feeder2_Park_Position" name="Feeder2_Park_Position" placeholder="New Value">
-      <input type="text" id="Feeder2_Park_Position_old" name="Feeder2_Park_Position_old" placeholder="Old Value" readonly>
+      <input type="text" id="Feeder2_Park_Position_old" name="Feeder2_Park_Position_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 9. FOIL 1 LENGTH -->
     <div class="field-group">
-      <label for="Foil1_Length">FOIL 1 LENGTH :</label>
+      <label for="Foil1_Length">FOIL 1 LENGTH (mm):</label>
       <input type="text" id="Foil1_Length" name="Foil1_Length" placeholder="New Value">
-      <input type="text" id="Foil1_Length_old" name="Foil1_Length_old" placeholder="Old Value" readonly>
+      <input type="text" id="Foil1_Length_old" name="Foil1_Length_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 10. FOIL 2 LENGTH -->
     <div class="field-group">
-      <label for="Foil2_Length">FOIL 2 LENGTH :</label>
+      <label for="Foil2_Length">FOIL 2 LENGTH (mm):</label>
       <input type="text" id="Foil2_Length" name="Foil2_Length" placeholder="New Value">
-      <input type="text" id="Foil2_Length_old" name="Foil2_Length_old" placeholder="Old Value" readonly>
+      <input type="text" id="Foil2_Length_old" name="Foil2_Length_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 11. FOIL 1 LENGTH OFFSET -->
     <div class="field-group">
-      <label for="Foil1_Length_Offset">FOIL 1 LENGTH OFFSET :</label>
-      <input type="text" id="Foil1_Length_Offset" name="Foil1_Length_Offset" placeholder="New Value">
-      <input type="text" id="Foil1_Length_Offset_old" name="Foil1_Length_Offset_old" placeholder="Old Value" readonly>
+      <label for="Foil1_Length_Offset">FOIL 1 LENGTH OFFSET (mm):</label>
+      <input type="text" id="Foil1_Length_Offset" name="Foil1_Length_Offset" placeholder="NewValue">
+      <input type="text" id="Foil1_Length_Offset_old" name="Foil1_Length_Offset_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 12. FOIL 2 LENGTH OFFSET -->
     <div class="field-group">
-      <label for="Foil2_Length_Offset">FOIL 2 LENGTH OFFSET :</label>
+      <label for="Foil2_Length_Offset">FOIL 2 LENGTH OFFSET (mm):</label>
       <input type="text" id="Foil2_Length_Offset" name="Foil2_Length_Offset" placeholder="New Value">
-      <input type="text" id="Foil2_Length_Offset_old" name="Foil2_Length_Offset_old" placeholder="Old Value" readonly>
+      <input type="text" id="Foil2_Length_Offset_old" name="Foil2_Length_Offset_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 13. FOIL 1 WIDTH -->
     <div class="field-group">
-      <label for="Foil1_Width">FOIL 1 WIDTH :</label>
+      <label for="Foil1_Width">FOIL 1 WIDTH (mm):</label>
       <input type="text" id="Foil1_Width" name="Foil1_Width" placeholder="New Value">
-      <input type="text" id="Foil1_Width_old" name="Foil1_Width_old" placeholder="Old Value" readonly>
+      <input type="text" id="Foil1_Width_old" name="Foil1_Width_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 14. FOIL 2 WIDTH -->
     <div class="field-group">
-      <label for="Foil2_Width">FOIL 2 WIDTH :</label>
+      <label for="Foil2_Width">FOIL 2 WIDTH (mm):</label>
       <input type="text" id="Foil2_Width" name="Foil2_Width" placeholder="New Value">
-      <input type="text" id="Foil2_Width_old" name="Foil2_Width_old" placeholder="Old Value" readonly>
+      <input type="text" id="Foil2_Width_old" name="Foil2_Width_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 15. PULLER START POSITION -->
     <div class="field-group">
-      <label for="Puller_Start_Position">PULLER START POSITION :</label>
+      <label for="Puller_Start_Position">PULLER START POSITION (mm):</label>
       <input type="text" id="Puller_Start_Position" name="Puller_Start_Position" placeholder="New Value">
-      <input type="text" id="Puller_Start_Position_old" name="Puller_Start_Position_old" placeholder="Old Value" readonly>
+      <input type="text" id="Puller_Start_Position_old" name="Puller_Start_Position_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 16. PULLER END POSITION -->
     <div class="field-group">
-      <label for="Puller_End_Position">PULLER END POSITION :</label>
+      <label for="Puller_End_Position">PULLER END POSITION (mm):</label>
       <input type="text" id="Puller_End_Position" name="Puller_End_Position" placeholder="New Value">
-      <input type="text" id="Puller_End_Position_old" name="Puller_End_Position_old" placeholder="Old Value" readonly>
+      <input type="text" id="Puller_End_Position_old" name="Puller_End_Position_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 17. AUTOFEEDING OFFSET -->
     <div class="field-group">
-      <label for="Autofeeding_Offset">AUTOFEEDING OFFSET :</label>
+      <label for="Autofeeding_Offset">AUTOFEEDING OFFSET (mm):</label>
       <input type="text" id="Autofeeding_Offset" name="Autofeeding_Offset" placeholder="New Value">
-      <input type="text" id="Autofeeding_Offset_old" name="Autofeeding_Offset_old" placeholder="Old Value" readonly>
+      <input type="text" id="Autofeeding_Offset_old" name="Autofeeding_Offset_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 18. PULLER 2 FEED CORRECTION -->
     <div class="field-group">
-      <label for="Puller2_Feed_Correction">PULLER 2 FEED CORRECTION :</label>
+      <label for="Puller2_Feed_Correction">PULLER 2 FEED CORRECTION (mm):</label>
       <input type="text" id="Puller2_Feed_Correction" name="Puller2_Feed_Correction" placeholder="New Value">
-      <input type="text" id="Puller2_Feed_Correction_old" name="Puller2_Feed_Correction_old" placeholder="Old Value" readonly>
+      <input type="text" id="Puller2_Feed_Correction_old" name="Puller2_Feed_Correction_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 19. FILTER BOX HEIGHT -->
     <div class="field-group">
-      <label for="Filter_Box_Height">FILTER BOX HEIGHT :</label>
+      <label for="Filter_Box_Height">FILTER BOX HEIGHT (mm):</label>
       <input type="text" id="Filter_Box_Height" name="Filter_Box_Height" placeholder="New Value">
-      <input type="text" id="Filter_Box_Height_old" name="Filter_Box_Height_old" placeholder="Old Value" readonly>
+      <input type="text" id="Filter_Box_Height_old" name="Filter_Box_Height_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 20. PULLER EXTRA STROKE ENABLE -->
     <div class="field-group">
-      <label for="Puller_Extra_Stroke_Enable">PULLER EXTRA STROKE ENABLE :</label>
+      <label for="Puller_Extra_Stroke_Enable">PULLER EXTRA STROKE ENABLE (0/1):</label>
       <input type="text" id="Puller_Extra_Stroke_Enable" name="Puller_Extra_Stroke_Enable" placeholder="New Value">
-      <input type="text" id="Puller_Extra_Stroke_Enable_old" name="Puller_Extra_Stroke_Enable_old" placeholder="Old Value" readonly>
+      <input type="text" id="Puller_Extra_Stroke_Enable_old" name="Puller_Extra_Stroke_Enable_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 21. FILTER BOX LENGTH -->
     <div class="field-group">
-      <label for="Filter_Box_Length">FILTER BOX LENGTH :</label>
+      <label for="Filter_Box_Length">FILTER BOX LENGTH (mm):</label>
       <input type="text" id="Filter_Box_Length" name="Filter_Box_Length" placeholder="New Value">
-      <input type="text" id="Filter_Box_Length_old" name="Filter_Box_Length_old" placeholder="Old Value" readonly>
+      <input type="text" id="Filter_Box_Length_old" name="Filter_Box_Length_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 22. FILTER BOX WIDTH -->
     <div class="field-group">
-      <label for="Filter_Box_Width">FILTER BOX WIDTH :</label>
+      <label for="Filter_Box_Width">FILTER BOX WIDTH (mm):</label>
       <input type="text" id="Filter_Box_Width" name="Filter_Box_Width" placeholder="New Value">
-      <input type="text" id="Filter_Box_Width_old" name="Filter_Box_Width_old" placeholder="Old Value" readonly>
+      <input type="text" id="Filter_Box_Width_old" name="Filter_Box_Width_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 23. PLEAT PITCH -->
     <div class="field-group">
-      <label for="Pleat_Pitch">PLEAT PITCH :</label>
+      <label for="Pleat_Pitch">PLEAT PITCH (mm):</label>
       <input type="text" id="Pleat_Pitch" name="Pleat_Pitch" placeholder="New Value">
-      <input type="text" id="Pleat_Pitch_old" name="Pleat_Pitch_old" placeholder="Old Value" readonly>
+      <input type="text" id="Pleat_Pitch_old" name="Pleat_Pitch_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 24. LID PLACEMENT ENABLE -->
     <div class="field-group">
-      <label for="Lid_Placement_Enable">LID PLACEMENT ENABLE :</label>
+      <label for="Lid_Placement_Enable">LID PLACEMENT ENABLE (0/1):</label>
       <input type="text" id="Lid_Placement_Enable" name="Lid_Placement_Enable" placeholder="New Value">
-      <input type="text" id="Lid_Placement_Enable_old" name="Lid_Placement_Enable_old" placeholder="Old Value" readonly>
+      <input type="text" id="Lid_Placement_Enable_old" name="Lid_Placement_Enable_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 25. PLEAT COUNTS -->
     <div class="field-group">
-      <label for="Pleat_Counts">PLEAT COUNTS :</label>
+      <label for="Pleat_Counts">PLEAT COUNTS (nos):</label>
       <input type="text" id="Pleat_Counts" name="Pleat_Counts" placeholder="New Value">
-      <input type="text" id="Pleat_Counts_old" name="Pleat_Counts_old" placeholder="Old Value" readonly>
+      <input type="text" id="Pleat_Counts_old" name="Pleat_Counts_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 26. LID PLACEMENT POSITION -->
     <div class="field-group">
-      <label for="Lid_Placement_Position">LID PLACEMENT POSITION :</label>
+      <label for="Lid_Placement_Position">LID PLACEMENT POSITION (mm):</label>
       <input type="text" id="Lid_Placement_Position" name="Lid_Placement_Position" placeholder="New Value">
-      <input type="text" id="Lid_Placement_Position_old" name="Lid_Placement_Position_old" placeholder="Old Value" readonly>
+      <input type="text" id="Lid_Placement_Position_old" name="Lid_Placement_Position_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 27. FOIL LOW DIAMETER -->
     <div class="field-group">
-      <label for="Foil_Low_Diameter">FOIL LOW DIAMETER :</label>
+      <label for="Foil_Low_Diameter">FOIL LOW DIAMETER (mm):</label>
       <input type="text" id="Foil_Low_Diameter" name="Foil_Low_Diameter" placeholder="New Value">
-      <input type="text" id="Foil_Low_Diameter_old" name="Foil_Low_Diameter_old" placeholder="Old Value" readonly>
+      <input type="text" id="Foil_Low_Diameter_old" name="Foil_Low_Diameter_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 28. SYNC TABLE START POSITION -->
     <div class="field-group">
-      <label for="Sync_Table_Start_Position">SYNC TABLE START POSITION :</label>
+      <label for="Sync_Table_Start_Position">SYNC TABLE START POSITION (nos):</label>
       <input type="text" id="Sync_Table_Start_Position" name="Sync_Table_Start_Position" placeholder="New Value">
-      <input type="text" id="Sync_Table_Start_Position_old" name="Sync_Table_Start_Position_old" placeholder="Old Value" readonly>
+      <input type="text" id="Sync_Table_Start_Position_old" name="Sync_Table_Start_Position_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 29. FEEDING CONVEYOR SPEED -->
     <div class="field-group">
-      <label for="Feeding_Conveyor_Speed">FEEDING CONVEYOR SPEED :</label>
+      <label for="Feeding_Conveyor_Speed">FEEDING CONVEYOR SPEED (Hz):</label>
       <input type="text" id="Feeding_Conveyor_Speed" name="Feeding_Conveyor_Speed" placeholder="New Value">
-      <input type="text" id="Feeding_Conveyor_Speed_old" name="Feeding_Conveyor_Speed_old" placeholder="Old Value" readonly>
+      <input type="text" id="Feeding_Conveyor_Speed_old" name="Feeding_Conveyor_Speed_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 30. BATCH COUNT -->
     <div class="field-group">
-      <label for="Batch_Count">BATCH COUNT :</label>
+      <label for="Batch_Count">BATCH COUNT (nos):</label>
       <input type="text" id="Batch_Count" name="Batch_Count" placeholder="New Value">
-      <input type="text" id="Batch_Count_old" name="Batch_Count_old" placeholder="Old Value" readonly>
+      <input type="text" id="Batch_Count_old" name="Batch_Count_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 31. PACK TRANSFER REV POSITION -->
     <div class="field-group">
-      <label for="Pack_Transfer_Rev_Position">PACK TRANSFER REV POSITION :</label>
+      <label for="Pack_Transfer_Rev_Position">PACK TRANSFER REV POSITION (mm):</label>
       <input type="text" id="Pack_Transfer_Rev_Position" name="Pack_Transfer_Rev_Position" placeholder="New Value">
-      <input type="text" id="Pack_Transfer_Rev_Position_old" name="Pack_Transfer_Rev_Position_old" placeholder="Old Value" readonly>
+      <input type="text" id="Pack_Transfer_Rev_Position_old" name="Pack_Transfer_Rev_Position_old" placeholder="Current Value" readonly>
     </div>
+
     <!-- 32. DISCHARGE CONVEYOR SPEED -->
     <div class="field-group">
-      <label for="Discharge_Conveyor_Speed">DISCHARGE CONVEYOR SPEED :</label>
+      <label for="Discharge_Conveyor_Speed">DISCHARGE CONVEYOR SPEED (Hz):</label>
       <input type="text" id="Discharge_Conveyor_Speed" name="Discharge_Conveyor_Speed" placeholder="New Value">
-      <input type="text" id="Discharge_Conveyor_Speed_old" name="Discharge_Conveyor_Speed_old" placeholder="Old Value" readonly>
+      <input type="text" id="Discharge_Conveyor_Speed_old" name="Discharge_Conveyor_Speed_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 33. FOIL 1 TENSION SET POINT -->
-  
     <div class="field-group">
-  <label for="Foil1_Tension_Set_Point">FOIL1 TENSION SET POINT :</label>
-  <input type="text" id="Foil1_Tension_Set_Point" name="Foil1_Tension_Set_Point" placeholder="New Value">
-  <input type="text" id="Foil1_Tension_Set_Point_old" name="Foil1_Tension_Set_Point_old" placeholder="Old Value" readonly>
-</div>
-
+      <label for="Foil1_Tension_Set_Point">FOIL 1 TENSION SET POINT (%):</label>
+      <input type="text" id="Foil1_Tension_Set_Point" name="Foil1_Tension_Set_Point" placeholder="NewValue">
+      <input type="text" id="Foil1_Tension_Set_Point_old" name="Foil1_Tension_Set_Point_old" placeholder="Current Value" readonly>
+    </div>
 
     <!-- 34. PACK TRANSFER PARK POSITION -->
     <div class="field-group">
-      <label for="Pack_Transfer_Park_Position">PACK TRANSFER PARK POSITION :</label>
+      <label for="Pack_Transfer_Park_Position">PACK TRANSFER PARK POSITION (mm):</label>
       <input type="text" id="Pack_Transfer_Park_Position" name="Pack_Transfer_Park_Position" placeholder="New Value">
-      <input type="text" id="Pack_Transfer_Park_Position_old" name="Pack_Transfer_Park_Position_old" placeholder="Old Value" readonly>
+      <input type="text" id="Pack_Transfer_Park_Position_old" name="Pack_Transfer_Park_Position_old" placeholder="Current Value" readonly>
     </div>
 
     <!-- 35. FOIL 2 TENSION SET POINT -->
     <div class="field-group">
-  <label for="Foil2_Tension_Set_Point">FOIL2 TENSION SET POINT :</label>
-  <input type="text" id="Foil2_Tension_Set_Point" name="Foil2_Tension_Set_Point" placeholder="New Value">
-  <input type="text" id="Foil2_Tension_Set_Point_old" name="Foil2_Tension_Set_Point_old" placeholder="Old Value" readonly>
-</div>
+      <label for="Foil2_Tension_Set_Point">FOIL 2 TENSION SET POINT (%):</label>
+      <input type="text" id="Foil2_Tension_Set_Point" name="Foil2_Tension_Set_Point" placeholder="New Value">
+      <input type="text" id="Foil2_Tension_Set_Point_old" name="Foil2_Tension_Set_Point_old" placeholder="Current Value" readonly>
+    </div>
+
     <!-- 36. MEDIA TENSION SET POINT -->
     <div class="field-group">
-      <label for="Media_Tension_SetPoint">MEDIA TENSION SET POINT :</label>
+      <label for="Media_Tension_Set_Point">MEDIA TENSION SET POINT (%):</label>
       <input type="text" id="Media_Tension_Set_Point" name="Media_Tension_Set_Point" placeholder="New Value">
-      <input type="text" id="Media_Tension_Set_Point_old" name="Media_Tension_Set_Point_old" placeholder="Old Value" readonly>
+      <input type="text" id="Media_Tension_Set_Point_old" name="Media_Tension_Set_Point_old" placeholder="Current Value" readonly>
     </div>
 
   </div>
@@ -374,6 +403,7 @@
     <button type="button" onclick="nextStep()">Next</button>
   </div>
 </div>
+
 
 
         
@@ -447,6 +477,16 @@
       <input type="text" id="Upper_Tolerance2" name="Upper_Tolerance2" placeholder="New Value">
       <input type="text" id="Upper_Tolerance2_old" name="Upper_Tolerance2_old" placeholder="Old Value" readonly>
     </div>
+    <div class="field-row">
+      <label for="Lower_Fan_Speed">Lower_Fan_Speed:</label>
+      <input type="text" id="Lower_Fan_Speed" name="Lower_Fan_Speed" placeholder="New Value">
+      <input type="text" id="Lower_Fan_Speed_old" name="Lower_Fan_Speed_old" placeholder="Old Value" readonly>
+    </div>
+    <div class="field-row">
+      <label for="Upper_Fan_Speed">Upper_Fan_Speed:</label>
+      <input type="text" id="Upper_Fan_Speed" name="Upper_Fan_Speed" placeholder="New Value">
+      <input type="text" id="Upper_Fan_Speed_old" name="Upper_Fan_Speed_old" placeholder="Old Value" readonly>
+    </div>
   </div>
 
   <div class="form-buttons">
@@ -505,7 +545,7 @@
             {% for i in range(1, 10) %}
             <label for="update_pos{{ i }}">Roll Positions{{ i }}:</label>
             <select  class="roll-select" id="update_pos{{ i }}" name="pos{{ i }}" style="width: 125px;" >
-                <option value="" disabled selected>Select a value</option>
+                  <option value="">No Selection</option>
                 {% for value in pos_values %}
                 <option value="{{ value }}">{{ value }}</option>
                 {% endfor %}
@@ -513,7 +553,7 @@
             {% endfor %}
             <label for="update_alu_mat">Alu_Materials:</label>
             <select class="roll-select" id="update_alu_mat" name="alu_mat" style="width: 125px;">
-                <option value="" disabled selected>Select value</option>
+                             <option value="">No Selection</option>
                 {% for value in alu_values %}
                     <option value="{{ value }}">{{ value }}</option>
                 {% endfor %}
@@ -522,7 +562,7 @@
             <!-- House_Mat Dropdown -->
             <label for="update_house_mat">House_Materials:</label>
             <select class="roll-select" id="update_house_mat" name="house_mat" style="width: 125px;">
-                <option value="" disabled selected>Select value</option>
+                                <option value="">No Selection</option>
                 {% for value in h_values %}
                     <option value="{{ value }}">{{ value }}</option>
                 {% endfor %}
@@ -853,6 +893,17 @@
                 <input type="text" id="update_Upper_Tolerance2" name="Upper_Tolerance2">
                 <input type="text" id="old_Upper_Tolerance2" class="old-value" placeholder="Old Value" readonly>
               </div>
+              <div class="field-row">
+                <label for="update_Lower_Fan_Speed">Lower_Fan_Speed:</label>
+                <input type="text" id="update_Lower_Fan_Speed" name="Lower_Fan_Speed">
+                <input type="text" id="old_Lower_Fan_Speed"  placeholder="Old Value" readonly>
+             </div>
+               <div class="field-row">
+                <label for="update_Upper_Fan_Speed">Lower_Fan_Speed:</label>
+                <input type="text" id="update_Upper_Fan_Speed" name="Upper_Fan_Speed">
+                <input type="text" id="old_Upper_Fan_Speed"  placeholder="Old Value" readonly>
+             </div>
+           
             </div>
           
             <div class="form-buttons">
@@ -996,7 +1047,7 @@
 }
 
 .field-group input {
-  width: 100px;
+  width: 110px;
   padding: 4px 6px;
   border-radius: 4px;
   border: 1px solid #ccc;
@@ -1214,8 +1265,9 @@ function loadRecipe() {
 
             if (data.success) {
                 // Step 1: Basic info
-                document.getElementById("recipe_id").value = data.recipe_id || "";
-                document.getElementById("recipe_name").value = data.recipe_name || "";
+                document.getElementById("recipe_id").value = nextRecipeId;
+                document.getElementById("recipe_name").value = (data.recipe_name ?? "") + "_copy";
+
                 document.getElementById("filter_size").value = data.filter_size || "";
                 document.getElementById("filter_code").value = data.filter_code || "";
                 document.getElementById("art_no").value = data.art_no || "";
@@ -1291,6 +1343,8 @@ function loadRecipe() {
                 document.getElementById("Lower_Tolerance2").value = data.Lower_Tolerance2 || "";
                 document.getElementById("Upper_Tolerance1").value = data.Upper_Tolerance1 || "";
                 document.getElementById("Upper_Tolerance2").value = data.Upper_Tolerance2 || "";
+                document.getElementById("Lower_Fan_Speed").value = data.Lower_Fan_Speed || "";
+                document.getElementById("Upper_Fan_Speed").value = data.Upper_Fan_Speed || "";
 
                 alert("Recipe loaded successfully!");
             } else {
@@ -1318,6 +1372,7 @@ function loadLastPLCValues() {
         })
         .catch(err => console.error("Error loading PLC values:", err));
 }
+
 function loadLastPLCValues2() {
     fetch('/get_last_plc_values')
         .then(response => response.json())
@@ -1332,7 +1387,9 @@ function loadLastPLCValues2() {
         })
         .catch(err => console.error("Error loading PLC values:", err));
 }
+
 loadLastPLCValues2()
+
 function openUpdatePopup(recipeId) {
     // Show the update popup
     document.getElementById('update-recipe-section').style.display = 'block';
@@ -1417,6 +1474,8 @@ function openUpdatePopup(recipeId) {
                 document.getElementById("update_Lower_Tolerance2").value = data.Lower_Tolerance2 || "";
                 document.getElementById("update_Upper_Tolerance1").value = data.Upper_Tolerance1 || "";
                 document.getElementById("update_Upper_Tolerance2").value = data.Upper_Tolerance2 || "";
+                document.getElementById("update_Lower_Fan_Speed").value = data.Lower_Fan_Speed || "";
+                document.getElementById("update_Upper_Fan_Speed").value = data.Upper_Fan_Speed || "";
 
             } else {
                 alert("Recipe not found!");

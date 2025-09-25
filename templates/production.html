@@ -9,24 +9,108 @@
     </div>
 {% endblock %}
 {% block content %}
+<style>
+  .filter-export-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  .filters {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+  }
+
+  .filters label {
+      margin: 0;
+      font-weight: bold;
+  }
+
+  .filters input[type="datetime-local"] {
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+  }
+
+  .filters button {
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+  }
+
+  .filters button:hover {
+      background-color: #0b5ed7;
+  }
+
+  .export-btn button {
+      background-color: #3c7de5;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+  }
+
+  .export-btn button:hover {
+      background-color: #0f0779;
+  }
+</style>
+
+
 <div class="container mt-5">  
-    <table class="table table-bordered table-striped">
-        <thead class="thead-dark">
-            <tr>
-                <th>Filter Code</th>
-                <th>Timestamp</th>
-                <th>Recipe Name</th>
-                <th>Article No</th>
-                <th>Filter Size</th>
-                <th>FilterSize</th>
-                <th>Ng Status</th>
-                <th>Serial No</th>
-                <th>AvgAirFlow</th>
-                <th>AvgResult</th>
-                <th>Filter Completion Status</th>
-                <th>Print</th>
-            </tr>
-        </thead>
+<div class="filter-export-container">
+    <!-- Date Filters -->
+    <div class="filters">
+        <label for="startDate">From:</label>
+        <input type="datetime-local" id="startDate">
+        <label for="endDate">To:</label>
+        <input type="datetime-local" id="endDate">
+        <button onclick="applyFilter()"><i class="fas fa-filter"></i> Filter</button>
+    </div>
+
+    <!-- Export Button -->
+    <div class="export-btn">
+        <button onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Export to Excel</button>
+    </div>
+</div>
+<table class="table table-bordered table-striped">
+<thead class="thead-dark">
+  <tr>
+    <th>Serial No</th>
+    <th>Recipe Name</th>
+    <th> Date/Time</th>
+    <th>Filter Code</th>
+    <th>RPM (Upper, Lower)<sub>RPM</sub></th>
+    <th>Pressure (Upper, Lower)<sub>Pa</sub></th>
+    <th>AirFlow (Upper, Lower)<sub>m³/h</sub></th>
+    <th>Pressure (Max, Min)<sub>Pa</sub></th>
+    <th>Average Motor<sub>RPM</sub></th>
+    <th>Average Air Flow<sub>m³/h</sub></th>
+    <th>Avg Pressure Diff<sub>Pa</sub></th>
+    <th>User</th>
+    <th>Test Time<sub>sec</sub></th>
+    <th>Judgement (NgStatus)</th>
+    <th>Print</th>
+  </tr>
+</thead>
         <tbody id="recipe-log-table">
             <!-- Data will be dynamically inserted here -->
         </tbody>
@@ -67,20 +151,27 @@
 
         visibleData.forEach(row => {
             tableBody.innerHTML += `
-                <tr>
-                    <td>${row.Batch_Code}</td>
-                    <td>${row.Timestamp}</td>
-                    <td>${row.Recipe_Name}</td>
-                    <td>${row.Article_No}</td>
-                    <td>${row.Filter_Size}</td>
-                    <td>${row.FilterSize}</td>
-                    <td>${row.NgStatus}</td>
-                    <td>${row.SerialNo}</td>
-                    <td>${row.Parameter1}</td>
-                    <td>${row.Parameter2}</td>
-                    <td>${row.Batch_Completion_Status}</td>
-                    <td><button class="print-btn" onclick="rePrint(${row.SerialNo})">Re-Print</button></td>
-                </tr>
+                 <tr>
+    <td>${row.SerialNo}</td>
+    <td>${row.Recipe_Name}</td>
+    <td>${row.Timestamp}</td>
+    <td>${row.Article_No}</td>
+
+    <!-- Limits shown as comma separated -->
+    <td>${row.RPM_Upper}, ${row.RPM_Lower}</td>
+    <td>${row.Pressure_Upper}, ${row.Pressure_Lower}</td>
+    <td>${row.AirFlow_Upper}, ${row.AirFlow_Lower}</td>
+    <td>${row.Pressure_Max}, ${row.Pressure_Min}</td>
+
+    <td>${row.Avg_Motor_RPM}</td>
+    <td>${row.Avg_Air_Flow}</td>
+    <td>${row.Avg_Pressure_Diff}</td>
+    <td>${row.User_Id}</td>
+    <td>${row.Test_Duration}</td>
+    <td>${row.NgStatus}</td>
+
+    <td><button class="print-btn" onclick="rePrint(${row.SerialNo})">Re-Print</button></td>
+  </tr>
             `;
         });
     }
@@ -166,6 +257,67 @@ function rePrint(serialNo) {
     })
     .catch(error => console.error('Error during re-print:', error));
 }
+window.addEventListener('DOMContentLoaded', () => {
+    const endDateInput = document.getElementById('endDate');
+    const startDateInput = document.getElementById('startDate');
+
+    const today = new Date();
+    const yesterday = new Date(today);
+
+    // Set yesterday to 00:00 local
+    yesterday.setDate(today.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+
+    // Set today to 23:59 local
+    today.setHours(23, 59, 0, 0);
+
+    // Format YYYY-MM-DDTHH:MM for datetime-local without UTC conversion
+    function formatDateTimeLocal(dt) {
+        const year = dt.getFullYear();
+        const month = String(dt.getMonth() + 1).padStart(2, '0');
+        const day = String(dt.getDate()).padStart(2, '0');
+        const hours = String(dt.getHours()).padStart(2, '0');
+        const minutes = String(dt.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    startDateInput.value = formatDateTimeLocal(yesterday); // yesterday 00:00
+    endDateInput.value = formatDateTimeLocal(today);       // today 23:59
+
+    fetchRecipeLog(); // fetch with default filter
+});
+
+function applyFilter() {
+    currentPage = 1; // reset pagination
+    fetchRecipeLog();
+}
+
+function fetchRecipeLog() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    fetch(`/api/recipe_log?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => response.json())
+        .then(data => {
+            fullData = data;
+            renderPage(currentPage);
+            setupPagination();
+        })
+        .catch(error => console.error('Error fetching recipe log:', error));
+}
+
+function exportToExcel() {
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+
+    let url = '/export_recipe_log';
+    if (start || end) {
+        url += `?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}`;
+    }
+
+    window.location.href = url;
+}
+
 </script>
 
 <!-- Optional CSS -->

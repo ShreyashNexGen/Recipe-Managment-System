@@ -42,11 +42,11 @@
         <form id="addRawMaterialForm" action="{{ url_for('raw_material1') }}" method="POST">
             <div class="popup-raw-body">
                 <div class="form-raw-group">
-                    <label for="thickness">Thickness:</label>
+                    <label for="thickness">Thickness (micron):</label>
                     <input type="text" id="thickness" name="thickness" placeholder="Enter Thickness" required>
                 </div>
                 <div class="form-raw-group">
-                    <label for="width">Width:</label>
+                    <label for="width">Width (mm):</label>
                     <input type="number" id="width" name="width" placeholder="Enter Width" required>
                 </div>
                 <div class="form-raw-group">
@@ -78,11 +78,11 @@
                     <input type="text" id="update_material_Id" name="material_Id" readonly>
                 </div>
                 <div class="form-update-group">
-                    <label for="update_thickness">Thickness:</label>
+                    <label for="update_thickness">Thickness (micron):</label>
                     <input type="text" id="update_thickness" name="thickness" required>
                 </div>
                 <div class="form-update-group">
-                    <label for="update_width">Width:</label>
+                    <label for="update_width">Width (mm):</label>
                     <input type="number" id="update_width" name="width" required>
                 </div>
                 <div class="form-update-group">
