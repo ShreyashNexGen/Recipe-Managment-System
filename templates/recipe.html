@@ -477,7 +477,7 @@ input[readonly] {
       <input type="text" id="Upper_Tolerance2" name="Upper_Tolerance2" placeholder="New Value">
       <input type="text" id="Upper_Tolerance2_old" name="Upper_Tolerance2_old" placeholder="Old Value" readonly>
     </div>
-    <div class="field-row">
+    <!-- <div class="field-row">
       <label for="Lower_Fan_Speed">Lower_Fan_Speed:</label>
       <input type="text" id="Lower_Fan_Speed" name="Lower_Fan_Speed" placeholder="New Value">
       <input type="text" id="Lower_Fan_Speed_old" name="Lower_Fan_Speed_old" placeholder="Old Value" readonly>
@@ -486,7 +486,7 @@ input[readonly] {
       <label for="Upper_Fan_Speed">Upper_Fan_Speed:</label>
       <input type="text" id="Upper_Fan_Speed" name="Upper_Fan_Speed" placeholder="New Value">
       <input type="text" id="Upper_Fan_Speed_old" name="Upper_Fan_Speed_old" placeholder="Old Value" readonly>
-    </div>
+    </div> -->
   </div>
 
   <div class="form-buttons">
@@ -893,7 +893,7 @@ input[readonly] {
                 <input type="text" id="update_Upper_Tolerance2" name="Upper_Tolerance2">
                 <input type="text" id="old_Upper_Tolerance2" class="old-value" placeholder="Old Value" readonly>
               </div>
-              <div class="field-row">
+              <!-- <div class="field-row">
                 <label for="update_Lower_Fan_Speed">Lower_Fan_Speed:</label>
                 <input type="text" id="update_Lower_Fan_Speed" name="Lower_Fan_Speed">
                 <input type="text" id="old_Lower_Fan_Speed"  placeholder="Old Value" readonly>
@@ -902,7 +902,7 @@ input[readonly] {
                 <label for="update_Upper_Fan_Speed">Lower_Fan_Speed:</label>
                 <input type="text" id="update_Upper_Fan_Speed" name="Upper_Fan_Speed">
                 <input type="text" id="old_Upper_Fan_Speed"  placeholder="Old Value" readonly>
-             </div>
+             </div> -->
            
             </div>
           
@@ -1343,8 +1343,7 @@ function loadRecipe() {
                 document.getElementById("Lower_Tolerance2").value = data.Lower_Tolerance2 || "";
                 document.getElementById("Upper_Tolerance1").value = data.Upper_Tolerance1 || "";
                 document.getElementById("Upper_Tolerance2").value = data.Upper_Tolerance2 || "";
-                document.getElementById("Lower_Fan_Speed").value = data.Lower_Fan_Speed || "";
-                document.getElementById("Upper_Fan_Speed").value = data.Upper_Fan_Speed || "";
+                
 
                 alert("Recipe loaded successfully!");
             } else {
@@ -1474,8 +1473,7 @@ function openUpdatePopup(recipeId) {
                 document.getElementById("update_Lower_Tolerance2").value = data.Lower_Tolerance2 || "";
                 document.getElementById("update_Upper_Tolerance1").value = data.Upper_Tolerance1 || "";
                 document.getElementById("update_Upper_Tolerance2").value = data.Upper_Tolerance2 || "";
-                document.getElementById("update_Lower_Fan_Speed").value = data.Lower_Fan_Speed || "";
-                document.getElementById("update_Upper_Fan_Speed").value = data.Upper_Fan_Speed || "";
+                
 
             } else {
                 alert("Recipe not found!");

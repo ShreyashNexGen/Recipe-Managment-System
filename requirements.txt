@@ -1,12 +1,14 @@
 Flask
 Flask-SocketIO
-Flask-CORS
-werkzeug
+Flask-Cors
+Werkzeug
+pandas
 requests
 reportlab
 pymongo
 opcua
 pyodbc
-sqlite3
-WMI; sys_platform == "win32"
+wmi
 bson
+eventlet
+dnspython

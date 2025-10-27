@@ -44,7 +44,7 @@ CORS(app)  # Enable CORS for frontend communication
 # OPC UA connection options
 # Connection details
 # server = 'DESKTOP-9G39B01\WINCC'
-# database = 'A2Z_DB'
+# database = 'A2Z_DB'3
 server = 'SHREYASHNEXGEN\WINCCFLEX2014'
 database = 'Shreyash'
 conn = pyodbc.connect(
@@ -94,6 +94,7 @@ def init_db():
                     plcId NVARCHAR(255) NOT NULL
                 )
             """,
+         
             "Raw_Materials": """
                     CREATE TABLE Raw_Materials (
                         material_Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -106,6 +107,7 @@ def init_db():
                         barcode NVARCHAR(255) NOT NULL
                     )
             """,
+          
             "Alu_Raw_Materials": """
                     CREATE TABLE Alu_Raw_Materials (
                         material_Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -118,6 +120,7 @@ def init_db():
                         barcode NVARCHAR(255) NOT NULL
                     )
             """,
+          
             "h_Raw_Materials": """
                     CREATE TABLE h_Raw_Materials (
                         material_Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -131,7 +134,9 @@ def init_db():
                         barcode NVARCHAR(255) NOT NULL
                     )
             """,
-            "Recipe": """ CREATE TABLE Recipe (
+          
+            "Recipe": """ 
+                     CREATE TABLE Recipe (
                        Recipe_ID INT PRIMARY KEY,
                         Filter_Size NVARCHAR(255),
                         Filter_Code NVARCHAR(255),
@@ -139,6 +144,7 @@ def init_db():
                         Recipe_Name NVARCHAR(255)
                     )
             """,
+          
             "Recipe_Details1": """
                 CREATE TABLE Recipe_Details1 (
                         Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -159,57 +165,135 @@ def init_db():
                         Recipe_ID INT FOREIGN KEY REFERENCES Recipe(Recipe_ID)
                     )
             """,
+          
             "Recipe_Log": """
-                    CREATE TABLE Recipe_Log (
-    Batch_No INT IDENTITY(1,1) PRIMARY KEY,
-    Batch_Code NVARCHAR(255) NOT NULL,
-    Timestamp DATETIME2 NOT NULL DEFAULT GETDATE(),
-    Recipe_Id INT,
-    Recipe_Name NVARCHAR(255) NOT NULL,
-    Art_No NVARCHAR(255),
-    Filter_Size NVARCHAR(255),
-    FilterSize NVARCHAR(255),
-    NgStatus NVARCHAR(255),
-    SerialNo NVARCHAR(255),
-    Avg_Air_Flow NVARCHAR(255),
-    Avg_Result NVARCHAR(255),
-    Batch_Completion_Status NVARCHAR(255) NOT NULL
-);
+    CREATE TABLE Recipe_Log (
+        Batch_No INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        Batch_Code NVARCHAR(255) NOT NULL,
+        Timestamp DATETIME2(7) NOT NULL DEFAULT (GETDATE()),
+        SerialNo NVARCHAR(255),
+        NgStatus NVARCHAR(255),
+        Avg_Air_Flow NVARCHAR(255),
+        Avg_Result NVARCHAR(255),
+        Batch_Completion_Status NVARCHAR(255) NOT NULL,
+        Recipe_Id INT,
+        Recipe_Name NVARCHAR(255) NOT NULL,
+        Filter_Size NVARCHAR(255),
+        Filter_Code NVARCHAR(255),
+        Art_No NVARCHAR(255),
+        Pos1 NVARCHAR(255),
+        Pos2 NVARCHAR(255),
+        Pos3 NVARCHAR(255),
+        Pos4 NVARCHAR(255),
+        Pos5 NVARCHAR(255),
+        Pos6 NVARCHAR(255),
+        Pos7 NVARCHAR(255),
+        Pos8 NVARCHAR(255),
+        Pos9 NVARCHAR(255),
+        Alu_Material NVARCHAR(255),
+        House_Material NVARCHAR(255),
+        Pleat_Height NVARCHAR(255),
+        Soft_Touch NVARCHAR(255),
+        Feeder1_Media_Thickness NVARCHAR(255),
+        Feeder1_Park_Position NVARCHAR(255),
+        Foil1_Length NVARCHAR(255),
+        Foil1_Length_Offset NVARCHAR(255),
+        Foil1_Width NVARCHAR(255),
+        Puller_Start_Position NVARCHAR(255),
+        Autofeeding_Offset NVARCHAR(255),
+        Filter_Box_Height NVARCHAR(255),
+        Filter_Box_Length NVARCHAR(255),
+        Pleat_Pitch NVARCHAR(255),
+        Pleat_Counts NVARCHAR(255),
+        Foil_Low_Diameter NVARCHAR(255),
+        Feeding_Conveyor_Speed NVARCHAR(255),
+        Pack_Transfer_Rev_Position NVARCHAR(255),
+        Foil1_Tension_Set_Point NVARCHAR(255),
+        Foil2_Tension_Set_Point NVARCHAR(255),
+        Blade_Opening NVARCHAR(255),
+        Press_Touch NVARCHAR(255),
+        Feeder2_Media_Thickness NVARCHAR(255),
+        Feeder2_Park_Position NVARCHAR(255),
+        Foil2_Length NVARCHAR(255),
+        Foil2_Length_Offset NVARCHAR(255),
+        Foil2_Width NVARCHAR(255),
+        Puller_End_Position NVARCHAR(255),
+        Puller2_Feed_Correction NVARCHAR(255),
+        Puller_Extra_Stroke_Enable NVARCHAR(255),
+        Filter_Box_Width NVARCHAR(255),
+        Lid_Placement_Enable NVARCHAR(255),
+        Lid_Placement_Position NVARCHAR(255),
+        Sync_Table_Start_Position NVARCHAR(255),
+        Batch_Count NVARCHAR(255),
+        Discharge_Conveyor_Speed NVARCHAR(255),
+        Pack_Transfer_Park_Position NVARCHAR(255),
+        Media_Tension_Set_Point NVARCHAR(255),
+        DatabaseAvailable NVARCHAR(255),
+        Width NVARCHAR(255),
+        Height NVARCHAR(255),
+        Depth NVARCHAR(255),
+        Inspection_Art_No NVARCHAR(255),
+        Air_Flow_Set NVARCHAR(255),
+        Pressure_Drop_Setpoint NVARCHAR(255),
+        Lower_Tolerance1 NVARCHAR(255),
+        Lower_Tolerance2 NVARCHAR(255),
+        Upper_Tolerance1 NVARCHAR(255),
+        Upper_Tolerance2 NVARCHAR(255),
+        Upper_fan_Speed NVARCHAR(255),
+        Lower_fan_Speed NVARCHAR(255),
+        Airflow_upper_limit NVARCHAR(255),
+        Airflow_lower_limit NVARCHAR(255),
+        Average_motor_RPM NVARCHAR(255),
+        testing_duration NVARCHAR(255),
+        Average_Pressure NVARCHAR(255),
+        user_Id NVARCHAR(50)
+    );
+
 
             """,
              
-             "Sub_Menu":"""
-                  CREATE TABLE Sub_Menu (
-    Recipe_ID INT PRIMARY KEY FOREIGN KEY REFERENCES Recipe(Recipe_ID),
-    motor_speed NVARCHAR(255),
-    motor_stroke NVARCHAR(255),
-    other_speed_force NVARCHAR(255),
-    alu_coil_width NVARCHAR(255),
-    Corr1Feed_length NVARCHAR(255),
-    Corr2feed_length NVARCHAR(255),
-    Pleat_Height NVARCHAR(255),
-    Blade_opening NVARCHAR(255),
-    Left_Blade_MediaTHickness NVARCHAR(255),
-    Right_Blade_MediaThickness NVARCHAR(255),
-    Soft_Touch NVARCHAR(255),
-    Press_Touch NVARCHAR(255),
-    Puller_Start_pos NVARCHAR(255),
-    Puller_End_pos NVARCHAR(255),
-    Puller2_Feed_Correction NVARCHAR(255),
-    Filter_Box_Height NVARCHAR(255),
-    Filter_Box_Width NVARCHAR(255),
-    Filter_Box_Length NVARCHAR(255),
-    Set_Pleat_Count NVARCHAR(255),
-    Set_Pleat_Pitch NVARCHAR(255),
-    Set_Batch_COunt NVARCHAR(255),
-    Machine_Speed_Ref NVARCHAR(255),
-    Decoiler_Set_point NVARCHAR(255),
-    Low_Dia_Set NVARCHAR(255),
-    Cutter_Park_pos NVARCHAR(255),
-    Cutter_Fwd_Pos NVARCHAR(255)
-);
-
-            """,
+            "Sub_Menu": """
+    CREATE TABLE Sub_Menu (
+        Recipe_ID INT NOT NULL PRIMARY KEY,
+        Pleat_Height DECIMAL(10, 2),
+        Soft_Touch DECIMAL(10, 2),
+        Feeder1_Media_Thickness DECIMAL(10, 2),
+        Feeder1_Park_Position DECIMAL(10, 2),
+        Foil1_Length DECIMAL(10, 2),
+        Foil1_Length_Offset DECIMAL(10, 2),
+        Foil1_Width DECIMAL(10, 2),
+        Puller_Start_Position DECIMAL(10, 2),
+        Autofeeding_Offset DECIMAL(10, 2),
+        Filter_Box_Height DECIMAL(10, 2),
+        Filter_Box_Length DECIMAL(10, 2),
+        Pleat_Pitch DECIMAL(10, 2),
+        Pleat_Counts INT,
+        Foil_Low_Diameter DECIMAL(10, 2),
+        Feeding_Conveyor_Speed DECIMAL(10, 2),
+        Pack_Transfer_Rev_Position DECIMAL(10, 2),
+        Foil1_Tension_Set_Point DECIMAL(10, 2),
+        Foil2_Tension_Set_Point DECIMAL(10, 2),
+        Blade_Opening DECIMAL(10, 2),
+        Press_Touch DECIMAL(10, 2),
+        Feeder2_Media_Thickness DECIMAL(10, 2),
+        Feeder2_Park_Position DECIMAL(10, 2),
+        Foil2_Length DECIMAL(10, 2),
+        Foil2_Length_Offset DECIMAL(10, 2),
+        Foil2_Width DECIMAL(10, 2),
+        Puller_End_Position DECIMAL(10, 2),
+        Puller2_Feed_Correction DECIMAL(10, 2),
+        Puller_Extra_Stroke_Enable BIT,
+        Filter_Box_Width DECIMAL(10, 2),
+        Lid_Placement_Enable BIT,
+        Lid_Placement_Position DECIMAL(10, 2),
+        Sync_Table_Start_Position DECIMAL(10, 2),
+        Batch_Count INT,
+        Discharge_Conveyor_Speed DECIMAL(10, 2),
+        Pack_Transfer_Park_Position DECIMAL(10, 2),
+        Media_Tension_Set_Point DECIMAL(10, 2)
+    );
+"""
+,
             
             "Inspection_Settings": """
 
@@ -230,6 +314,7 @@ def init_db():
     );
 
                 """,
+           
             "Live_Tags": """
                 CREATE TABLE Live_Tags (
                     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -239,6 +324,7 @@ def init_db():
                     FOREIGN KEY (tagId) REFERENCES Tag_Table(tagId)
                 )
             """,
+           
             "Live_Log": """
                 CREATE TABLE Live_Log (
                     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -248,6 +334,7 @@ def init_db():
                     timestamp DATETIME DEFAULT GETDATE()
                 )
             """,
+           
             "connection_status": """
                 CREATE TABLE connection_status (
                     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -256,6 +343,7 @@ def init_db():
                     timestamp DATETIME DEFAULT GETDATE()
                 )
             """,
+           
             "internet_status": """
                 CREATE TABLE internet_status (
                     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -265,6 +353,7 @@ def init_db():
                     status NVARCHAR(50) NOT NULL
                 )
             """,
+          
             "plc_status": """
                 CREATE TABLE plc_status (
                     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -274,6 +363,7 @@ def init_db():
                     status NVARCHAR(50) NOT NULL
                 )
             """,
+            
             "users": """
                 CREATE TABLE users (
                     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -284,6 +374,7 @@ def init_db():
                     roles NVARCHAR(MAX)
                 )
             """,
+           
             "user_activity": """
                 CREATE TABLE user_activity (
                     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -293,6 +384,7 @@ def init_db():
                     FOREIGN KEY (username) REFERENCES users(username)
                 )
             """,
+          
             "Plc_Table": """
                 CREATE TABLE Plc_Table (
                     Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -304,6 +396,7 @@ def init_db():
                     serial_Key NVARCHAR(50) DEFAULT '12345'
                 )
             """,
+            
             "BatchTracker": """
                 CREATE TABLE BatchTracker (
                     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -3241,8 +3334,8 @@ def update_recipe():
     Lower_Tolerance2 = request.form.get('Lower_Tolerance2')
     Upper_Tolerance1 = request.form.get('Upper_Tolerance1')
     Upper_Tolerance2 = request.form.get('Upper_Tolerance2')
-    lower_fan_speed = request.form.get('Lower_Fan_Speed')
-    upper_fan_speed = request.form.get('Upper_Fan_Speed')
+    # lower_fan_speed = request.form.get('Lower_Fan_Speed')
+    # upper_fan_speed = request.form.get('Upper_Fan_Speed')
     alu_value = request.form.get('alu_mat', None)
     house_value = request.form.get('house_mat', None)
 
@@ -3300,7 +3393,7 @@ def update_recipe():
                    Lower_Tolerance1=?, Lower_Tolerance2=?, Upper_Tolerance1=?, Upper_Tolerance2=?,Lower_Fan_Speed=?,Upper_Fan_Speed=? 
                WHERE Recipe_ID=?''',
             (databaseAvailable, Width, Height, Depth, Art_Num, Air_Flow_Set,
-             Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2,lower_fan_speed,upper_fan_speed, recipe_id)
+             Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2,recipe_id)
         )
 
         conn.commit()
@@ -3399,8 +3492,8 @@ def add_recipe():
     Lower_Tolerance2 = request.form.get('Lower_Tolerance2')
     Upper_Tolerance1 = request.form.get('Upper_Tolerance1')
     Upper_Tolerance2 = request.form.get('Upper_Tolerance2')
-    lower_fan_speed = request.form.get('Lower_Fan_Speed')
-    upper_fan_speed = request.form.get('Upper_Fan_Speed')
+    # lower_fan_speed = request.form.get('Lower_Fan_Speed')
+    # upper_fan_speed = request.form.get('Upper_Fan_Speed')
     alu_value = request.form.get('alu_mat', None)
     house_value = request.form.get('house_mat', None)
 
@@ -3457,10 +3550,10 @@ def add_recipe():
         cursor.execute(
             '''INSERT INTO Inspection_Settings 
                (Recipe_ID, databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, Pressure_Drop_Setpoint, 
-                Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2,Lower_Fan_Speed,Upper_Fan_Speed) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)''',
+                Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             (recipe_id, databaseAvailable, Width, Height, Depth, Art_Num, Air_Flow_Set,
-             Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2,lower_fan_speed,upper_fan_speed)
+             Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2)
         )
         print("✅ Inserted into Inspection_Settings")
 
@@ -4640,42 +4733,48 @@ def get_recipe():
     finally:
         conn.close()
 
-#report aap.py code
-# Sample data for the report
 @app.route("/report", methods=["GET", "POST"])
 def report():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Get date filters
     start_date = request.form.get("start_date")
     end_date = request.form.get("end_date")
 
-    print(f"📌 Debug: Received Dates -> Start: {start_date}, End: {end_date}")  # Debugging
+    print(f"📌 Debug: Received Dates -> Start: {start_date}, End: {end_date}")
 
+    # Pagination setup
     page = request.args.get("page", 1, type=int)
-    per_page = 5
+    per_page = 10  # ✅ show 10 entries per page
     offset = (page - 1) * per_page
 
-    query = "SELECT * FROM Recipe_Log"
+    # Build query dynamically
+    base_query = "FROM Recipe_Log"
     params = []
 
     if start_date and end_date:
-        query += " WHERE CONVERT(DATE, Timestamp) BETWEEN ? AND ?"
+        base_query += " WHERE CONVERT(DATE, Timestamp) BETWEEN ? AND ?"
         params.extend([start_date, end_date])
 
-    query += " ORDER BY Timestamp DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
-    params.extend([offset, per_page])
-
-    cursor.execute(query, params)
-    columns = [column[0] for column in cursor.description]
+    # Data query
+    data_query = f"SELECT * {base_query} ORDER BY Timestamp DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
+    cursor.execute(data_query, params + [offset, per_page])
+    columns = [col[0] for col in cursor.description]
     data = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    count_query = "SELECT COUNT(*) FROM Recipe_Log"
-    cursor.execute(count_query)
+    # Count query (same filter)
+    count_query = f"SELECT COUNT(*) {base_query}"
+    cursor.execute(count_query, params)
     total_count = cursor.fetchone()[0]
+
     total_pages = (total_count + per_page - 1) // per_page
 
     conn.close()
+
+    # Calculate range for display text
+    start_entry = offset + 1 if total_count > 0 else 0
+    end_entry = min(offset + per_page, total_count)
 
     return render_template(
         "report.html",
@@ -4683,6 +4782,8 @@ def report():
         page=page,
         total_pages=total_pages,
         total_count=total_count,
+        start_entry=start_entry,
+        end_entry=end_entry,
         start_date=start_date,
         end_date=end_date
     )
@@ -4843,9 +4944,9 @@ frontend_to_plc_map2 = {
     "Lower_Tolerance1": "Lower_Tolerance1",
     "Lower_Tolerance2": "Lower_Tolerance2",
     "Upper_Tolerance1": "Upper_Tolerance1",
-    "Upper_Tolerance2": "Upper_Tolerance2",
-    "Lower_Fan_Speed": "Lower_fan_speed",
-    "Upper_Fan_Speed": "Upper_fan_Speed"
+    "Upper_Tolerance2": "Upper_Tolerance2"
+    # "Lower_Fan_Speed": "Lower_fan_speed",
+    # "Upper_Fan_Speed": "Upper_fan_Speed"
 }
 
 
@@ -4977,6 +5078,6 @@ if __name__ == '__main__':
     threading.Thread(target=log_status, daemon=True).start()
     # socketio.run(app, host='0.0.0.0', port=5000)
     start_periodic_update()
-    webbrowser.open("http://127.0.0.1:5000")
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    # webbrowser.open("http://127.0.0.1:5000")
+    app.run(host='127.0.0.1', port=5000, debug=True)
 
