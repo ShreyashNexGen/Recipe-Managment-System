@@ -38,6 +38,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 import pandas as pd
 import json 
+from openpyxl import Workbook
+from flask import send_file
+import io
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
 # socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
@@ -2344,7 +2347,7 @@ def raw_material():
 
             # Auto-generate fields
             make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            user = "admin"
+            user = session.get('username')
             # barcode = f"-{type_code}-{lot_no}"  # Example barcode
             material_type= f"{type1}x{width}:{part_no}"
             barcode=material_type
@@ -2464,14 +2467,14 @@ def delete_raw_material(raw_material_id):
 @app.route('/update-raw-material/<int:material_Id>', methods=['POST'])
 def update_raw_material(material_Id):
     """Update raw material details in MSSQL database."""
-    conn = None  # Ensure conn is defined before try
+    conn = None  # Ensure conn is always defined
 
     try:
-        data = request.json
+        data = request.json or {}
         print(data)
 
         # Validate required fields
-        required_fields = ["type", "width", "part_no", "make", "user", "barcode"]
+        required_fields = ["type", "width", "part_no", "make", "user"]
         missing_fields = [field for field in required_fields if not data.get(field)]
         if missing_fields:
             return jsonify({"success": False, "error": f"Missing fields: {', '.join(missing_fields)}"}), 400
@@ -2482,8 +2485,9 @@ def update_raw_material(material_Id):
         make = data.get("make")
         user = data.get("user")
         barcode = f"{type1}x{width}:{part_no}"
-        materialType = f"{type1}x{width}:{part_no}"
+        materialType = barcode  # same format
 
+        # Get DB connection safely
         conn = get_db_connection()
         if not conn:
             return jsonify({"success": False, "error": "Database connection failed"}), 500
@@ -2509,9 +2513,10 @@ def update_raw_material(material_Id):
         return jsonify({"success": True, "message": "Raw material updated successfully."})
 
     except pyodbc.IntegrityError as e:
-        if "UNIQUE constraint failed: Raw_Materials.materialType" in str(e):
+        msg = str(e)
+        if "UNIQUE" in msg and "materialType" in msg:
             return jsonify({"success": False, "error": "Material Type must be unique."}), 409
-        return jsonify({"success": False, "error": f"Database integrity error: {str(e)}"}), 400
+        return jsonify({"success": False, "error": f"Database integrity error: {msg}"}), 400
 
     except pyodbc.Error as e:
         return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
@@ -2520,8 +2525,12 @@ def update_raw_material(material_Id):
         return jsonify({"success": False, "error": f"An unexpected error occurred: {str(e)}"}), 500
 
     finally:
-        if conn:
-            conn.close()
+        try:
+            if conn:
+                conn.close()
+        except Exception as close_error:
+            print(f"Error closing connection: {close_error}")
+
 
 @app.route('/alu-raw-material', methods=['GET', 'POST'])
 def raw_material1():
@@ -4738,46 +4747,66 @@ def report():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Get date filters
-    start_date = request.form.get("start_date")
-    end_date = request.form.get("end_date")
-
-    print(f"📌 Debug: Received Dates -> Start: {start_date}, End: {end_date}")
-
-    # Pagination setup
+    # --- Pagination setup ---
     page = request.args.get("page", 1, type=int)
-    per_page = 10  # ✅ show 10 entries per page
+    per_page = 10
     offset = (page - 1) * per_page
 
-    # Build query dynamically
+    # --- Date filters ---
+    start_date = request.values.get("start_date")
+    end_date = request.values.get("end_date")
+
     base_query = "FROM Recipe_Log"
+    where_clauses = []
     params = []
 
+    # --- Fetch column names dynamically once ---
+    cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Recipe_Log'")
+    columns = [col[0] for col in cursor.fetchall()]
+
+    # --- Column search filters ---
+    column_filters = []
+    filter_params = []
+    for col_name in columns:
+        value = request.values.get(col_name)
+        if value:
+            column_filters.append(f"[{col_name}] LIKE ?")
+            filter_params.append(f"%{value}%")
+
+    # --- Combine all filters ---
     if start_date and end_date:
-        base_query += " WHERE CONVERT(DATE, Timestamp) BETWEEN ? AND ?"
+        where_clauses.append("CONVERT(DATE, Timestamp) BETWEEN ? AND ?")
         params.extend([start_date, end_date])
 
-    # Data query
-    data_query = f"SELECT * {base_query} ORDER BY Timestamp DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
-    cursor.execute(data_query, params + [offset, per_page])
-    columns = [col[0] for col in cursor.description]
-    data = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    if column_filters:
+        where_clauses.extend(column_filters)
+        params.extend(filter_params)
 
-    # Count query (same filter)
+    if where_clauses:
+        base_query += " WHERE " + " AND ".join(where_clauses)
+
+    # --- Fetch paginated data ---
+    query = f"SELECT * {base_query} ORDER BY Timestamp DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
+    cursor.execute(query, params + [offset, per_page])
+    rows = cursor.fetchall()
+
+    # --- Convert rows to dict ---
+    data = [dict(zip(columns, row)) for row in rows]
+
+    # --- Count total records ---
     count_query = f"SELECT COUNT(*) {base_query}"
     cursor.execute(count_query, params)
     total_count = cursor.fetchone()[0]
-
     total_pages = (total_count + per_page - 1) // per_page
 
-    conn.close()
-
-    # Calculate range for display text
     start_entry = offset + 1 if total_count > 0 else 0
     end_entry = min(offset + per_page, total_count)
 
+    conn.close()
+
     return render_template(
         "report.html",
+        columns=columns,
         data=data,
         page=page,
         total_pages=total_pages,
@@ -4787,6 +4816,7 @@ def report():
         start_date=start_date,
         end_date=end_date
     )
+
 
 @app.route("/search-report")
 def search_report():
@@ -4818,80 +4848,75 @@ def search_report():
     conn.close()
     return jsonify(data)
 
-@app.route("/download", methods=["POST"])
-def download():
-    import json
-    import io
-    import pandas as pd
-    from flask import send_file, request
-    from reportlab.lib.pagesizes import landscape, letter
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib import colors
-    from reportlab.lib.styles import ParagraphStyle
+@app.route("/download_excel", methods=["GET"])
+def download_excel():
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    # Get the filtered data from the request
-    filtered_data = request.form.get("filtered_data")
-    print("Filtered Data Received:", filtered_data)  # Debugging output
+    # --- Get filters ---
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
 
-    if not filtered_data or filtered_data == "[]":
-        print("No data to generate PDF")  # Debugging output
-        return "No data to generate PDF", 400  # Prevent empty PDF errors
+    # --- Base query ---
+    base_query = "FROM Recipe_Log"
+    where_clauses = []
+    params = []
 
-    try:
-        filtered_data = json.loads(filtered_data)  # Convert JSON string to list
-        print("Filtered Data Parsed:", filtered_data)  # Debugging output
+    # --- Get columns dynamically ---
+    cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Recipe_Log'")
+    columns = [col[0] for col in cursor.fetchall()]
 
-        # Adjust headers to match all 11 columns
-        headers = [
-            "Batch_No", "Timestamp", "Recipe_Name", "Art_No", "Filter_Size", "FilterSize",
-            "NgStatus", "SerialNo", "Avg_Air_Flow", "Avg_Result", "BatchStatus"
-        ]
+    # --- Column filters ---
+    column_filters = []
+    filter_params = []
+    for col_name in columns:
+        value = request.args.get(col_name)
+        if value:
+            column_filters.append(f"[{col_name}] LIKE ?")
+            filter_params.append(f"%{value}%")
 
-        # Create DataFrame with all columns
-        df = pd.DataFrame(filtered_data, columns=headers)
-        print("DataFrame Created:\n", df)  # Debugging output
+    # --- Apply date and column filters ---
+    if start_date and end_date:
+        where_clauses.append("CONVERT(DATE, Timestamp) BETWEEN ? AND ?")
+        params.extend([start_date, end_date])
+    if column_filters:
+        where_clauses.extend(column_filters)
+        params.extend(filter_params)
 
-        # Generate PDF
-        output = io.BytesIO()
-        doc = SimpleDocTemplate(output, pagesize=landscape(letter))
-        elements = []
+    if where_clauses:
+        base_query += " WHERE " + " AND ".join(where_clauses)
 
-        elements.append(Paragraph("Filtered Data Report", ParagraphStyle(name='Heading1', fontSize=18, alignment=1)))
-        elements.append(Spacer(1, 12))
-        # Wrap text in table cells
-        def wrap_text(text, width):
-            return Paragraph(text, ParagraphStyle(name="Normal", wordWrap="CJK"))
+    # --- Fetch all filtered data ---
+    query = f"SELECT * {base_query} ORDER BY Timestamp DESC"
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
 
-        # Convert DataFrame to a list with wrapped text
-        headers = list(df.columns)
-        table_data = [headers] + [[wrap_text(str(cell), 100) for cell in row] for row in df.values.tolist()]
+    # --- Create Excel workbook ---
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Filtered Data"
 
-# Adjust column widths dynamically
-        num_cols = len(headers)
-        column_widths = [max(60, 700 / num_cols)] * num_cols  # Adjust to prevent cropping
+    # Header row
+    ws.append(columns)
 
-# Apply wrapping & better styling
-        table = Table(table_data, colWidths=column_widths)
-        style = TableStyle([
-            ('WORDWRAP', (0, 0), (-1, -1), True),  # Enable text wrapping
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ])
-        table.setStyle(style)
-        elements.append(table)
-        doc.build(elements)
+    # Data rows
+    for row in rows:
+        ws.append(list(row))
 
-        output.seek(0)
-        return send_file(output, download_name="filtered_report.pdf", as_attachment=True, mimetype="application/pdf")
+    # --- Save to memory ---
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
 
-    except Exception as e:
-        print("Error Occurred:", str(e))  # Debugging output
-        return f"Internal Server Error: {str(e)}", 500  # Send error message
+    conn.close()
+
+    # --- Return file ---
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="Filtered_Report.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 frontend_to_plc_map = {
     # Step 3: Machine Settings
@@ -5078,6 +5103,6 @@ if __name__ == '__main__':
     threading.Thread(target=log_status, daemon=True).start()
     # socketio.run(app, host='0.0.0.0', port=5000)
     start_periodic_update()
-    # webbrowser.open("http://127.0.0.1:5000")
+  
     app.run(host='127.0.0.1', port=5000, debug=True)
 

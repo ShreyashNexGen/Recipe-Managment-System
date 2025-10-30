@@ -276,12 +276,15 @@ input[readonly] {
       <input type="text" id="Filter_Box_Height_old" name="Filter_Box_Height_old" placeholder="Current Value" readonly>
     </div>
 
-    <!-- 20. PULLER EXTRA STROKE ENABLE -->
-    <div class="field-group">
-      <label for="Puller_Extra_Stroke_Enable">PULLER EXTRA STROKE ENABLE (0/1):</label>
-      <input type="text" id="Puller_Extra_Stroke_Enable" name="Puller_Extra_Stroke_Enable" placeholder="New Value">
-      <input type="text" id="Puller_Extra_Stroke_Enable_old" name="Puller_Extra_Stroke_Enable_old" placeholder="Current Value" readonly>
-    </div>
+   <!-- Puller Extra Stroke Enable -->
+<div class="field-group">
+  <label for="Puller_Extra_Stroke_Enable">PULLER EXTRA STROKE ENABLE:</label>
+  <select style="width: 26%;" id="Puller_Extra_Stroke_Enable" name="Puller_Extra_Stroke_Enable">
+    <option value="1">True</option>
+    <option value="0">False</option>
+  </select>
+  <input type="text" id="Puller_Extra_Stroke_Enable_old" name="Puller_Extra_Stroke_Enable_old" placeholder="Current Value" readonly>
+</div>
 
     <!-- 21. FILTER BOX LENGTH -->
     <div class="field-group">
@@ -304,12 +307,18 @@ input[readonly] {
       <input type="text" id="Pleat_Pitch_old" name="Pleat_Pitch_old" placeholder="Current Value" readonly>
     </div>
 
-    <!-- 24. LID PLACEMENT ENABLE -->
-    <div class="field-group">
-      <label for="Lid_Placement_Enable">LID PLACEMENT ENABLE (0/1):</label>
-      <input type="text" id="Lid_Placement_Enable" name="Lid_Placement_Enable" placeholder="New Value">
-      <input type="text" id="Lid_Placement_Enable_old" name="Lid_Placement_Enable_old" placeholder="Current Value" readonly>
-    </div>
+
+
+<!-- Lid Placement Enable -->
+<div class="field-group">
+  <label for="Lid_Placement_Enable">LID PLACEMENT ENABLE:</label>
+  <select style="width: 26%;" id="Lid_Placement_Enable" name="Lid_Placement_Enable">
+    <option value="1">True</option>
+    <option value="0">False</option>
+  </select>
+  <input type="text" id="Lid_Placement_Enable_old" name="Lid_Placement_Enable_old" placeholder="Current Value" readonly>
+</div>
+
 
     <!-- 25. PLEAT COUNTS -->
     <div class="field-group">
@@ -409,7 +418,15 @@ input[readonly] {
         
 <!-- Step 4: Air Inspection Settings -->
 <div class="form-step" id="step4" style="display:none;">
-  <h1 style="text-align: center; padding:10px">Air Inspection Settings</h1>
+  <h1 style="text-align: center; padding:10px; position: relative;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <i class="fa fa-info-circle" 
+         style="color: #007bff; cursor: pointer; font-size: 22px;"
+         onclick="openInfoPopup()"
+         title="View diagram info"></i>
+      Air Inspection Settings
+    </span>
+  </h1>
 
   <div class="form-grid">
     <div class="field-row">
@@ -495,7 +512,15 @@ input[readonly] {
     <button type="submit">Submit Recipe</button>
   </div>
 </div>
-
+<div id="infoPopup" class="popup-overlay_info" style="display: none;">
+  <div class="popup-content_info">
+    <span class="close-btn_info" onclick="closeInfoPopup()">&times;</span>
+    <h3>Air Inspection Dimensions</h3>
+    <img src="{{ url_for('static', filename='images/Img3.png') }}" 
+         alt="Air Inspection Dimensions" 
+         style="max-width: 100%; border-radius: 8px;">
+  </div>
+</div>
         
         </form>
         <!-- <style>
@@ -1011,237 +1036,6 @@ input[readonly] {
     {% endif %}
 </div>
 
-<style>
-    .recipe-form {
-        display: flex;
-        padding-left: 10px;
-    padding-right: 10px;
-        flex-direction: column;
-        width: 100%;
-        max-width: 1200px; /* Adjust based on your layout */
-        margin: auto;
-    }
-    
-    .form-row {
-        display: grid;
-        grid-template-columns: repeat(10, 1fr); /* 4 equal columns */
-        gap: 10px; /* Space between items */
-        align-items: center;
-        /*margin-bottom: 10px; /* Space between rows */
-    }
-    .form-row3 {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* Two columns */
-  gap: 20px;
-}
-
-.field-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.field-group label {
-  width: 150px;
-  font-weight: 500;
-}
-
-.field-group input {
-  width: 110px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}  
-    .form-row1 {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr); /* 4 equal columns */
-        gap: 10px; /* Space between items */
-        align-items: center;
-        /*margin-bottom: 10px; /* Space between rows */
-    }
-    .form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.field-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.field-row label {
-  width: 150px;
-  font-weight: 500;
-}
-
-.field-row input {
-  width: 100px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
-
-    .form-buttons {
-        display: flex;
-        justify-content: center; /* Centers buttons */
-        gap: 10px; /* Adds spacing between buttons */
-        margin-bottom: 10px;
-    /* margin-top: 10px; */
-    }
-    label {
-        font-weight: bold;
-        display: block;
-    }
-    
-    input, select {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 992px) {
-        .form-row {
-            grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
-        }
-    }
-    
-    @media (max-width: 600px) {
-        .form-row {
-            grid-template-columns: repeat(1, 1fr); /* 1 column on mobile */
-        }
-    }
-    
-    .submit-button1 {
-        display: inline-block; /* Ensures buttons stay in line */
-        background-color: #007bff; /* Darker purple */
-        color: rgb(27, 26, 26);
-        border: none;
-        border-radius: 4px;
-        padding: 8px 12px;
-        cursor: pointer;
-        margin-right: 10px; /* Space between buttons */
-    }
-    .submit-button1:last-child {
-        margin-right: 0; /* Remove margin from the last button */
-    }
-    /* Styling for table header */
-    .highlighted-tag{
-        font-weight: bold;
-        font-size: 20px;
-    }
-.highlighted-header {
-    background-color: #007bff; /* Corporate blue */
-    color: white; /* White text */
-    font-size: 16px;
-    padding: 12px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
-}
-
-    /* Center align all table cells */
-    #recipetable th, #recipetable td {
-        text-align: center; /* Center-align text */
-        vertical-align: middle; /* Center-align content vertically */
-    }
-
-    /* Optional: Adjust padding for a cleaner look */
-    #recipetable th, #recipetable td {
-        padding: 8px;
-    }
-    
-    /* Flexbox container for side-by-side layout */
-    .recipe-container {
-        display: flex;
-        justify-content: center;         /* Center the dropdowns horizontally */
-        align-items: flex-start;         /* Align tops of each dropdown */
-        gap: 15px;                       /* Space between dropdowns */
-        margin-top: 10px;
-        flex-wrap: wrap;
-    }
-
-.dropdown-container {
-    position: relative;
-    width: 220px; /* Slightly wider for balance */
-    margin: 5px 10px;
-}
-
-.dropdown-container input[type="text"] {
-    width: 100%;
-    margin-top: 15px;
-    padding: 10px 35px 10px 12px; /* Room for icon on the right */
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 14px;
-    background-color: #fff;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    box-sizing: border-box;
-}
-
-.dropdown-container input[type="text"]:focus {
-    border-color: #8e24aa; /* Match your theme */
-    box-shadow: 0 0 5px rgba(142, 36, 170, 0.3);
-    outline: none;
-}
-
-.dropdown-container .dropdown-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    font-size: 14px;
-    pointer-events: none; /* Let clicks go through */
-}
-.dropdown-list {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background-color: #fff;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    position: absolute;
-    width: 100%;
-    top: 100%;
-    left: 0;
-    z-index: 1000;
-    display: none; /* toggle this with JS */
-}
-.dropdown-list div {
-    padding: 8px 12px;
-    text-align: center;  /* Center the text */
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-}
-
-.dropdown-list div:hover {
-    background-color: #f2f2f2;
-}
-
-
-/* Hover effect */
-.dropdown-item:hover {
-    background: #f5f5f5;
-}
-label[for="load_recipe_id"] {
-    display: block;
-    text-align: center;
-    font-weight: 500;
-    margin-bottom: 5px;
-}
-    
-    
-</style>
 
 <script>
 const nextRecipeId = "{{ next_recipe_id }}";
@@ -1541,10 +1335,7 @@ function populateDropdown(inputId, dropdownId, recipes, key) {
     });
 }
 
-
-</script>
-<script>
-    let currentStep = 1;
+let currentStep = 1;
 
     function showStep(stepIndex) {
         const steps = document.querySelectorAll(".form-step");
@@ -1583,22 +1374,69 @@ function populateDropdown(inputId, dropdownId, recipes, key) {
     // Initially show the first step
     showStep(currentStep);
 
-    // Placeholder for upload settings
-  
+
+      // Highlight selected roll positions
+     document.querySelectorAll(".roll-select").forEach(select => {
+        select.addEventListener("change", function () {
+            if (this.value) {
+                this.classList.add("filled");  // highlight
+            } else {
+                this.classList.remove("filled"); // back to dull
+            }
+        });
+    });
+    
+function openInfoPopup() {
+  document.getElementById("infoPopup").style.display = "flex";
+}
+
+function closeInfoPopup() {
+  document.getElementById("infoPopup").style.display = "none";
+}
 </script>
+
 <style>
-    #recipetable tr:nth-child(odd) {
+    /* Dull style */
+  
+      #recipetable tr:nth-child(odd) {
         background-color: #f2f2f2; /* light grey */
     }
     #recipetablee tr:nth-child(even) {
         background-color: #e0e0e0; /* slightly darker grey */
     }
 
+    .popup-overlay_info {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
 
-</style>
-<style>
-    /* Dull style */
-    
+.popup-content_info {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  width: 400px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.close-btn_info {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #333;
+}
+
 .separator {
     border: none;              /* remove default */
     border-top: 2px dashed #666; /* dashed gray line */
@@ -1620,21 +1458,237 @@ function populateDropdown(inputId, dropdownId, recipes, key) {
         border-color: #28a745;     /* green */
         font-weight: bold;
     }
-</style>
 
-<script>
-    // Highlight selected roll positions
-    document.querySelectorAll(".roll-select").forEach(select => {
-        select.addEventListener("change", function () {
-            if (this.value) {
-                this.classList.add("filled");  // highlight
-            } else {
-                this.classList.remove("filled"); // back to dull
-            }
-        });
-    });
+    .recipe-form {
+        display: flex;
+        padding-left: 10px;
+    padding-right: 10px;
+        flex-direction: column;
+        width: 100%;
+        max-width: 1200px; /* Adjust based on your layout */
+        margin: auto;
+    }
     
-</script>
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr); /* 4 equal columns */
+        gap: 10px; /* Space between items */
+        align-items: center;
+        /*margin-bottom: 10px; /* Space between rows */
+    }
+    .form-row3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two columns */
+  gap: 20px;
+}
+
+.field-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-group label {
+  width: 150px;
+  font-weight: 500;
+}
+
+.field-group input {
+  width: 110px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}  
+    .form-row1 {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr); /* 4 equal columns */
+        gap: 10px; /* Space between items */
+        align-items: center;
+        /*margin-bottom: 10px; /* Space between rows */
+    }
+    .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-row label {
+  width: 150px;
+  font-weight: 500;
+}
+
+.field-row input {
+  width: 100px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+    .form-buttons {
+        display: flex;
+        justify-content: center; /* Centers buttons */
+        gap: 10px; /* Adds spacing between buttons */
+        margin-bottom: 10px;
+    /* margin-top: 10px; */
+    }
+    label {
+        font-weight: bold;
+        display: block;
+    }
+    
+    input, select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .form-row {
+            grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+        }
+    }
+    
+    @media (max-width: 600px) {
+        .form-row {
+            grid-template-columns: repeat(1, 1fr); /* 1 column on mobile */
+        }
+    }
+    
+    .submit-button1 {
+        display: inline-block; /* Ensures buttons stay in line */
+        background-color: #007bff; /* Darker purple */
+        color: rgb(27, 26, 26);
+        border: none;
+        border-radius: 4px;
+        padding: 8px 12px;
+        cursor: pointer;
+        margin-right: 10px; /* Space between buttons */
+    }
+    .submit-button1:last-child {
+        margin-right: 0; /* Remove margin from the last button */
+    }
+    /* Styling for table header */
+    .highlighted-tag{
+        font-weight: bold;
+        font-size: 20px;
+    }
+.highlighted-header {
+    background-color: #007bff; /* Corporate blue */
+    color: white; /* White text */
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+    /* Center align all table cells */
+    #recipetable th, #recipetable td {
+        text-align: center; /* Center-align text */
+        vertical-align: middle; /* Center-align content vertically */
+    }
+
+    /* Optional: Adjust padding for a cleaner look */
+    #recipetable th, #recipetable td {
+        padding: 8px;
+    }
+    
+    /* Flexbox container for side-by-side layout */
+    .recipe-container {
+        display: flex;
+        justify-content: center;         /* Center the dropdowns horizontally */
+        align-items: flex-start;         /* Align tops of each dropdown */
+        gap: 15px;                       /* Space between dropdowns */
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+.dropdown-container {
+    position: relative;
+    width: 220px; /* Slightly wider for balance */
+    margin: 5px 10px;
+}
+
+.dropdown-container input[type="text"] {
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px 35px 10px 12px; /* Room for icon on the right */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    box-sizing: border-box;
+}
+
+.dropdown-container input[type="text"]:focus {
+    border-color: #8e24aa; /* Match your theme */
+    box-shadow: 0 0 5px rgba(142, 36, 170, 0.3);
+    outline: none;
+}
+
+.dropdown-container .dropdown-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 14px;
+    pointer-events: none; /* Let clicks go through */
+}
+.dropdown-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: absolute;
+    width: 100%;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: none; /* toggle this with JS */
+}
+.dropdown-list div {
+    padding: 8px 12px;
+    text-align: center;  /* Center the text */
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.dropdown-list div:hover {
+    background-color: #f2f2f2;
+}
+
+
+/* Hover effect */
+.dropdown-item:hover {
+    background: #f5f5f5;
+}
+label[for="load_recipe_id"] {
+    display: block;
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+    
+    
+</style>
 
 {% endblock %}
 

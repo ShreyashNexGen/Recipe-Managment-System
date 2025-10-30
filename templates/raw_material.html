@@ -12,10 +12,10 @@
     </div>
 {% endblock %}
 {% block content %}
-<div class="content-header">
+<!-- <div class="content-header"> -->
 <!-- Your First Table (with collapsible feature) -->
  
-<div id="raw-material-section"  class="raw-material-section section-box hidden-section">
+<!-- <div id="raw-material-section"  class="raw-material-section section-box hidden-section">
     <div class="raw-material-cards">
       <h3 class="section-title">Raw Material Summary</h3>
       <div class="card-container">
@@ -38,9 +38,9 @@
       <h3 class="section-title">Shift-wise Production</h3>
       <canvas id="shiftPieChart"></canvas>
     </div>
-  </div>
+  </div> -->
   <!-- <button onclick="openAddMaterialForm()" class="add-button">+ Add Material</button>     -->
-</div>
+<!-- </div> -->
 
 <div class="search-section">
     
@@ -64,7 +64,7 @@
    
     <div>
   <button  onclick="openAddMaterialForm()" class="add-button">Add Material</button>
-  <button id="toggleBtn" class="add-button">Hide Charts</button>
+  <!-- <button id="toggleBtn" class="add-button">Hide Charts</button> -->
 </div>
 </div>
 <div id="add-material-section" class="pop-raw-up" style="display: none;">
@@ -157,7 +157,7 @@
         <thead>
             <tr>
                 <th>Serial No.</th>
-                <th>Material ID</th>
+                <!-- <th>Material ID</th> -->
                 <th>Type</th>
                 <th>Width</th>
                 <th>Part No.</th>
@@ -174,7 +174,7 @@
             {% for material in raw_materials %}
             <tr id="row-{{ material.material_Id}}">
                 <td>{{ serial_number + loop.index }}</td>
-                <td>{{ material.material_Id }}</td>
+                <!-- <td>{{ material.material_Id }}</td> -->
                 <td>{{ material.type}}</td>
                 <td>{{ material.width}}</td>
                 <td>{{ material.part_no}}</td>

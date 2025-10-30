@@ -116,7 +116,7 @@
         </tbody>
     </table>
      <!-- Pagination Controls -->
-     <div class="d-flex justify-content-between align-items-center mt-4">
+<div class="d-flex justify-content-between align-items-center mt-4">
         <nav>
             <ul class="pagination mb-0" id="pagination">
                 <!-- Dynamic pagination -->
@@ -141,42 +141,57 @@
             .catch(error => console.error('Error fetching recipe log:', error));
     }
 
-    function renderPage(page) {
-        const start = (page - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        const visibleData = fullData.slice(start, end);
+function renderPage(page) { 
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const visibleData = fullData.slice(start, end);
 
-        const tableBody = document.getElementById('recipe-log-table');
-        tableBody.innerHTML = '';
+    const tableBody = document.getElementById('recipe-log-table');
+    tableBody.innerHTML = '';
 
-        visibleData.forEach(row => {
-            tableBody.innerHTML += `
-                 <tr>
-    <td>${row.SerialNo}</td>
-    <td>${row.Recipe_Name}</td>
-    <td>${row.Timestamp}</td>
-    <td>${row.Article_No}</td>
+    visibleData.forEach(row => {
+        // Determine NgStatus badge style
+        let ngBadge = `<span class="status-badge neutral">N/A</span>`;
+        if (row.NgStatus) {
+            const status = row.NgStatus.toString().toLowerCase();
+            if (status.includes('ok')) {
+                ngBadge = `<span class="status-badge ok">OK</span>`;
+            } else if (status.includes('ng')) {
+                ngBadge = `<span class="status-badge ng">NG</span>`;
+            } else {
+                ngBadge = `<span class="status-badge neutral">${row.NgStatus}</span>`;
+            }
+        }
 
-    <!-- Limits shown as comma separated -->
-    <td>${row.RPM_Upper}, ${row.RPM_Lower}</td>
-    <td>${row.Pressure_Upper}, ${row.Pressure_Lower}</td>
-    <td>${row.AirFlow_Upper}, ${row.AirFlow_Lower}</td>
-    <td>${row.Pressure_Max}, ${row.Pressure_Min}</td>
+        tableBody.innerHTML += `
+            <tr>
+                <td>${row.SerialNo}</td>
+                <td>${row.Recipe_Name}</td>
+                <td>${row.Timestamp}</td>
+                <td>${row.Article_No}</td>
 
-    <td>${row.Avg_Motor_RPM}</td>
-    <td>${row.Avg_Air_Flow}</td>
-    <td>${row.Avg_Pressure_Diff}</td>
-    <td>${row.User_Id}</td>
-    <td>${row.Test_Duration}</td>
-    <td>${row.NgStatus}</td>
+                <td>${row.RPM_Upper}, ${row.RPM_Lower}</td>
+                <td>${row.Pressure_Upper}, ${row.Pressure_Lower}</td>
+                <td>${row.AirFlow_Upper}, ${row.AirFlow_Lower}</td>
+                <td>${row.Pressure_Max}, ${row.Pressure_Min}</td>
 
-    <td><button class="print-btn" onclick="rePrint(${row.SerialNo})">Re-Print</button></td>
-  </tr>
-            `;
-        });
-    }
+                <td>${row.Avg_Motor_RPM}</td>
+                <td>${row.Avg_Air_Flow}</td>
+                <td>${row.Avg_Pressure_Diff}</td>
+                <td>${row.User_Id}</td>
+                <td>${row.Test_Duration}</td>
 
-    function setupPagination() {
+                <!-- NgStatus with badge -->
+                <td>${ngBadge}</td>
+
+                <td><button class="print-btn" onclick="rePrint(${row.SerialNo})">Re-Print</button></td>
+            </tr>
+        `;
+    });
+}
+
+   
+function setupPagination() {
         const totalPages = Math.ceil(fullData.length / rowsPerPage);
         const pagination = document.getElementById('pagination');
         pagination.innerHTML = '';
@@ -423,6 +438,30 @@ function exportToExcel() {
     #recipe-log-table tr:nth-child(even) {
         background-color: #e0e0e0; /* slightly darker grey */
     }
+</style>
+<style>
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  min-width: 45px;
+}
+
+.status-badge.ok {
+  background-color: #28a745; /* Green */
+}
+
+.status-badge.ng {
+  background-color: #dc3545; /* Red */
+}
+
+.status-badge.neutral {
+  background-color: #6c757d; /* Gray */
+}
 </style>
 
 

@@ -27,92 +27,104 @@
             <button type="button" class="refresh-btn" id="reset-filters">Refresh</button>
         </form>
             <!-- PDF Download Button -->
-        <form method="POST" action="/download" id="download-form">
-            <input type="hidden" name="filtered_data" id="filtered-data">
-            <button type="submit" name="format" value="pdf" class="download-btn">Download as PDF</button>
-        </form>  
+        <form method="GET" action="/download_excel" id="excel-form">
+  <input type="hidden" name="start_date" value="{{ start_date or '' }}">
+  <input type="hidden" name="end_date" value="{{ end_date or '' }}">
+  {% for col in columns %}
+    <input type="hidden" name="{{ col }}" value="{{ request.args.get(col, '') }}">
+  {% endfor %}
+  <button type="submit" class="download-btn">Download Excel</button>
+</form>
+
+        
     </div>  
 </div>
 
-<table class="table table-bordered table-striped" id="report-table">
-  <thead class="thead-dark">
-    <tr>
-      <th>Batch Code</th>
-      <th>Timestamp</th>
-      <th>Recipe Name</th>
-      <th>Article No</th>
-      <th>Filter Size</th>
-      <th>FilterSize</th>
-      <th>Ng Status</th>
-      <th>Serial No</th>
-      <th>Parameter 1</th>
-      <th>Parameter 2</th>
-      <th>Batch Completion Status</th>
-    </tr>
-    <!-- ✅ Filter row added below header -->
-    <tr class="column-filters">
-      <th><input type="text" class="column-search" data-col="0" placeholder="Search Batch Code"></th>
-      <th><input type="text" class="column-search" data-col="1" placeholder="Search Timestamp"></th>
-      <th><input type="text" class="column-search" data-col="2" placeholder="Search Recipe Name"></th>
-      <th><input type="text" class="column-search" data-col="3" placeholder="Search Article No"></th>
-      <th><input type="text" class="column-search" data-col="4" placeholder="Search Filter Size"></th>
-      <th><input type="text" class="column-search" data-col="5" placeholder="Search FilterSize"></th>
-      <th><input type="text" class="column-search" data-col="6" placeholder="Search Ng Status"></th>
-      <th><input type="text" class="column-search" data-col="7" placeholder="Search Serial No"></th>
-      <th><input type="text" class="column-search" data-col="8" placeholder="Search Parameter 1"></th>
-      <th><input type="text" class="column-search" data-col="9" placeholder="Search Parameter 2"></th>
-      <th><input type="text" class="column-search" data-col="10" placeholder="Search Batch Status"></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in data %}
-    <tr>
-      <td>{{ row.Batch_Code }}</td>
-      <td>{{ row.Timestamp }}</td>
-      <td>{{ row.Recipe_Name }}</td>
-      <td>{{ row.Article_No }}</td>
-      <td>{{ row.Filter_Size }}</td>
-      <td>{{ row.FilterSize }}</td>
-      <td>{{ row.NgStatus }}</td>
-      <td>{{ row.SerialNo }}</td>
-      <td>{{ row.Parameter1 }}</td>
-      <td>{{ row.Parameter2 }}</td>
-      <td>{{ row.Batch_Completion_Status }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="table-wrapper">
+  <table class="data-table" id="report-table">
+    <thead>
+      <!-- Table Headers -->
+      <tr>
+        {% for col in columns %}
+          <th>{{ col }}</th>
+        {% endfor %}
+      </tr>
+
+      <!-- Column Filters -->
+      <tr class="column-filters">
+        {% for col in columns %}
+          <th><input type="text" class="column-search" placeholder="Search {{ col }}" value="{{ request.args.get(col, '') }}">
+</th>
+        {% endfor %}
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for row in data %}
+      <tr>
+        {% for col in columns %}
+          <td>{{ row[col] }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
 <!-- Showing Entries Info -->
 <div class="entries-info">
-    Showing <span id="entry-start">0</span> to <span id="entry-end">0</span> of <span id="entry-total">0</span> entries
+ Showing {{ start_entry }} – {{ end_entry }} of {{ total_count }} entries
 </div>
-<div class="pagination-container"></div>
-<div class="d-flex justify-content-between align-items-center mt-3">
-  <div>
-    <small>
-      Showing {{ start_entry }} – {{ end_entry }} of {{ total_count }} entries
-    </small>
+<div class="pagination-container">
+  <div class="pagination">
+
+    <!-- Prev Button -->
+    <a href="{{ url_for('report', page=page-1, start_date=start_date, end_date=end_date) }}"
+       class="page-btn {% if page == 1 %}disabled{% endif %}">« Prev</a>
+
+    {# --- Calculate safe start and end pages --- #}
+    {% set start_page = page - 1 if page > 1 else 1 %}
+    {% set end_page = start_page + 2 %}
+    {% if end_page > total_pages %}
+      {% set end_page = total_pages %}
+    {% endif %}
+
+    {# --- Leading Ellipsis --- #}
+    {% if start_page > 1 %}
+      <a href="{{ url_for('report', page=1, start_date=start_date, end_date=end_date) }}" class="page-btn">1</a>
+      {% if start_page > 2 %}
+        <span class="dots">...</span>
+      {% endif %}
+    {% endif %}
+
+    {# --- Page Numbers --- #}
+    {% for i in range(start_page, end_page + 1) %}
+      <a href="{{ url_for('report', page=i, start_date=start_date, end_date=end_date) }}"
+         class="page-btn {% if page == i %}active{% endif %}">
+        {{ i }}
+      </a>
+    {% endfor %}
+
+    {# --- Trailing Ellipsis --- #}
+    {% if end_page < total_pages %}
+      {% if end_page < total_pages - 1 %}
+        <span class="dots">...</span>
+      {% endif %}
+      <a href="{{ url_for('report', page=total_pages, start_date=start_date, end_date=end_date) }}" class="page-btn">
+        {{ total_pages }}
+      </a>
+    {% endif %}
+
+    <!-- Next Button -->
+    <a href="{{ url_for('report', page=page+1, start_date=start_date, end_date=end_date) }}"
+       class="page-btn {% if page == total_pages %}disabled{% endif %}">Next »</a>
+
   </div>
-
-  <nav>
-    <ul class="pagination mb-0">
-      <li class="page-item {% if page == 1 %}disabled{% endif %}">
-        <a class="page-link" href="{{ url_for('report', page=page-1) }}">Previous</a>
-      </li>
-
-      {% for i in range(1, total_pages + 1) %}
-        <li class="page-item {% if page == i %}active{% endif %}">
-          <a class="page-link" href="{{ url_for('report', page=i) }}">{{ i }}</a>
-        </li>
-      {% endfor %}
-
-      <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-        <a class="page-link" href="{{ url_for('report', page=page+1) }}">Next</a>
-      </li>
-    </ul>
-  </nav>
 </div>
+
+
+
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -137,105 +149,130 @@ document.addEventListener("DOMContentLoaded", function () {
     filterForm.submit();
   });
 
+  // ✅ Initialize flatpickr
   flatpickr("#report-start-date", { dateFormat: "Y-m-d", allowInput: true });
   flatpickr("#report-end-date", { dateFormat: "Y-m-d", allowInput: true });
 
-  // ✅ --- COLUMN-WISE FILTERING ---
-  const table = document.getElementById("report-table");
-  const rows = Array.from(table.querySelectorAll("tbody tr"));
-  const columnInputs = document.querySelectorAll(".column-search");
 
-  columnInputs.forEach(input => {
-    input.addEventListener("input", () => applyColumnFilters());
-  });
-
-  function applyColumnFilters() {
-    const filters = Array.from(columnInputs).map(inp => inp.value.toLowerCase().trim());
-    rows.forEach(row => {
-      const cells = row.querySelectorAll("td");
-      let visible = true;
-      filters.forEach((filter, i) => {
-        if (filter && !cells[i].textContent.toLowerCase().includes(filter)) {
-          visible = false;
-        }
-      });
-      row.style.display = visible ? "" : "none";
-    });
-    updatePagination(1); // Refresh pagination after filtering
-  }
-
-  // ✅ --- PDF DOWNLOAD (only visible rows) ---
-  document.getElementById("download-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const visibleRows = Array.from(rows).filter(r => r.style.display !== "none");
-    const data = visibleRows.map(r => Array.from(r.querySelectorAll("td")).map(td => td.textContent.trim()));
-    document.getElementById("filtered-data").value = JSON.stringify(data);
-    this.submit();
-  });
-
-  // ✅ --- PAGINATION ---
-  const rowsPerPage = 10;
-  const paginationContainer = document.querySelector(".pagination-container");
-  const entriesInfo = document.querySelector(".entries-info");
-  let currentPage = 1;
-
-  function renderTable(page) {
-    const visibleRows = rows.filter(r => r.style.display !== "none");
-    const totalPages = Math.ceil(visibleRows.length / rowsPerPage);
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    visibleRows.forEach((row, index) => {
-      row.style.display = index >= start && index < end ? "" : "none";
-    });
-
-    updatePaginationButtons(page, totalPages);
-    updateEntriesInfo(page, visibleRows.length);
-  }
-
-  function updatePaginationButtons(activePage, totalPages) {
-    paginationContainer.innerHTML = "";
-    if (totalPages <= 1) return;
-
-    const createBtn = (page, text, active = false) => {
-      const btn = document.createElement("a");
-      btn.href = "javascript:void(0)";
-      btn.textContent = text;
-      btn.className = `pagination-btn ${active ? "active" : ""}`;
-      btn.onclick = () => changePage(page);
-      return btn;
-    };
-
-    if (activePage > 1) paginationContainer.appendChild(createBtn(activePage - 1, "Previous"));
-    for (let i = 1; i <= totalPages; i++) {
-      paginationContainer.appendChild(createBtn(i, i, i === activePage));
-    }
-    if (activePage < totalPages) paginationContainer.appendChild(createBtn(activePage + 1, "Next"));
-  }
-
-  function updateEntriesInfo(page, totalVisible) {
-    const start = (page - 1) * rowsPerPage + 1;
-    const end = Math.min(page * rowsPerPage, totalVisible);
-    entriesInfo.innerHTML = `Showing ${start} to ${end} of ${totalVisible} entries`;
-  }
-
-  window.changePage = function (page) {
-    currentPage = page;
-    renderTable(currentPage);
-  };
-
-  function updatePagination(page) {
-    renderTable(page);
-  }
-
-  // ✅ Initial render
-  renderTable(currentPage);
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  let typingTimer;
+  const typingDelay = 600; // milliseconds delay after typing
+
+  document.querySelectorAll('.column-search').forEach((input) => {
+    input.addEventListener('keyup', () => {
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(applyFilters, typingDelay);
+    });
+  });
+
+  function applyFilters() {
+    const params = new URLSearchParams(window.location.search);
+    // 🧭 Preserve date filters if present
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    if (startDateInput && startDateInput.value) params.set("start_date", startDateInput.value);
+    if (endDateInput && endDateInput.value) params.set("end_date", endDateInput.value);
+     // 🧮 Collect column filters
+    const headers = document.querySelectorAll('.data-table thead tr:first-child th');
+    const inputs = document.querySelectorAll('.column-search');
+    document.querySelector('.table-wrapper').classList.add('loading');
+    inputs.forEach((inp, i) => {
+      const colName = headers[i].textContent.trim();
+      if (inp.value.trim() !== "")
+        params.set(colName, inp.value.trim());
+      else
+        params.delete(colName);
+    });
+
+    params.set("page", 1); // Reset pagination when filters change
+    window.location.search = params.toString();
+  }
+});
+
+
+
 </script>
 
 
 
 <style>
+/* ===== Pagination Section ===== */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Info text */
+.entries-info {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Pagination Buttons */
+.pagination {
+  display: flex;
+  gap: 5px;
+}
+
+.page-btn {
+  color: #007bff;
+  background: white;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.25s ease;
+}
+
+.page-btn:hover {
+  background: #007bff;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+}
+
+/* Active Page */
+.page-btn.active {
+  background: #007bff;
+  color: white;
+  cursor: default;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.4);
+}
+
+/* Disabled Button */
+.page-btn.disabled {
+  color: #999;
+  border-color: #ccc;
+  background: #f8f8f8;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .pagination-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+}
+
     .column-filters input {
   width: 100%;
   padding: 3px;
@@ -604,5 +641,99 @@ document.addEventListener("DOMContentLoaded", function () {
         border: none;
         pointer-events: none;
     }
+    /* Table wrapper for horizontal scroll */
+.table-wrapper {
+  overflow-x: auto;
+  margin: 20px auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  background-color: #fff;
+  max-width: 98%;
+}
+.table-wrapper.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+/* Table design */
+.data-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+  text-align: left;
+}
+
+.data-table thead {
+  background-color: #007bff;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.data-table th, .data-table td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+}
+
+.data-table tbody tr:hover {
+  background-color: #f1f5ff;
+  transition: background 0.2s;
+}
+
+/* Entries info */
+.entries-info {
+  margin: 10px 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Pagination styling */
+.pagination-container {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.pagination {
+  display: inline-flex;
+  background: #f9f9f9;
+  border-radius: 25px;
+  padding: 8px 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.page-btn {
+  color: #007bff;
+  border: 1px solid #007bff;
+  padding: 6px 12px;
+  margin: 0 4px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.page-btn:hover {
+  background: #007bff;
+  color: #fff;
+}
+
+.page-btn.active {
+  background: #007bff;
+  color: #fff;
+  pointer-events: none;
+}
+
+.page-btn.disabled {
+  color: #ccc;
+  border-color: #ccc;
+  pointer-events: none;
+}
+
+.dots {
+  padding: 6px 10px;
+  color: #888;
+}
+
 </style>
 {% endblock %}
