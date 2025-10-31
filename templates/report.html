@@ -1,43 +1,55 @@
-{% extends "base.html" %}
-{% block title %}Recipe Report{% endblock %}
-{% block breadcrumbs %}
+{% extends "base.html" %} {% block title %}Recipe Report{% endblock %} {% block
+breadcrumbs %}
 <div class="breadcrumb">
-        <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
-        <i class="fas fa-angle-right"></i>
-        <a href="/production"><span>Report</span></a>        
-        <h1> Report Table</h1>
+  <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+  <i class="fas fa-angle-right"></i>
+  <a href="/production"><span>Report</span></a>
+  <h1>Report Table</h1>
 </div>
-{% endblock %}
-{% block content %}
+{% endblock %} {% block content %}
 
 <div class="report-filters">
-    <div class="filter-container">
-        <form method="POST" action="/report" id="filter-form">
-            <div class="date-filter">
-                <label for="report-start-date">From:</label>
-                <input type="text" id="report-start-date" name="start_date" placeholder="Select start date"
-                    value="{{ start_date if start_date else '' }}">
-            </div>
-            <div class="date-filter">
-                <label for="report-end-date">To:</label>
-                <input type="text" id="report-end-date" name="end_date" placeholder="Select end date"
-                    value="{{ end_date if end_date else '' }}">
-            </div>
-            <button type="submit" class="filter-btn">Filter</button>
-            <button type="button" class="refresh-btn" id="reset-filters">Refresh</button>
-        </form>
-            <!-- PDF Download Button -->
-        <form method="GET" action="/download_excel" id="excel-form">
-  <input type="hidden" name="start_date" value="{{ start_date or '' }}">
-  <input type="hidden" name="end_date" value="{{ end_date or '' }}">
-  {% for col in columns %}
-    <input type="hidden" name="{{ col }}" value="{{ request.args.get(col, '') }}">
-  {% endfor %}
-  <button type="submit" class="download-btn">Download Excel</button>
-</form>
-
-        
-    </div>  
+  <div class="filter-container">
+    <form method="POST" action="/report" id="filter-form">
+      <div class="date-filter">
+        <label for="report-start-date">From:</label>
+        <input
+          type="text"
+          id="report-start-date"
+          name="start_date"
+          placeholder="Select start date"
+          value="{{ start_date if start_date else '' }}"
+        />
+      </div>
+      <div class="date-filter">
+        <label for="report-end-date">To:</label>
+        <input
+          type="text"
+          id="report-end-date"
+          name="end_date"
+          placeholder="Select end date"
+          value="{{ end_date if end_date else '' }}"
+        />
+      </div>
+      <button type="submit" class="filter-btn">Filter</button>
+      <button type="button" class="refresh-btn" id="reset-filters">
+        Refresh
+      </button>
+    </form>
+    <!-- PDF Download Button -->
+    <form method="GET" action="/download_excel" id="excel-form">
+      <input type="hidden" name="start_date" value="{{ start_date or '' }}" />
+      <input type="hidden" name="end_date" value="{{ end_date or '' }}" />
+      {% for col in columns %}
+      <input
+        type="hidden"
+        name="{{ col }}"
+        value="{{ request.args.get(col, '') }}"
+      />
+      {% endfor %}
+      <button type="submit" class="download-btn">Download Excel</button>
+    </form>
+  </div>
 </div>
 
 <div class="table-wrapper">
@@ -46,15 +58,21 @@
       <!-- Table Headers -->
       <tr>
         {% for col in columns %}
-          <th>{{ col }}</th>
+        <th>{{ col }}</th>
         {% endfor %}
       </tr>
 
       <!-- Column Filters -->
       <tr class="column-filters">
         {% for col in columns %}
-          <th><input type="text" class="column-search" placeholder="Search {{ col }}" value="{{ request.args.get(col, '') }}">
-</th>
+        <th>
+          <input
+            type="text"
+            class="column-search"
+            placeholder="Search {{ col }}"
+            value="{{ request.args.get(col, '') }}"
+          />
+        </th>
         {% endfor %}
       </tr>
     </thead>
@@ -63,7 +81,7 @@
       {% for row in data %}
       <tr>
         {% for col in columns %}
-          <td>{{ row[col] }}</td>
+        <td>{{ row[col] }}</td>
         {% endfor %}
       </tr>
       {% endfor %}
@@ -73,220 +91,212 @@
 
 <!-- Showing Entries Info -->
 <div class="entries-info">
- Showing {{ start_entry }} – {{ end_entry }} of {{ total_count }} entries
+  Showing {{ start_entry }} – {{ end_entry }} of {{ total_count }} entries
 </div>
 <div class="pagination-container">
   <div class="pagination">
-
     <!-- Prev Button -->
-    <a href="{{ url_for('report', page=page-1, start_date=start_date, end_date=end_date) }}"
-       class="page-btn {% if page == 1 %}disabled{% endif %}">« Prev</a>
+    <a
+      href="{{ url_for('report', page=page-1, start_date=start_date, end_date=end_date) }}"
+      class="page-btn {% if page == 1 %}disabled{% endif %}"
+      >« Prev</a
+    >
 
-    {# --- Calculate safe start and end pages --- #}
-    {% set start_page = page - 1 if page > 1 else 1 %}
-    {% set end_page = start_page + 2 %}
-    {% if end_page > total_pages %}
-      {% set end_page = total_pages %}
+    {# --- Calculate safe start and end pages --- #} {% set start_page = page -
+    1 if page > 1 else 1 %} {% set end_page = start_page + 2 %} {% if end_page >
+    total_pages %} {% set end_page = total_pages %} {% endif %} {# --- Leading
+    Ellipsis --- #} {% if start_page > 1 %}
+    <a
+      href="{{ url_for('report', page=1, start_date=start_date, end_date=end_date) }}"
+      class="page-btn"
+      >1</a
+    >
+    {% if start_page > 2 %}
+    <span class="dots">...</span>
+    {% endif %} {% endif %} {# --- Page Numbers --- #} {% for i in
+    range(start_page, end_page + 1) %}
+    <a
+      href="{{ url_for('report', page=i, start_date=start_date, end_date=end_date) }}"
+      class="page-btn {% if page == i %}active{% endif %}"
+    >
+      {{ i }}
+    </a>
+    {% endfor %} {# --- Trailing Ellipsis --- #} {% if end_page < total_pages %}
+    {% if end_page < total_pages - 1 %}
+    <span class="dots">...</span>
     {% endif %}
-
-    {# --- Leading Ellipsis --- #}
-    {% if start_page > 1 %}
-      <a href="{{ url_for('report', page=1, start_date=start_date, end_date=end_date) }}" class="page-btn">1</a>
-      {% if start_page > 2 %}
-        <span class="dots">...</span>
-      {% endif %}
-    {% endif %}
-
-    {# --- Page Numbers --- #}
-    {% for i in range(start_page, end_page + 1) %}
-      <a href="{{ url_for('report', page=i, start_date=start_date, end_date=end_date) }}"
-         class="page-btn {% if page == i %}active{% endif %}">
-        {{ i }}
-      </a>
-    {% endfor %}
-
-    {# --- Trailing Ellipsis --- #}
-    {% if end_page < total_pages %}
-      {% if end_page < total_pages - 1 %}
-        <span class="dots">...</span>
-      {% endif %}
-      <a href="{{ url_for('report', page=total_pages, start_date=start_date, end_date=end_date) }}" class="page-btn">
-        {{ total_pages }}
-      </a>
+    <a
+      href="{{ url_for('report', page=total_pages, start_date=start_date, end_date=end_date) }}"
+      class="page-btn"
+    >
+      {{ total_pages }}
+    </a>
     {% endif %}
 
     <!-- Next Button -->
-    <a href="{{ url_for('report', page=page+1, start_date=start_date, end_date=end_date) }}"
-       class="page-btn {% if page == total_pages %}disabled{% endif %}">Next »</a>
-
+    <a
+      href="{{ url_for('report', page=page+1, start_date=start_date, end_date=end_date) }}"
+      class="page-btn {% if page == total_pages %}disabled{% endif %}"
+      >Next »</a
+    >
   </div>
 </div>
 
-
-
-
-
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  // ✅ --- DATE FILTER FORM ---
-  const filterForm = document.getElementById("filter-form");
-  const resetBtn = document.getElementById("reset-filters");
-  const startInput = document.getElementById("report-start-date");
-  const endInput = document.getElementById("report-end-date");
+  document.addEventListener("DOMContentLoaded", function () {
+    // ✅ --- DATE FILTER FORM ---
+    const filterForm = document.getElementById("filter-form");
+    const resetBtn = document.getElementById("reset-filters");
+    const startInput = document.getElementById("report-start-date");
+    const endInput = document.getElementById("report-end-date");
 
-  filterForm.addEventListener("submit", function (e) {
-    const startDate = startInput.value;
-    const endDate = endInput.value;
-    if (!startDate || !endDate) {
-      alert("❌ Please select both start and end dates.");
-      e.preventDefault();
+    filterForm.addEventListener("submit", function (e) {
+      const startDate = startInput.value;
+      const endDate = endInput.value;
+      if (!startDate || !endDate) {
+        alert("❌ Please select both start and end dates.");
+        e.preventDefault();
+      }
+    });
+
+    resetBtn.addEventListener("click", function () {
+      startInput.value = "";
+      endInput.value = "";
+      filterForm.submit();
+    });
+
+    // ✅ Initialize flatpickr
+    flatpickr("#report-start-date", { dateFormat: "Y-m-d", allowInput: true });
+    flatpickr("#report-end-date", { dateFormat: "Y-m-d", allowInput: true });
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    let typingTimer;
+    const typingDelay = 600; // milliseconds delay after typing
+
+    document.querySelectorAll(".column-search").forEach((input) => {
+      input.addEventListener("keyup", () => {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(applyFilters, typingDelay);
+      });
+    });
+
+    function applyFilters() {
+      const params = new URLSearchParams(window.location.search);
+      // 🧭 Preserve date filters if present
+      const startDateInput = document.querySelector('input[name="start_date"]');
+      const endDateInput = document.querySelector('input[name="end_date"]');
+      if (startDateInput && startDateInput.value)
+        params.set("start_date", startDateInput.value);
+      if (endDateInput && endDateInput.value)
+        params.set("end_date", endDateInput.value);
+      // 🧮 Collect column filters
+      const headers = document.querySelectorAll(
+        ".data-table thead tr:first-child th"
+      );
+      const inputs = document.querySelectorAll(".column-search");
+      document.querySelector(".table-wrapper").classList.add("loading");
+      inputs.forEach((inp, i) => {
+        const colName = headers[i].textContent.trim();
+        if (inp.value.trim() !== "") params.set(colName, inp.value.trim());
+        else params.delete(colName);
+      });
+
+      params.set("page", 1); // Reset pagination when filters change
+      window.location.search = params.toString();
     }
   });
-
-  resetBtn.addEventListener("click", function () {
-    startInput.value = "";
-    endInput.value = "";
-    filterForm.submit();
-  });
-
-  // ✅ Initialize flatpickr
-  flatpickr("#report-start-date", { dateFormat: "Y-m-d", allowInput: true });
-  flatpickr("#report-end-date", { dateFormat: "Y-m-d", allowInput: true });
-
-
-});
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  let typingTimer;
-  const typingDelay = 600; // milliseconds delay after typing
-
-  document.querySelectorAll('.column-search').forEach((input) => {
-    input.addEventListener('keyup', () => {
-      clearTimeout(typingTimer);
-      typingTimer = setTimeout(applyFilters, typingDelay);
-    });
-  });
-
-  function applyFilters() {
-    const params = new URLSearchParams(window.location.search);
-    // 🧭 Preserve date filters if present
-    const startDateInput = document.querySelector('input[name="start_date"]');
-    const endDateInput = document.querySelector('input[name="end_date"]');
-    if (startDateInput && startDateInput.value) params.set("start_date", startDateInput.value);
-    if (endDateInput && endDateInput.value) params.set("end_date", endDateInput.value);
-     // 🧮 Collect column filters
-    const headers = document.querySelectorAll('.data-table thead tr:first-child th');
-    const inputs = document.querySelectorAll('.column-search');
-    document.querySelector('.table-wrapper').classList.add('loading');
-    inputs.forEach((inp, i) => {
-      const colName = headers[i].textContent.trim();
-      if (inp.value.trim() !== "")
-        params.set(colName, inp.value.trim());
-      else
-        params.delete(colName);
-    });
-
-    params.set("page", 1); // Reset pagination when filters change
-    window.location.search = params.toString();
-  }
-});
-
-
-
 </script>
 
-
-
 <style>
-/* ===== Pagination Section ===== */
-.pagination-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fafafa;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 10px 20px;
-  margin-top: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  font-family: "Segoe UI", sans-serif;
-}
-
-/* Info text */
-.entries-info {
-  font-size: 14px;
-  color: #333;
-}
-
-/* Pagination Buttons */
-.pagination {
-  display: flex;
-  gap: 5px;
-}
-
-.page-btn {
-  color: #007bff;
-  background: white;
-  border: 1px solid #007bff;
-  border-radius: 6px;
-  padding: 6px 12px;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.25s ease;
-}
-
-.page-btn:hover {
-  background: #007bff;
-  color: white;
-  box-shadow: 0 2px 8px rgba(0,123,255,0.3);
-}
-
-/* Active Page */
-.page-btn.active {
-  background: #007bff;
-  color: white;
-  cursor: default;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0,123,255,0.4);
-}
-
-/* Disabled Button */
-.page-btn.disabled {
-  color: #999;
-  border-color: #ccc;
-  background: #f8f8f8;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
+  /* ===== Pagination Section ===== */
   .pagination-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    font-family: "Segoe UI", sans-serif;
   }
 
+  /* Info text */
+  .entries-info {
+    font-size: 14px;
+    color: #333;
+  }
+
+  /* Pagination Buttons */
   .pagination {
-    flex-wrap: wrap;
+    display: flex;
+    gap: 5px;
   }
-}
 
-    .column-filters input {
-  width: 100%;
-  padding: 3px;
-  font-size: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.column-filters input:focus {
-  outline: none;
-  border-color: #007bff;
-}
+  .page-btn {
+    color: #007bff;
+    background: white;
+    border: 1px solid #007bff;
+    border-radius: 6px;
+    padding: 6px 12px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.25s ease;
+  }
 
-    .report-filters {
-        display: flex;
+  .page-btn:hover {
+    background: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  }
+
+  /* Active Page */
+  .page-btn.active {
+    background: #007bff;
+    color: white;
+    cursor: default;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.4);
+  }
+
+  /* Disabled Button */
+  .page-btn.disabled {
+    color: #999;
+    border-color: #ccc;
+    background: #f8f8f8;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .pagination-container {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .pagination {
+      flex-wrap: wrap;
+    }
+  }
+
+  .column-filters input {
+    width: 100%;
+    padding: 3px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .column-filters input:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+
+  .report-filters {
+    display: flex;
     align-items: center;
     gap: 15px; /* Adds space between elements */
     justify-content: center; /* Centers content */
@@ -295,445 +305,448 @@ document.addEventListener("DOMContentLoaded", () => {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 8px;
-    }
-    
-    .filter-container {
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-         /* Ensures responsiveness */
-    }
-    
-    .date-filter {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .date-filter label {
-        font-weight: bold;
-        margin-bottom: 5px;
-    }
-    
-    .date-filter input {
-        width: 180px;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-    
-    .filter-btn,
-    .download-btn {
-        padding: 10px 15px;
-        font-weight: bold;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-    .report-filters form {
-        display: flex;
-        align-items: center;
-        gap: 15px; /* Adds spacing between elements */
-        justify-content: center;
-        background: #f8f9fa;
-        padding: 10px;
-        border-radius: 8px;
-        flex-wrap: wrap; /* Ensures responsiveness */
-    }
-    .filter-btn {
-        padding: 10px 15px;
-        font-weight: bold;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-    
-    .filter-btn:hover {
-        background-color: #0056b3;
-    }
-    
-    .download-btn {
-        background-color: #28a745;
-        color: white;
-    }
-    
-    .download-btn:hover {
-        background-color: #218838;
-    }
-    
-    
-    .report-filters .date-filter {
-        margin-bottom: 10px; /* Space between date filters */
-    }
-    .report-filters label {
-        display: block; /* Make labels appear above inputs */
-        margin-bottom: 5px; /* Space between label and input */
-    }
-    .report-filters input[type="text"] {
-        padding: 8px;
-        width: 200px; /* Fixed width for inputs */
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-    .report-filters button {
-        padding: 8px 16px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-    .report-filters button:hover {
-        background-color: #0056b3;
-    }
-    .report-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-    .report-table, .report-table th, .report-table td {
-        border: 1px solid #ddd;
-    }
-    .report-table th, .report-table td {
-        padding: 8px;
-        text-align: left;
-    }
-    .report-table th {
-        background-color: #f2f2f2;
-    }
-    .report-download-buttons {
-        margin-bottom: 20px; /* Move download buttons above the table */
-    }
-    .report-download-buttons button {
-        padding: 8px 16px;
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        width: 50%;
-        margin-right: 10px;
-    }
-    .report-download-buttons button:hover {
-        background-color: #218838;
-    }
-    .details-table {
-        border-collapse: collapse;
-        width: 100%;
-        text-align: center; /* Centers text horizontally */
-    }
-    .table {
-        table-layout: fixed;
-    }
-    
-    .details-table th, .details-table td {
-        padding: 4px; /* Reduces spacing */
-        white-space: nowrap; /* Prevents text from wrapping */
-        text-align: center; /* Centers text horizontally */
-        vertical-align: middle; /* Centers text vertically */
-        border: 1px solid black; /* Adds border for clarity */
-    }
-    .table-options-container {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-    }
+  }
 
-    .btn-toggle {
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 5px 7px;
-        font-size: 18px;
-        border-radius: 20%;
-        cursor: pointer;
-        transition: 0.3s;
-        margin-right: 10px;
-    }
+  .filter-container {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    /* Ensures responsiveness */
+  }
 
-    .btn-toggle:hover {
-        background: #5093da;
-    }
+  .date-filter {
+    display: flex;
+    flex-direction: column;
+  }
 
-    .options-menu {
-        display: none;
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
-        background: #aed6ed;
-        padding: 10px;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        z-index: 10;
-    }
+  .date-filter label {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
 
-    .options-menu .form-control {
-        padding: 8px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
+  .date-filter input {
+    width: 180px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
 
-    .btn-filter, .btn-refresh {
-        padding: 8px;
-        border-radius: 5px;
-        border: none;
-        cursor: pointer;
-        transition: 0.3s;
-    }
+  .filter-btn,
+  .download-btn {
+    padding: 10px 15px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .report-filters form {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Adds spacing between elements */
+    justify-content: center;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    flex-wrap: wrap; /* Ensures responsiveness */
+  }
+  .filter-btn {
+    padding: 10px 15px;
+    font-weight: bold;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
 
-    .btn-filter {
-        background: #007bff;
-        color: white;
-    }
+  .filter-btn:hover {
+    background-color: #0056b3;
+  }
 
-    .btn-filter:hover {
-        background: #0056b3;
-    }
+  .download-btn {
+    background-color: #28a745;
+    color: white;
+  }
 
-    .btn-refresh {
-        background: #dc3545;
-        color: white;
-    }
+  .download-btn:hover {
+    background-color: #218838;
+  }
 
-    .btn-refresh:hover {
-        background: #c82333;
-    }
+  .report-filters .date-filter {
+    margin-bottom: 10px; /* Space between date filters */
+  }
+  .report-filters label {
+    display: block; /* Make labels appear above inputs */
+    margin-bottom: 5px; /* Space between label and input */
+  }
+  .report-filters input[type="text"] {
+    padding: 8px;
+    width: 200px; /* Fixed width for inputs */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .report-filters button {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .report-filters button:hover {
+    background-color: #0056b3;
+  }
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .report-table,
+  .report-table th,
+  .report-table td {
+    border: 1px solid #ddd;
+  }
+  .report-table th,
+  .report-table td {
+    padding: 8px;
+    text-align: left;
+  }
+  .report-table th {
+    background-color: #f2f2f2;
+  }
+  .report-download-buttons {
+    margin-bottom: 20px; /* Move download buttons above the table */
+  }
+  .report-download-buttons button {
+    padding: 8px 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 50%;
+    margin-right: 10px;
+  }
+  .report-download-buttons button:hover {
+    background-color: #218838;
+  }
+  .details-table {
+    border-collapse: collapse;
+    width: 100%;
+    text-align: center; /* Centers text horizontally */
+  }
+  .table {
+    table-layout: fixed;
+  }
 
-    .dropdown-multi-select {
-        position: relative;
-        display: inline-block;
-      }
-      
-      .dropdown-btn1 {
-        padding: 6px 12px;
-        border-radius: 5px;
-        background: #fff;
-        border: 1px solid #007bff;
-        color: #007bff;
-        cursor: pointer;
-      }
-      
-      .dropdown-content1 {
-        display: none;
-        position: absolute;
-        background-color: white;
-        min-width: 250px;
-        border: 1px solid #ddd;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        padding: 10px;
-        max-height: 300px;
-        overflow-y: auto;
-        z-index: 10;
-      }
-      
-      .dropdown-multi-select:hover .dropdown-content1 {
-        display: block;
-      }
-      
-      .tag-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 10px;
-        padding-left: 4px;
-        justify-content: flex-start;
-      }
-      
-      .tag {
-        background: #007bff;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 16px;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-      }
-      
-      .tag .remove-tag {
-        margin-left: 8px;
-        cursor: pointer;
-        font-weight: bold;
-      }
-      
-      
-    .multi-select-dropdown {
-        position: relative;
-        width: 250px;
-      }
-      
-      .dropdown-header {
-        background-color: #fff;
-        border: 2px solid #007bff;
-        padding: 10px;
-        cursor: pointer;
-        border-radius: 6px;
-        font-weight: 500;
-        color: #007bff;
-      }
-      
-      .dropdown-options {
-        display: none;
-        position: absolute;
-        z-index: 1000;
-        background-color: white;
-        border: 2px solid #007bff;
-        padding: 10px;
-        border-radius: 0 0 6px 6px;
-        max-height: 200px;
-        overflow-y: auto;
-        width: 100%;
-        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
-      }
-      
-      .dropdown-options label {
-        display: block;
-        padding: 5px 0;
-        font-size: 14px;
-        cursor: pointer;
-      }
-      
-    .entries-info {
-        text-align: center;
-        font-weight: bold;
-        color: #555;
-        margin-bottom: 10px;
-        border-bottom: 2px solid #ddd;
-        padding-bottom: 5px;
-    }
+  .details-table th,
+  .details-table td {
+    padding: 4px; /* Reduces spacing */
+    white-space: nowrap; /* Prevents text from wrapping */
+    text-align: center; /* Centers text horizontally */
+    vertical-align: middle; /* Centers text vertically */
+    border: 1px solid black; /* Adds border for clarity */
+  }
+  .table-options-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
 
-    .pagination-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-    }
+  .btn-toggle {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 7px;
+    font-size: 18px;
+    border-radius: 20%;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-right: 10px;
+  }
 
-    .pagination-btn {
-        padding: 6px 10px;
-        background-color: white; /* Default: white */
-        color: #007bff; /* Blue text */
-        text-decoration: none;
-        border: 1px solid white; /* Blue border */
-        border-radius: 5px;
-        margin: 0 2px;
-    }
+  .btn-toggle:hover {
+    background: #5093da;
+  }
 
-    .pagination-btn:hover {
-        background-color: #007bff;
-        color: white;
-    }
+  .options-menu {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    background: #aed6ed;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    z-index: 10;
+  }
 
-    .pagination-btn.active {
-        background-color: #007bff; /* Blue background for active page */
-        color: white;
-        font-weight: bold;
-        pointer-events: none; /* Prevent clicking on current page */
-    }
+  .options-menu .form-control {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
 
-    .pagination-btn.disabled {
-        background-color: transparent;
-        color: #ccc;
-        border: none;
-        pointer-events: none;
-    }
-    /* Table wrapper for horizontal scroll */
-.table-wrapper {
-  overflow-x: auto;
-  margin: 20px auto;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  background-color: #fff;
-  max-width: 98%;
-}
-.table-wrapper.loading {
-  opacity: 0.5;
-  pointer-events: none;
-}
-/* Table design */
-.data-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 14px;
-  text-align: left;
-}
+  .btn-filter,
+  .btn-refresh {
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+  }
 
-.data-table thead {
-  background-color: #007bff;
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
+  .btn-filter {
+    background: #007bff;
+    color: white;
+  }
 
-.data-table th, .data-table td {
-  padding: 10px 15px;
-  border-bottom: 1px solid #ddd;
-  white-space: nowrap;
-}
+  .btn-filter:hover {
+    background: #0056b3;
+  }
 
-.data-table tbody tr:hover {
-  background-color: #f1f5ff;
-  transition: background 0.2s;
-}
+  .btn-refresh {
+    background: #dc3545;
+    color: white;
+  }
 
-/* Entries info */
-.entries-info {
-  margin: 10px 20px;
-  font-size: 14px;
-  color: #555;
-}
+  .btn-refresh:hover {
+    background: #c82333;
+  }
 
-/* Pagination styling */
-.pagination-container {
-  text-align: center;
-  margin: 20px 0;
-}
+  .dropdown-multi-select {
+    position: relative;
+    display: inline-block;
+  }
 
-.pagination {
-  display: inline-flex;
-  background: #f9f9f9;
-  border-radius: 25px;
-  padding: 8px 15px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
+  .dropdown-btn1 {
+    padding: 6px 12px;
+    border-radius: 5px;
+    background: #fff;
+    border: 1px solid #007bff;
+    color: #007bff;
+    cursor: pointer;
+  }
 
-.page-btn {
-  color: #007bff;
-  border: 1px solid #007bff;
-  padding: 6px 12px;
-  margin: 0 4px;
-  border-radius: 20px;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
+  .dropdown-content1 {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 250px;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+  }
 
-.page-btn:hover {
-  background: #007bff;
-  color: #fff;
-}
+  .dropdown-multi-select:hover .dropdown-content1 {
+    display: block;
+  }
 
-.page-btn.active {
-  background: #007bff;
-  color: #fff;
-  pointer-events: none;
-}
+  .tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding-left: 4px;
+    justify-content: flex-start;
+  }
 
-.page-btn.disabled {
-  color: #ccc;
-  border-color: #ccc;
-  pointer-events: none;
-}
+  .tag {
+    background: #007bff;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+  }
 
-.dots {
-  padding: 6px 10px;
-  color: #888;
-}
+  .tag .remove-tag {
+    margin-left: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
 
+  .multi-select-dropdown {
+    position: relative;
+    width: 250px;
+  }
+
+  .dropdown-header {
+    background-color: #fff;
+    border: 2px solid #007bff;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 500;
+    color: #007bff;
+  }
+
+  .dropdown-options {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    background-color: white;
+    border: 2px solid #007bff;
+    padding: 10px;
+    border-radius: 0 0 6px 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+  }
+
+  .dropdown-options label {
+    display: block;
+    padding: 5px 0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .entries-info {
+    text-align: center;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+  }
+
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .pagination-btn {
+    padding: 6px 10px;
+    background-color: white; /* Default: white */
+    color: #007bff; /* Blue text */
+    text-decoration: none;
+    border: 1px solid white; /* Blue border */
+    border-radius: 5px;
+    margin: 0 2px;
+  }
+
+  .pagination-btn:hover {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .pagination-btn.active {
+    background-color: #007bff; /* Blue background for active page */
+    color: white;
+    font-weight: bold;
+    pointer-events: none; /* Prevent clicking on current page */
+  }
+
+  .pagination-btn.disabled {
+    background-color: transparent;
+    color: #ccc;
+    border: none;
+    pointer-events: none;
+  }
+  /* Table wrapper for horizontal scroll */
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    background-color: #fff;
+    max-width: 98%;
+  }
+  .table-wrapper.loading {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  /* Table design */
+  .data-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  .data-table thead {
+    background-color: #007bff;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #ddd;
+    white-space: nowrap;
+  }
+
+  .data-table tbody tr:hover {
+    background-color: #f1f5ff;
+    transition: background 0.2s;
+  }
+
+  /* Entries info */
+  .entries-info {
+    margin: 10px 20px;
+    font-size: 14px;
+    color: #555;
+  }
+
+  /* Pagination styling */
+  .pagination-container {
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .pagination {
+    display: inline-flex;
+    background: #f9f9f9;
+    border-radius: 25px;
+    padding: 8px 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  .page-btn {
+    color: #007bff;
+    border: 1px solid #007bff;
+    padding: 6px 12px;
+    margin: 0 4px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .page-btn:hover {
+    background: #007bff;
+    color: #fff;
+  }
+
+  .page-btn.active {
+    background: #007bff;
+    color: #fff;
+    pointer-events: none;
+  }
+
+  .page-btn.disabled {
+    color: #ccc;
+    border-color: #ccc;
+    pointer-events: none;
+  }
+
+  .dots {
+    padding: 6px 10px;
+    color: #888;
+  }
 </style>
 {% endblock %}

@@ -1,500 +1,1077 @@
-{% extends "base.html" %}
-
-{% block title %}Recipe Management{% endblock %}
-{% block breadcrumbs %}
+{% extends "base.html" %} {% block title %}Recipe Management{% endblock %} {%
+block breadcrumbs %}
 <div class="breadcrumb">
-        <a href="/dashboard"><i class="fas fa-home"></i>Dashboard</a>
-        <i class="fas fa-angle-right"></i>
-        <a href="/recipe">Recipe</a>
-        <i class="fas fa-angle-right"></i>
-        <span>Recipe Overview</span>
-        <h1> Recipe Overview</h1>
-    </div>
-{% endblock %}
-{% block content %}
+  <a href="/dashboard"><i class="fas fa-home"></i>Dashboard</a>
+  <i class="fas fa-angle-right"></i>
+  <a href="/recipe">Recipe</a>
+  <i class="fas fa-angle-right"></i>
+  <span>Recipe Overview</span>
+  <h1>Recipe Overview</h1>
+</div>
+{% endblock %} {% block content %}
 <div class="content-header">
-    <h1>Recipe Overview</h1>
-    <button onclick="toggleRecipeForm()" class="add-button">+ Add Recipe</button>
+  <h1>Recipe Overview</h1>
+  <button onclick="toggleRecipeForm()" class="add-button">+ Add Recipe</button>
 </div>
 
 <div id="add-recipe-section">
-    <div id="recipe-form">
-        <div id="loadRecipeSection" class="popup-recipe-header">
-            <h3>Add New Recipe</h3>
-            <button type="button" class="close-button" onclick="toggleRecipeForm()">X</button>
-            <div >
-                <label for="load_recipe_id">Load Existing Recipe:</label>
-                <div class="recipe-container">
-                    <!-- Recipe ID -->
-                    <div class="dropdown-container">
-                        <input type="text" id="load_recipe_id" placeholder="Select Recipe ID" readonly >
-                        <span class="dropdown-icon"><i class="fa-solid fa-caret-down"></i></span>
-                        <div class="dropdown-list" id="dropdown_recipe_id"></div>
-                    </div>
-                
-                    <!-- Recipe Name -->
-                    <div class="dropdown-container">
-                        <input type="text" id="load_recipe_name" placeholder="Select Recipe Name" readonly>
-                        <span class="dropdown-icon"><i class="fa-solid fa-caret-down"></i></span>
-                        <div class="dropdown-list" id="dropdown_recipe_name"></div>
-                    </div>
-                </div>
-                <button type="button" onclick="loadRecipe()">Load Recipe</button>
-            </div>
+  <div id="recipe-form">
+    <div id="loadRecipeSection" class="popup-recipe-header">
+      <h3>Add New Recipe</h3>
+      <button type="button" class="close-button" onclick="toggleRecipeForm()">
+        X
+      </button>
+      <div>
+        <label for="load_recipe_id">Load Existing Recipe:</label>
+        <div class="recipe-container">
+          <!-- Recipe ID -->
+          <div class="dropdown-container">
+            <input
+              type="text"
+              id="load_recipe_id"
+              placeholder="Select Recipe ID"
+              readonly
+            />
+            <span class="dropdown-icon"
+              ><i class="fa-solid fa-caret-down"></i
+            ></span>
+            <div class="dropdown-list" id="dropdown_recipe_id"></div>
+          </div>
+
+          <!-- Recipe Name -->
+          <div class="dropdown-container">
+            <input
+              type="text"
+              id="load_recipe_name"
+              placeholder="Select Recipe Name"
+              readonly
+            />
+            <span class="dropdown-icon"
+              ><i class="fa-solid fa-caret-down"></i
+            ></span>
+            <div class="dropdown-list" id="dropdown_recipe_name"></div>
+          </div>
         </div>
-        <form action="/add_recipe" method="POST" class="recipe-form">
+        <button type="button" onclick="loadRecipe()">Load Recipe</button>
+      </div>
+    </div>
+    <form action="/add_recipe" method="POST" class="recipe-form">
+      <!-- Step 1: Basic Recipe Details -->
+      <div class="form-step" id="step1">
+        <div class="form-row">
+          <label for="recipe_id">Recipe ID:</label>
+          <input
+            type="number"
+            name="recipe_id"
+            id="recipe_id"
+            value="{{ next_recipe_id }}"
+            readonly
+          />
 
-            <!-- Step 1: Basic Recipe Details -->
-            <div class="form-step" id="step1">
-                <div class="form-row">
-                   <label for="recipe_id">Recipe ID:</label>
-                   <input type="number" name="recipe_id" id="recipe_id" value="{{ next_recipe_id }}" readonly>
+          <label for="recipe_name">Recipe Name:</label>
+          <input type="text" id="recipe_name" name="recipe_name" required />
 
-          
-        
-                    <label for="recipe_name">Recipe Name:</label>
-                    <input type="text" id="recipe_name" name="recipe_name" required>
-        
-                    <label for="filter_size">Filter Size:</label>
-                    <input type="text" id="filter_size" name="filter_size" required>
-        
-                    <label for="filter_code">Filter Code:</label>
-                    <input type="text" id="filter_code" name="filter_code" required>
-        
-                    <label for="art_no">Art No:</label>
-                    <input type="text" id="art_no" name="art_no" required>
-                    
-                </div>
-                <div class="form-buttons">
-                    <button type="button" onclick="loadLastPLCValues()">Upload Settings</button>
-                    <button type="button" onclick="nextStep()">Next</button>
-                </div>
-            </div>
-        
-            <!-- Step 2: Roll Positions -->
-<div class="form-step" id="step2" style="display:none;">
-    <h1 style="text-align: center; padding:10px">Roll Positions</h1>
-    <div class="form-row1">
+          <label for="filter_size">Filter Size:</label>
+          <input type="text" id="filter_size" name="filter_size" required />
 
-        <!-- Roll Positions -->
-        {% for i in range(1, 10) %}
-            <label for="pos{{ i }}">Roll Position {{ i }}:</label>
-            <select id="pos{{ i }}" name="pos{{ i }}" class="roll-select" style="width: 125px;">
-                <option value="">No Selection</option>
-                {% for value in pos_values %}
-                    <option value="{{ value }}">{{ value }}</option>
-                {% endfor %}
-            </select>
-        {% endfor %}
+          <label for="filter_code">Filter Code:</label>
+          <input type="text" id="filter_code" name="filter_code" required />
 
-        <!-- Separator Line -->
-         <div class="separator"></div> <div class="separator"></div> <div class="separator"></div>
-            <div class="separator"></div>
-             <div class="separator"></div>
-              <div class="separator"></div>
+          <label for="art_no">Art No:</label>
+          <input type="text" id="art_no" name="art_no" required />
+        </div>
+        <div class="form-buttons">
+          <button type="button" onclick="loadLastPLCValues()">
+            Upload Settings
+          </button>
+          <button type="button" onclick="nextStep()">Next</button>
+        </div>
+      </div>
 
-        
+      <!-- Step 2: Roll Positions -->
+      <div class="form-step" id="step2" style="display: none">
+        <h1 style="text-align: center; padding: 10px">Roll Positions</h1>
+        <div class="form-row1">
+          <!-- Roll Positions -->
+          {% for i in range(1, 10) %}
+          <label for="pos{{ i }}">Roll Position {{ i }}:</label>
+          <select
+            id="pos{{ i }}"
+            name="pos{{ i }}"
+            class="roll-select"
+            style="width: 125px"
+          >
+            <option value="">No Selection</option>
+            {% for value in pos_values %}
+            <option value="{{ value }}">{{ value }}</option>
+            {% endfor %}
+          </select>
+          {% endfor %}
 
-        <!-- Alu_Mat Dropdown -->
-        <label for="alu_mat">Alu_Materials:</label>
-        <select id="alu_mat" name="alu_mat" class="roll-select" style="width: 125px;">
-                <option value="">No Selection</option>
+          <!-- Separator Line -->
+          <div class="separator"></div>
+          <div class="separator"></div>
+          <div class="separator"></div>
+          <div class="separator"></div>
+          <div class="separator"></div>
+          <div class="separator"></div>
+
+          <!-- Alu_Mat Dropdown -->
+          <label for="alu_mat">Alu_Materials:</label>
+          <select
+            id="alu_mat"
+            name="alu_mat"
+            class="roll-select"
+            style="width: 125px"
+          >
+            <option value="">No Selection</option>
             {% for value in alu_values %}
-                <option value="{{ value }}">{{ value }}</option>
+            <option value="{{ value }}">{{ value }}</option>
             {% endfor %}
-        </select>
+          </select>
 
-        <!-- House_Mat Dropdown -->
-        <label for="house_mat">House_Materials:</label>
-        <select id="house_mat" name="house_mat" class="roll-select" style="width: 125px;">
-                <option value="">No Selection</option>
+          <!-- House_Mat Dropdown -->
+          <label for="house_mat">House_Materials:</label>
+          <select
+            id="house_mat"
+            name="house_mat"
+            class="roll-select"
+            style="width: 125px"
+          >
+            <option value="">No Selection</option>
             {% for value in h_values %}
-                <option value="{{ value }}">{{ value }}</option>
+            <option value="{{ value }}">{{ value }}</option>
             {% endfor %}
-        </select>
-    </div>
+          </select>
+        </div>
 
-    <div class="form-buttons">
-        <button type="button" onclick="loadLastPLCValues()">Upload Settings</button>
-        <button type="button" onclick="prevStep()">Back</button>
-        <button type="button" onclick="nextStep()">Next</button>
-    </div>
-</div>
+        <div class="form-buttons">
+          <button type="button" onclick="loadLastPLCValues()">
+            Upload Settings
+          </button>
+          <button type="button" onclick="prevStep()">Back</button>
+          <button type="button" onclick="nextStep()">Next</button>
+        </div>
+      </div>
 
-            
-            <!-- Step 3: Machine Settings -->
-<!-- Step 3: Machine Settings -->
-<!-- Step 3: Machine Settings -->
-<style>
-/* New value inputs → Yellowish */
-input[type="text"]:not([readonly]) {
-  background-color: #fff8d6; /* light yellow */
-  border: 1px solid #ccc;
-}
+      <!-- Step 3: Machine Settings -->
+      <!-- Step 3: Machine Settings -->
+      <!-- Step 3: Machine Settings -->
+      <style>
+        /* New value inputs → Yellowish */
+        input[type="text"]:not([readonly]) {
+          background-color: #fff8d6; /* light yellow */
+          border: 1px solid #ccc;
+        }
 
-/* Old value inputs → Bluish */
-input[readonly] {
-  background-color: #d6e9ff; /* light blue */
-  border: 1px solid #aaa;
-}
-</style>
+        /* Old value inputs → Bluish */
+        input[readonly] {
+          background-color: #d6e9ff; /* light blue */
+          border: 1px solid #aaa;
+        }
+      </style>
 
-<div class="form-step" id="step3" style="display:none;">
-  <h1 style="text-align: center; margin-bottom: 15px;">Machine Settings</h1>
-  <div class="form-row3">
+      <div class="form-step" id="step3" style="display: none">
+        <h1 style="text-align: center; margin-bottom: 15px">
+          Machine Settings
+        </h1>
+        <div class="form-row3">
+          <!-- 1. PLEAT HEIGHT -->
+          <div class="field-group">
+            <label for="Pleat_Height">PLEAT HEIGHT (mm):</label>
+            <input
+              type="text"
+              id="Pleat_Height"
+              name="Pleat_Height"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Pleat_Height_old"
+              name="Pleat_Height_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 1. PLEAT HEIGHT -->
-    <div class="field-group">
-      <label for="Pleat_Height">PLEAT HEIGHT (mm):</label>
-      <input type="text" id="Pleat_Height" name="Pleat_Height" placeholder="New Value">
-      <input type="text" id="Pleat_Height_old" name="Pleat_Height_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 2. BLADE OPENING -->
+          <div class="field-group">
+            <label for="Blade_Opening">BLADE OPENING (mm):</label>
+            <input
+              type="text"
+              id="Blade_Opening"
+              name="Blade_Opening"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Blade_Opening_old"
+              name="Blade_Opening_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 2. BLADE OPENING -->
-    <div class="field-group">
-      <label for="Blade_Opening">BLADE OPENING (mm):</label>
-      <input type="text" id="Blade_Opening" name="Blade_Opening" placeholder="New Value">
-      <input type="text" id="Blade_Opening_old" name="Blade_Opening_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 3. SOFT TOUCH -->
+          <div class="field-group">
+            <label for="Soft_Touch">SOFT TOUCH (mm):</label>
+            <input
+              type="text"
+              id="Soft_Touch"
+              name="Soft_Touch"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Soft_Touch_old"
+              name="Soft_Touch_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 3. SOFT TOUCH -->
-    <div class="field-group">
-      <label for="Soft_Touch">SOFT TOUCH (mm):</label>
-      <input type="text" id="Soft_Touch" name="Soft_Touch" placeholder="New Value">
-      <input type="text" id="Soft_Touch_old" name="Soft_Touch_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 4. PRESS TOUCH -->
+          <div class="field-group">
+            <label for="Press_Touch">PRESS TOUCH (mm):</label>
+            <input
+              type="text"
+              id="Press_Touch"
+              name="Press_Touch"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Press_Touch_old"
+              name="Press_Touch_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 4. PRESS TOUCH -->
-    <div class="field-group">
-      <label for="Press_Touch">PRESS TOUCH (mm):</label>
-      <input type="text" id="Press_Touch" name="Press_Touch" placeholder="New Value">
-      <input type="text" id="Press_Touch_old" name="Press_Touch_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 5. FEEDER 1 MEDIA THICKNESS -->
+          <div class="field-group">
+            <label for="Feeder1_Media_Thickness"
+              >FEEDER 1 MEDIA THICKNESS (mm):</label
+            >
+            <input
+              type="text"
+              id="Feeder1_Media_Thickness"
+              name="Feeder1_Media_Thickness"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Feeder1_Media_Thickness_old"
+              name="Feeder1_Media_Thickness_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 5. FEEDER 1 MEDIA THICKNESS -->
-    <div class="field-group">
-      <label for="Feeder1_Media_Thickness">FEEDER 1 MEDIA THICKNESS (mm):</label>
-      <input type="text" id="Feeder1_Media_Thickness" name="Feeder1_Media_Thickness" placeholder="New Value">
-      <input type="text" id="Feeder1_Media_Thickness_old" name="Feeder1_Media_Thickness_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 6. FEEDER 2 MEDIA THICKNESS -->
+          <div class="field-group">
+            <label for="Feeder2_Media_Thickness"
+              >FEEDER 2 MEDIA THICKNESS (mm):</label
+            >
+            <input
+              type="text"
+              id="Feeder2_Media_Thickness"
+              name="Feeder2_Media_Thickness"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Feeder2_Media_Thickness_old"
+              name="Feeder2_Media_Thickness_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 6. FEEDER 2 MEDIA THICKNESS -->
-    <div class="field-group">
-      <label for="Feeder2_Media_Thickness">FEEDER 2 MEDIA THICKNESS (mm):</label>
-      <input type="text" id="Feeder2_Media_Thickness" name="Feeder2_Media_Thickness" placeholder="New Value">
-      <input type="text" id="Feeder2_Media_Thickness_old" name="Feeder2_Media_Thickness_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 7. FEEDER 1 PARK POSITION -->
+          <div class="field-group">
+            <label for="Feeder1_Park_Position"
+              >FEEDER 1 PARK POSITION (mm):</label
+            >
+            <input
+              type="text"
+              id="Feeder1_Park_Position"
+              name="Feeder1_Park_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Feeder1_Park_Position_old"
+              name="Feeder1_Park_Position_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 7. FEEDER 1 PARK POSITION -->
-    <div class="field-group">
-      <label for="Feeder1_Park_Position">FEEDER 1 PARK POSITION (mm):</label>
-      <input type="text" id="Feeder1_Park_Position" name="Feeder1_Park_Position" placeholder="New Value">
-      <input type="text" id="Feeder1_Park_Position_old" name="Feeder1_Park_Position_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 8. FEEDER 2 PARK POSITION -->
+          <div class="field-group">
+            <label for="Feeder2_Park_Position"
+              >FEEDER 2 PARK POSITION (mm):</label
+            >
+            <input
+              type="text"
+              id="Feeder2_Park_Position"
+              name="Feeder2_Park_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Feeder2_Park_Position_old"
+              name="Feeder2_Park_Position_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 8. FEEDER 2 PARK POSITION -->
-    <div class="field-group">
-      <label for="Feeder2_Park_Position">FEEDER 2 PARK POSITION (mm):</label>
-      <input type="text" id="Feeder2_Park_Position" name="Feeder2_Park_Position" placeholder="New Value">
-      <input type="text" id="Feeder2_Park_Position_old" name="Feeder2_Park_Position_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 9. FOIL 1 LENGTH -->
+          <div class="field-group">
+            <label for="Foil1_Length">FOIL 1 LENGTH (mm):</label>
+            <input
+              type="text"
+              id="Foil1_Length"
+              name="Foil1_Length"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Foil1_Length_old"
+              name="Foil1_Length_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 9. FOIL 1 LENGTH -->
-    <div class="field-group">
-      <label for="Foil1_Length">FOIL 1 LENGTH (mm):</label>
-      <input type="text" id="Foil1_Length" name="Foil1_Length" placeholder="New Value">
-      <input type="text" id="Foil1_Length_old" name="Foil1_Length_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 10. FOIL 2 LENGTH -->
+          <div class="field-group">
+            <label for="Foil2_Length">FOIL 2 LENGTH (mm):</label>
+            <input
+              type="text"
+              id="Foil2_Length"
+              name="Foil2_Length"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Foil2_Length_old"
+              name="Foil2_Length_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 10. FOIL 2 LENGTH -->
-    <div class="field-group">
-      <label for="Foil2_Length">FOIL 2 LENGTH (mm):</label>
-      <input type="text" id="Foil2_Length" name="Foil2_Length" placeholder="New Value">
-      <input type="text" id="Foil2_Length_old" name="Foil2_Length_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 11. FOIL 1 LENGTH OFFSET -->
+          <div class="field-group">
+            <label for="Foil1_Length_Offset">FOIL 1 LENGTH OFFSET (mm):</label>
+            <input
+              type="text"
+              id="Foil1_Length_Offset"
+              name="Foil1_Length_Offset"
+              placeholder="NewValue"
+            />
+            <input
+              type="text"
+              id="Foil1_Length_Offset_old"
+              name="Foil1_Length_Offset_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 11. FOIL 1 LENGTH OFFSET -->
-    <div class="field-group">
-      <label for="Foil1_Length_Offset">FOIL 1 LENGTH OFFSET (mm):</label>
-      <input type="text" id="Foil1_Length_Offset" name="Foil1_Length_Offset" placeholder="NewValue">
-      <input type="text" id="Foil1_Length_Offset_old" name="Foil1_Length_Offset_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 12. FOIL 2 LENGTH OFFSET -->
+          <div class="field-group">
+            <label for="Foil2_Length_Offset">FOIL 2 LENGTH OFFSET (mm):</label>
+            <input
+              type="text"
+              id="Foil2_Length_Offset"
+              name="Foil2_Length_Offset"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Foil2_Length_Offset_old"
+              name="Foil2_Length_Offset_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 12. FOIL 2 LENGTH OFFSET -->
-    <div class="field-group">
-      <label for="Foil2_Length_Offset">FOIL 2 LENGTH OFFSET (mm):</label>
-      <input type="text" id="Foil2_Length_Offset" name="Foil2_Length_Offset" placeholder="New Value">
-      <input type="text" id="Foil2_Length_Offset_old" name="Foil2_Length_Offset_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 13. FOIL 1 WIDTH -->
+          <div class="field-group">
+            <label for="Foil1_Width">FOIL 1 WIDTH (mm):</label>
+            <input
+              type="text"
+              id="Foil1_Width"
+              name="Foil1_Width"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Foil1_Width_old"
+              name="Foil1_Width_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 13. FOIL 1 WIDTH -->
-    <div class="field-group">
-      <label for="Foil1_Width">FOIL 1 WIDTH (mm):</label>
-      <input type="text" id="Foil1_Width" name="Foil1_Width" placeholder="New Value">
-      <input type="text" id="Foil1_Width_old" name="Foil1_Width_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 14. FOIL 2 WIDTH -->
+          <div class="field-group">
+            <label for="Foil2_Width">FOIL 2 WIDTH (mm):</label>
+            <input
+              type="text"
+              id="Foil2_Width"
+              name="Foil2_Width"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Foil2_Width_old"
+              name="Foil2_Width_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 14. FOIL 2 WIDTH -->
-    <div class="field-group">
-      <label for="Foil2_Width">FOIL 2 WIDTH (mm):</label>
-      <input type="text" id="Foil2_Width" name="Foil2_Width" placeholder="New Value">
-      <input type="text" id="Foil2_Width_old" name="Foil2_Width_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 15. PULLER START POSITION -->
+          <div class="field-group">
+            <label for="Puller_Start_Position"
+              >PULLER START POSITION (mm):</label
+            >
+            <input
+              type="text"
+              id="Puller_Start_Position"
+              name="Puller_Start_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Puller_Start_Position_old"
+              name="Puller_Start_Position_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 15. PULLER START POSITION -->
-    <div class="field-group">
-      <label for="Puller_Start_Position">PULLER START POSITION (mm):</label>
-      <input type="text" id="Puller_Start_Position" name="Puller_Start_Position" placeholder="New Value">
-      <input type="text" id="Puller_Start_Position_old" name="Puller_Start_Position_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 16. PULLER END POSITION -->
+          <div class="field-group">
+            <label for="Puller_End_Position">PULLER END POSITION (mm):</label>
+            <input
+              type="text"
+              id="Puller_End_Position"
+              name="Puller_End_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Puller_End_Position_old"
+              name="Puller_End_Position_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 16. PULLER END POSITION -->
-    <div class="field-group">
-      <label for="Puller_End_Position">PULLER END POSITION (mm):</label>
-      <input type="text" id="Puller_End_Position" name="Puller_End_Position" placeholder="New Value">
-      <input type="text" id="Puller_End_Position_old" name="Puller_End_Position_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 17. AUTOFEEDING OFFSET -->
+          <div class="field-group">
+            <label for="Autofeeding_Offset">AUTOFEEDING OFFSET (mm):</label>
+            <input
+              type="text"
+              id="Autofeeding_Offset"
+              name="Autofeeding_Offset"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Autofeeding_Offset_old"
+              name="Autofeeding_Offset_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 17. AUTOFEEDING OFFSET -->
-    <div class="field-group">
-      <label for="Autofeeding_Offset">AUTOFEEDING OFFSET (mm):</label>
-      <input type="text" id="Autofeeding_Offset" name="Autofeeding_Offset" placeholder="New Value">
-      <input type="text" id="Autofeeding_Offset_old" name="Autofeeding_Offset_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 18. PULLER 2 FEED CORRECTION -->
+          <div class="field-group">
+            <label for="Puller2_Feed_Correction"
+              >PULLER 2 FEED CORRECTION (mm):</label
+            >
+            <input
+              type="text"
+              id="Puller2_Feed_Correction"
+              name="Puller2_Feed_Correction"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Puller2_Feed_Correction_old"
+              name="Puller2_Feed_Correction_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 18. PULLER 2 FEED CORRECTION -->
-    <div class="field-group">
-      <label for="Puller2_Feed_Correction">PULLER 2 FEED CORRECTION (mm):</label>
-      <input type="text" id="Puller2_Feed_Correction" name="Puller2_Feed_Correction" placeholder="New Value">
-      <input type="text" id="Puller2_Feed_Correction_old" name="Puller2_Feed_Correction_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 19. FILTER BOX HEIGHT -->
+          <div class="field-group">
+            <label for="Filter_Box_Height">FILTER BOX HEIGHT (mm):</label>
+            <input
+              type="text"
+              id="Filter_Box_Height"
+              name="Filter_Box_Height"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Filter_Box_Height_old"
+              name="Filter_Box_Height_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 19. FILTER BOX HEIGHT -->
-    <div class="field-group">
-      <label for="Filter_Box_Height">FILTER BOX HEIGHT (mm):</label>
-      <input type="text" id="Filter_Box_Height" name="Filter_Box_Height" placeholder="New Value">
-      <input type="text" id="Filter_Box_Height_old" name="Filter_Box_Height_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- Puller Extra Stroke Enable -->
+          <div class="field-group">
+            <label for="Puller_Extra_Stroke_Enable"
+              >PULLER EXTRA STROKE ENABLE:</label
+            >
+            <select
+              style="width: 26%"
+              id="Puller_Extra_Stroke_Enable"
+              name="Puller_Extra_Stroke_Enable"
+            >
+              <option value="1">True</option>
+              <option value="0">False</option>
+            </select>
+            <input
+              type="text"
+              id="Puller_Extra_Stroke_Enable_old"
+              name="Puller_Extra_Stroke_Enable_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-   <!-- Puller Extra Stroke Enable -->
-<div class="field-group">
-  <label for="Puller_Extra_Stroke_Enable">PULLER EXTRA STROKE ENABLE:</label>
-  <select style="width: 26%;" id="Puller_Extra_Stroke_Enable" name="Puller_Extra_Stroke_Enable">
-    <option value="1">True</option>
-    <option value="0">False</option>
-  </select>
-  <input type="text" id="Puller_Extra_Stroke_Enable_old" name="Puller_Extra_Stroke_Enable_old" placeholder="Current Value" readonly>
-</div>
+          <!-- 21. FILTER BOX LENGTH -->
+          <div class="field-group">
+            <label for="Filter_Box_Length">FILTER BOX LENGTH (mm):</label>
+            <input
+              type="text"
+              id="Filter_Box_Length"
+              name="Filter_Box_Length"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Filter_Box_Length_old"
+              name="Filter_Box_Length_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 21. FILTER BOX LENGTH -->
-    <div class="field-group">
-      <label for="Filter_Box_Length">FILTER BOX LENGTH (mm):</label>
-      <input type="text" id="Filter_Box_Length" name="Filter_Box_Length" placeholder="New Value">
-      <input type="text" id="Filter_Box_Length_old" name="Filter_Box_Length_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 22. FILTER BOX WIDTH -->
+          <div class="field-group">
+            <label for="Filter_Box_Width">FILTER BOX WIDTH (mm):</label>
+            <input
+              type="text"
+              id="Filter_Box_Width"
+              name="Filter_Box_Width"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Filter_Box_Width_old"
+              name="Filter_Box_Width_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 22. FILTER BOX WIDTH -->
-    <div class="field-group">
-      <label for="Filter_Box_Width">FILTER BOX WIDTH (mm):</label>
-      <input type="text" id="Filter_Box_Width" name="Filter_Box_Width" placeholder="New Value">
-      <input type="text" id="Filter_Box_Width_old" name="Filter_Box_Width_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 23. PLEAT PITCH -->
+          <div class="field-group">
+            <label for="Pleat_Pitch">PLEAT PITCH (mm):</label>
+            <input
+              type="text"
+              id="Pleat_Pitch"
+              name="Pleat_Pitch"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Pleat_Pitch_old"
+              name="Pleat_Pitch_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 23. PLEAT PITCH -->
-    <div class="field-group">
-      <label for="Pleat_Pitch">PLEAT PITCH (mm):</label>
-      <input type="text" id="Pleat_Pitch" name="Pleat_Pitch" placeholder="New Value">
-      <input type="text" id="Pleat_Pitch_old" name="Pleat_Pitch_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- Lid Placement Enable -->
+          <div class="field-group">
+            <label for="Lid_Placement_Enable">LID PLACEMENT ENABLE:</label>
+            <select
+              style="width: 26%"
+              id="Lid_Placement_Enable"
+              name="Lid_Placement_Enable"
+            >
+              <option value="1">True</option>
+              <option value="0">False</option>
+            </select>
+            <input
+              type="text"
+              id="Lid_Placement_Enable_old"
+              name="Lid_Placement_Enable_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
+          <!-- 25. PLEAT COUNTS -->
+          <div class="field-group">
+            <label for="Pleat_Counts">PLEAT COUNTS (nos):</label>
+            <input
+              type="text"
+              id="Pleat_Counts"
+              name="Pleat_Counts"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Pleat_Counts_old"
+              name="Pleat_Counts_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
+          <!-- 26. LID PLACEMENT POSITION -->
+          <div class="field-group">
+            <label for="Lid_Placement_Position"
+              >LID PLACEMENT POSITION (mm):</label
+            >
+            <input
+              type="text"
+              id="Lid_Placement_Position"
+              name="Lid_Placement_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Lid_Placement_Position_old"
+              name="Lid_Placement_Position_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-<!-- Lid Placement Enable -->
-<div class="field-group">
-  <label for="Lid_Placement_Enable">LID PLACEMENT ENABLE:</label>
-  <select style="width: 26%;" id="Lid_Placement_Enable" name="Lid_Placement_Enable">
-    <option value="1">True</option>
-    <option value="0">False</option>
-  </select>
-  <input type="text" id="Lid_Placement_Enable_old" name="Lid_Placement_Enable_old" placeholder="Current Value" readonly>
-</div>
+          <!-- 27. FOIL LOW DIAMETER -->
+          <div class="field-group">
+            <label for="Foil_Low_Diameter">FOIL LOW DIAMETER (mm):</label>
+            <input
+              type="text"
+              id="Foil_Low_Diameter"
+              name="Foil_Low_Diameter"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Foil_Low_Diameter_old"
+              name="Foil_Low_Diameter_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
+          <!-- 28. SYNC TABLE START POSITION -->
+          <div class="field-group">
+            <label for="Sync_Table_Start_Position"
+              >SYNC TABLE START POSITION (nos):</label
+            >
+            <input
+              type="text"
+              id="Sync_Table_Start_Position"
+              name="Sync_Table_Start_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Sync_Table_Start_Position_old"
+              name="Sync_Table_Start_Position_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 25. PLEAT COUNTS -->
-    <div class="field-group">
-      <label for="Pleat_Counts">PLEAT COUNTS (nos):</label>
-      <input type="text" id="Pleat_Counts" name="Pleat_Counts" placeholder="New Value">
-      <input type="text" id="Pleat_Counts_old" name="Pleat_Counts_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 29. FEEDING CONVEYOR SPEED -->
+          <div class="field-group">
+            <label for="Feeding_Conveyor_Speed"
+              >FEEDING CONVEYOR SPEED (Hz):</label
+            >
+            <input
+              type="text"
+              id="Feeding_Conveyor_Speed"
+              name="Feeding_Conveyor_Speed"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Feeding_Conveyor_Speed_old"
+              name="Feeding_Conveyor_Speed_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 26. LID PLACEMENT POSITION -->
-    <div class="field-group">
-      <label for="Lid_Placement_Position">LID PLACEMENT POSITION (mm):</label>
-      <input type="text" id="Lid_Placement_Position" name="Lid_Placement_Position" placeholder="New Value">
-      <input type="text" id="Lid_Placement_Position_old" name="Lid_Placement_Position_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 30. BATCH COUNT -->
+          <div class="field-group">
+            <label for="Batch_Count">BATCH COUNT (nos):</label>
+            <input
+              type="text"
+              id="Batch_Count"
+              name="Batch_Count"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Batch_Count_old"
+              name="Batch_Count_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 27. FOIL LOW DIAMETER -->
-    <div class="field-group">
-      <label for="Foil_Low_Diameter">FOIL LOW DIAMETER (mm):</label>
-      <input type="text" id="Foil_Low_Diameter" name="Foil_Low_Diameter" placeholder="New Value">
-      <input type="text" id="Foil_Low_Diameter_old" name="Foil_Low_Diameter_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 31. PACK TRANSFER REV POSITION -->
+          <div class="field-group">
+            <label for="Pack_Transfer_Rev_Position"
+              >PACK TRANSFER REV POSITION (mm):</label
+            >
+            <input
+              type="text"
+              id="Pack_Transfer_Rev_Position"
+              name="Pack_Transfer_Rev_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Pack_Transfer_Rev_Position_old"
+              name="Pack_Transfer_Rev_Position_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 28. SYNC TABLE START POSITION -->
-    <div class="field-group">
-      <label for="Sync_Table_Start_Position">SYNC TABLE START POSITION (nos):</label>
-      <input type="text" id="Sync_Table_Start_Position" name="Sync_Table_Start_Position" placeholder="New Value">
-      <input type="text" id="Sync_Table_Start_Position_old" name="Sync_Table_Start_Position_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 32. DISCHARGE CONVEYOR SPEED -->
+          <div class="field-group">
+            <label for="Discharge_Conveyor_Speed"
+              >DISCHARGE CONVEYOR SPEED (Hz):</label
+            >
+            <input
+              type="text"
+              id="Discharge_Conveyor_Speed"
+              name="Discharge_Conveyor_Speed"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Discharge_Conveyor_Speed_old"
+              name="Discharge_Conveyor_Speed_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 29. FEEDING CONVEYOR SPEED -->
-    <div class="field-group">
-      <label for="Feeding_Conveyor_Speed">FEEDING CONVEYOR SPEED (Hz):</label>
-      <input type="text" id="Feeding_Conveyor_Speed" name="Feeding_Conveyor_Speed" placeholder="New Value">
-      <input type="text" id="Feeding_Conveyor_Speed_old" name="Feeding_Conveyor_Speed_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 33. FOIL 1 TENSION SET POINT -->
+          <div class="field-group">
+            <label for="Foil1_Tension_Set_Point"
+              >FOIL 1 TENSION SET POINT (%):</label
+            >
+            <input
+              type="text"
+              id="Foil1_Tension_Set_Point"
+              name="Foil1_Tension_Set_Point"
+              placeholder="NewValue"
+            />
+            <input
+              type="text"
+              id="Foil1_Tension_Set_Point_old"
+              name="Foil1_Tension_Set_Point_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 30. BATCH COUNT -->
-    <div class="field-group">
-      <label for="Batch_Count">BATCH COUNT (nos):</label>
-      <input type="text" id="Batch_Count" name="Batch_Count" placeholder="New Value">
-      <input type="text" id="Batch_Count_old" name="Batch_Count_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 34. PACK TRANSFER PARK POSITION -->
+          <div class="field-group">
+            <label for="Pack_Transfer_Park_Position"
+              >PACK TRANSFER PARK POSITION (mm):</label
+            >
+            <input
+              type="text"
+              id="Pack_Transfer_Park_Position"
+              name="Pack_Transfer_Park_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Pack_Transfer_Park_Position_old"
+              name="Pack_Transfer_Park_Position_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 31. PACK TRANSFER REV POSITION -->
-    <div class="field-group">
-      <label for="Pack_Transfer_Rev_Position">PACK TRANSFER REV POSITION (mm):</label>
-      <input type="text" id="Pack_Transfer_Rev_Position" name="Pack_Transfer_Rev_Position" placeholder="New Value">
-      <input type="text" id="Pack_Transfer_Rev_Position_old" name="Pack_Transfer_Rev_Position_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 35. FOIL 2 TENSION SET POINT -->
+          <div class="field-group">
+            <label for="Foil2_Tension_Set_Point"
+              >FOIL 2 TENSION SET POINT (%):</label
+            >
+            <input
+              type="text"
+              id="Foil2_Tension_Set_Point"
+              name="Foil2_Tension_Set_Point"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Foil2_Tension_Set_Point_old"
+              name="Foil2_Tension_Set_Point_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
 
-    <!-- 32. DISCHARGE CONVEYOR SPEED -->
-    <div class="field-group">
-      <label for="Discharge_Conveyor_Speed">DISCHARGE CONVEYOR SPEED (Hz):</label>
-      <input type="text" id="Discharge_Conveyor_Speed" name="Discharge_Conveyor_Speed" placeholder="New Value">
-      <input type="text" id="Discharge_Conveyor_Speed_old" name="Discharge_Conveyor_Speed_old" placeholder="Current Value" readonly>
-    </div>
+          <!-- 36. MEDIA TENSION SET POINT -->
+          <div class="field-group">
+            <label for="Media_Tension_Set_Point"
+              >MEDIA TENSION SET POINT (%):</label
+            >
+            <input
+              type="text"
+              id="Media_Tension_Set_Point"
+              name="Media_Tension_Set_Point"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Media_Tension_Set_Point_old"
+              name="Media_Tension_Set_Point_old"
+              placeholder="Current Value"
+              readonly
+            />
+          </div>
+        </div>
 
-    <!-- 33. FOIL 1 TENSION SET POINT -->
-    <div class="field-group">
-      <label for="Foil1_Tension_Set_Point">FOIL 1 TENSION SET POINT (%):</label>
-      <input type="text" id="Foil1_Tension_Set_Point" name="Foil1_Tension_Set_Point" placeholder="NewValue">
-      <input type="text" id="Foil1_Tension_Set_Point_old" name="Foil1_Tension_Set_Point_old" placeholder="Current Value" readonly>
-    </div>
+        <div class="form-buttons">
+          <button type="button" onclick="loadLastPLCValues()">
+            Upload Settings
+          </button>
+          <button type="button" onclick="prevStep()">Back</button>
+          <button type="button" onclick="nextStep()">Next</button>
+        </div>
+      </div>
 
-    <!-- 34. PACK TRANSFER PARK POSITION -->
-    <div class="field-group">
-      <label for="Pack_Transfer_Park_Position">PACK TRANSFER PARK POSITION (mm):</label>
-      <input type="text" id="Pack_Transfer_Park_Position" name="Pack_Transfer_Park_Position" placeholder="New Value">
-      <input type="text" id="Pack_Transfer_Park_Position_old" name="Pack_Transfer_Park_Position_old" placeholder="Current Value" readonly>
-    </div>
+      <!-- Step 4: Air Inspection Settings -->
+      <div class="form-step" id="step4" style="display: none">
+        <h1 style="text-align: center; padding: 10px; position: relative">
+          <span style="display: inline-flex; align-items: center; gap: 10px">
+            <i
+              class="fa fa-info-circle"
+              style="color: #007bff; cursor: pointer; font-size: 22px"
+              onclick="openInfoPopup()"
+              title="View diagram info"
+            ></i>
+            Air Inspection Settings
+          </span>
+        </h1>
 
-    <!-- 35. FOIL 2 TENSION SET POINT -->
-    <div class="field-group">
-      <label for="Foil2_Tension_Set_Point">FOIL 2 TENSION SET POINT (%):</label>
-      <input type="text" id="Foil2_Tension_Set_Point" name="Foil2_Tension_Set_Point" placeholder="New Value">
-      <input type="text" id="Foil2_Tension_Set_Point_old" name="Foil2_Tension_Set_Point_old" placeholder="Current Value" readonly>
-    </div>
+        <div class="form-grid">
+          <div class="field-row">
+            <label for="databaseAvailable">Database Available:</label>
+            <input
+              type="text"
+              id="databaseAvailable"
+              name="databaseAvailable"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="databaseAvailable_old"
+              name="databaseAvailable_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 36. MEDIA TENSION SET POINT -->
-    <div class="field-group">
-      <label for="Media_Tension_Set_Point">MEDIA TENSION SET POINT (%):</label>
-      <input type="text" id="Media_Tension_Set_Point" name="Media_Tension_Set_Point" placeholder="New Value">
-      <input type="text" id="Media_Tension_Set_Point_old" name="Media_Tension_Set_Point_old" placeholder="Current Value" readonly>
-    </div>
+          <div class="field-row">
+            <label for="Width">Width:</label>
+            <input
+              type="text"
+              id="Width"
+              name="Width"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Width_old"
+              name="Width_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-  </div>
+          <div class="field-row">
+            <label for="Height">Height:</label>
+            <input
+              type="text"
+              id="Height"
+              name="Height"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Height_old"
+              name="Height_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-  <div class="form-buttons">
-    <button type="button" onclick="loadLastPLCValues()">Upload Settings</button>
-    <button type="button" onclick="prevStep()">Back</button>
-    <button type="button" onclick="nextStep()">Next</button>
-  </div>
-</div>
+          <div class="field-row">
+            <label for="Depth">Depth:</label>
+            <input
+              type="text"
+              id="Depth"
+              name="Depth"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Depth_old"
+              name="Depth_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
+          <div class="field-row">
+            <label for="Art_Num">Art Number:</label>
+            <input
+              type="text"
+              id="Art_Num"
+              name="Art_Num"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Art_Num_old"
+              name="Art_Num_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
+          <div class="field-row">
+            <label for="Air_Flow_Set">Air Flow Set:</label>
+            <input
+              type="text"
+              id="Air_Flow_Set"
+              name="Air_Flow_Set"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Air_Flow_Set_old"
+              name="Air_Flow_Set_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-        
-<!-- Step 4: Air Inspection Settings -->
-<div class="form-step" id="step4" style="display:none;">
-  <h1 style="text-align: center; padding:10px; position: relative;">
-    <span style="display: inline-flex; align-items: center; gap: 10px;">
-      <i class="fa fa-info-circle" 
-         style="color: #007bff; cursor: pointer; font-size: 22px;"
-         onclick="openInfoPopup()"
-         title="View diagram info"></i>
-      Air Inspection Settings
-    </span>
-  </h1>
+          <div class="field-row">
+            <label for="Pressure_Drop_Setpoint">Pressure Drop Setpoint:</label>
+            <input
+              type="text"
+              id="Pressure_Drop_Setpoint"
+              name="Pressure_Drop_Setpoint"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Pressure_Drop_Setpoint_old"
+              name="Pressure_Drop_Setpoint_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-  <div class="form-grid">
-    <div class="field-row">
-      <label for="databaseAvailable">Database Available:</label>
-      <input type="text" id="databaseAvailable" name="databaseAvailable" placeholder="New Value">
-      <input type="text" id="databaseAvailable_old" name="databaseAvailable_old" placeholder="Old Value" readonly>
-    </div>
+          <div class="field-row">
+            <label for="Lower_Tolerance1">Lower Tolerance1:</label>
+            <input
+              type="text"
+              id="Lower_Tolerance1"
+              name="Lower_Tolerance1"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Lower_Tolerance1_old"
+              name="Lower_Tolerance1_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <div class="field-row">
-      <label for="Width">Width:</label>
-      <input type="text" id="Width" name="Width" placeholder="New Value">
-      <input type="text" id="Width_old" name="Width_old" placeholder="Old Value" readonly>
-    </div>
+          <div class="field-row">
+            <label for="Lower_Tolerance2">Lower Tolerance2:</label>
+            <input
+              type="text"
+              id="Lower_Tolerance2"
+              name="Lower_Tolerance2"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Lower_Tolerance2_old"
+              name="Lower_Tolerance2_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <div class="field-row">
-      <label for="Height">Height:</label>
-      <input type="text" id="Height" name="Height" placeholder="New Value">
-      <input type="text" id="Height_old" name="Height_old" placeholder="Old Value" readonly>
-    </div>
+          <div class="field-row">
+            <label for="Upper_Tolerance1">Upper Tolerance1:</label>
+            <input
+              type="text"
+              id="Upper_Tolerance1"
+              name="Upper_Tolerance1"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Upper_Tolerance1_old"
+              name="Upper_Tolerance1_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <div class="field-row">
-      <label for="Depth">Depth:</label>
-      <input type="text" id="Depth" name="Depth" placeholder="New Value">
-      <input type="text" id="Depth_old" name="Depth_old" placeholder="Old Value" readonly>
-    </div>
-
-    <div class="field-row">
-      <label for="Art_Num">Art Number:</label>
-      <input type="text" id="Art_Num" name="Art_Num" placeholder="New Value">
-      <input type="text" id="Art_Num_old" name="Art_Num_old" placeholder="Old Value" readonly>
-    </div>
-
-    <div class="field-row">
-      <label for="Air_Flow_Set">Air Flow Set:</label>
-      <input type="text" id="Air_Flow_Set" name="Air_Flow_Set" placeholder="New Value">
-      <input type="text" id="Air_Flow_Set_old" name="Air_Flow_Set_old" placeholder="Old Value" readonly>
-    </div>
-
-    <div class="field-row">
-      <label for="Pressure_Drop_Setpoint">Pressure Drop Setpoint:</label>
-      <input type="text" id="Pressure_Drop_Setpoint" name="Pressure_Drop_Setpoint" placeholder="New Value">
-      <input type="text" id="Pressure_Drop_Setpoint_old" name="Pressure_Drop_Setpoint_old" placeholder="Old Value" readonly>
-    </div>
-
-    <div class="field-row">
-      <label for="Lower_Tolerance1">Lower Tolerance1:</label>
-      <input type="text" id="Lower_Tolerance1" name="Lower_Tolerance1" placeholder="New Value">
-      <input type="text" id="Lower_Tolerance1_old" name="Lower_Tolerance1_old" placeholder="Old Value" readonly>
-    </div>
-
-    <div class="field-row">
-      <label for="Lower_Tolerance2">Lower Tolerance2:</label>
-      <input type="text" id="Lower_Tolerance2" name="Lower_Tolerance2" placeholder="New Value">
-      <input type="text" id="Lower_Tolerance2_old" name="Lower_Tolerance2_old" placeholder="Old Value" readonly>
-    </div>
-
-    <div class="field-row">
-      <label for="Upper_Tolerance1">Upper Tolerance1:</label>
-      <input type="text" id="Upper_Tolerance1" name="Upper_Tolerance1" placeholder="New Value">
-      <input type="text" id="Upper_Tolerance1_old" name="Upper_Tolerance1_old" placeholder="Old Value" readonly>
-    </div>
-
-    <div class="field-row">
-      <label for="Upper_Tolerance2">Upper Tolerance2:</label>
-      <input type="text" id="Upper_Tolerance2" name="Upper_Tolerance2" placeholder="New Value">
-      <input type="text" id="Upper_Tolerance2_old" name="Upper_Tolerance2_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- <div class="field-row">
+          <div class="field-row">
+            <label for="Upper_Tolerance2">Upper Tolerance2:</label>
+            <input
+              type="text"
+              id="Upper_Tolerance2"
+              name="Upper_Tolerance2"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="Upper_Tolerance2_old"
+              name="Upper_Tolerance2_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- <div class="field-row">
       <label for="Lower_Fan_Speed">Lower_Fan_Speed:</label>
       <input type="text" id="Lower_Fan_Speed" name="Lower_Fan_Speed" placeholder="New Value">
       <input type="text" id="Lower_Fan_Speed_old" name="Lower_Fan_Speed_old" placeholder="Old Value" readonly>
@@ -504,421 +1081,952 @@ input[readonly] {
       <input type="text" id="Upper_Fan_Speed" name="Upper_Fan_Speed" placeholder="New Value">
       <input type="text" id="Upper_Fan_Speed_old" name="Upper_Fan_Speed_old" placeholder="Old Value" readonly>
     </div> -->
-  </div>
+        </div>
 
-  <div class="form-buttons">
-    <button type="button" onclick="loadLastPLCValues()">Upload Settings</button>
-    <button type="button" onclick="prevStep()">Back</button>
-    <button type="submit">Submit Recipe</button>
-  </div>
-</div>
-<div id="infoPopup" class="popup-overlay_info" style="display: none;">
-  <div class="popup-content_info">
-    <span class="close-btn_info" onclick="closeInfoPopup()">&times;</span>
-    <h3>Air Inspection Dimensions</h3>
-    <img src="{{ url_for('static', filename='images/Img3.png') }}" 
-         alt="Air Inspection Dimensions" 
-         style="max-width: 100%; border-radius: 8px;">
-  </div>
-</div>
-        
-        </form>
-        <!-- <style>
+        <div class="form-buttons">
+          <button type="button" onclick="loadLastPLCValues()">
+            Upload Settings
+          </button>
+          <button type="button" onclick="prevStep()">Back</button>
+          <button type="submit">Submit Recipe</button>
+        </div>
+      </div>
+      <div id="infoPopup" class="popup-overlay_info" style="display: none">
+        <div class="popup-content_info">
+          <span class="close-btn_info" onclick="closeInfoPopup()">&times;</span>
+          <h3>Air Inspection Dimensions</h3>
+          <img
+            src="{{ url_for('static', filename='images/Img3.png') }}"
+            alt="Air Inspection Dimensions"
+            style="max-width: 100%; border-radius: 8px"
+          />
+        </div>
+      </div>
+    </form>
+    <!-- <style>
             /* Button Styling */
             
             </style> -->
-            
-
-            
-        
-    </div>
+  </div>
 </div>
 
-<div id="update-recipe-section" style="display: none;">
-    <div id="update-recipe-form">
-        <div class="popup-recipe-header">
-            <h3 style="font-size: 30px;">Update Recipe</h3>
-            <button type="button" class="close-button" onclick="toggleUpdatePopup()">X</button>
-        </div>
-        <form action="/update_recipe" method="POST" class="recipe-form">
-            <div class="form-step-1" id="update-step1">
-                <div class="form-row">
-                    <label for="update_recipe_id">Recipe ID:</label>
-                    <input type="text" id="update_recipe_id" name="recipe_id" readonly>
-        
-                    <label for="update_recipe_name">Recipe Name:</label>
-                    <input type="text" id="update_recipe_name" name="recipe_name" required>
-        
-                    <label for="update_filter_size">Filter Size:</label>
-                    <input type="text" id="update_filter_size" name="filter_size" required>
-        
-                    <label for="update_filter_code">Filter Code:</label>
-                    <input type="text" id="update_filter_code" name="filter_code" required>
-        
-                    <label for="update_art_no">Art No:</label>
-                    <input type="text" id="update_art_no" name="art_no" required>
-                    </div>
-                    <div class="form-buttons">
-                        <button type="button" onclick="nextStep1()">Next</button>
-                    </div>
-            </div>
-        
-            <div class="form-step-1" id="update-step2" style="display:none;">
-                <h1 style="display: block; margin: 0 auto; text-align: center; margin-bottom: 15px;">Roll Positions</h1>
-            
-            <div class="form-row1">
-            {% for i in range(1, 10) %}
-            <label for="update_pos{{ i }}">Roll Positions{{ i }}:</label>
-            <select  class="roll-select" id="update_pos{{ i }}" name="pos{{ i }}" style="width: 125px;" >
-                  <option value="">No Selection</option>
-                {% for value in pos_values %}
-                <option value="{{ value }}">{{ value }}</option>
-                {% endfor %}
-            </select>
-            {% endfor %}
-            <label for="update_alu_mat">Alu_Materials:</label>
-            <select class="roll-select" id="update_alu_mat" name="alu_mat" style="width: 125px;">
-                             <option value="">No Selection</option>
-                {% for value in alu_values %}
-                    <option value="{{ value }}">{{ value }}</option>
-                {% endfor %}
-            </select>
-    
-            <!-- House_Mat Dropdown -->
-            <label for="update_house_mat">House_Materials:</label>
-            <select class="roll-select" id="update_house_mat" name="house_mat" style="width: 125px;">
-                                <option value="">No Selection</option>
-                {% for value in h_values %}
-                    <option value="{{ value }}">{{ value }}</option>
-                {% endfor %}
-            </select>
+<div id="update-recipe-section" style="display: none">
+  <div id="update-recipe-form">
+    <div class="popup-recipe-header">
+      <h3 style="font-size: 30px">Update Recipe</h3>
+      <button type="button" class="close-button" onclick="toggleUpdatePopup()">
+        X
+      </button>
+    </div>
+    <form action="/update_recipe" method="POST" class="recipe-form">
+      <div class="form-step-1" id="update-step1">
+        <div class="form-row">
+          <label for="update_recipe_id">Recipe ID:</label>
+          <input type="text" id="update_recipe_id" name="recipe_id" readonly />
+
+          <label for="update_recipe_name">Recipe Name:</label>
+          <input
+            type="text"
+            id="update_recipe_name"
+            name="recipe_name"
+            required
+          />
+
+          <label for="update_filter_size">Filter Size:</label>
+          <input
+            type="text"
+            id="update_filter_size"
+            name="filter_size"
+            required
+          />
+
+          <label for="update_filter_code">Filter Code:</label>
+          <input
+            type="text"
+            id="update_filter_code"
+            name="filter_code"
+            required
+          />
+
+          <label for="update_art_no">Art No:</label>
+          <input type="text" id="update_art_no" name="art_no" required />
         </div>
         <div class="form-buttons">
-            <button type="button" onclick="prevStep1()">Back</button>
-            <button type="button" onclick="nextStep1()">Next</button>
+          <button type="button" onclick="nextStep1()">Next</button>
         </div>
-             </div>
-<div class="form-step-1" id="update-step3" style="display:none;">
-  <h1 style="text-align: center; margin-bottom: 15px;">Machine Settings</h1>
+      </div>
 
-  <div class="form-row3">
+      <div class="form-step-1" id="update-step2" style="display: none">
+        <h1
+          style="
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+            margin-bottom: 15px;
+          "
+        >
+          Roll Positions
+        </h1>
 
-    <!-- 1 -->
-    <div class="field-group">
-      <label for="update_Pleat_Height">Pleat Height:</label>
-      <input type="text" id="update_Pleat_Height" name="Pleat_Height" placeholder="New Value">
-      <input type="text" id="update_Pleat_Height_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 2 -->
-    <div class="field-group">
-      <label for="update_Blade_Opening">Blade Opening:</label>
-      <input type="text" id="update_Blade_Opening" name="Blade_Opening" placeholder="New Value">
-      <input type="text" id="update_Blade_Opening_old" placeholder="Old Value" readonly>
-    </div>
+        <div class="form-row1">
+          {% for i in range(1, 10) %}
+          <label for="update_pos{{ i }}">Roll Positions{{ i }}:</label>
+          <select
+            class="roll-select"
+            id="update_pos{{ i }}"
+            name="pos{{ i }}"
+            style="width: 125px"
+          >
+            <option value="">No Selection</option>
+            {% for value in pos_values %}
+            <option value="{{ value }}">{{ value }}</option>
+            {% endfor %}
+          </select>
+          {% endfor %}
+          <label for="update_alu_mat">Alu_Materials:</label>
+          <select
+            class="roll-select"
+            id="update_alu_mat"
+            name="alu_mat"
+            style="width: 125px"
+          >
+            <option value="">No Selection</option>
+            {% for value in alu_values %}
+            <option value="{{ value }}">{{ value }}</option>
+            {% endfor %}
+          </select>
 
-    <!-- 3 -->
-    <div class="field-group">
-      <label for="update_Soft_Touch">Soft Touch:</label>
-      <input type="text" id="update_Soft_Touch" name="Soft_Touch" placeholder="New Value">
-      <input type="text" id="update_Soft_Touch_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 4 -->
-    <div class="field-group">
-      <label for="update_Press_Touch">Press Touch:</label>
-      <input type="text" id="update_Press_Touch" name="Press_Touch" placeholder="New Value">
-      <input type="text" id="update_Press_Touch_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- House_Mat Dropdown -->
+          <label for="update_house_mat">House_Materials:</label>
+          <select
+            class="roll-select"
+            id="update_house_mat"
+            name="house_mat"
+            style="width: 125px"
+          >
+            <option value="">No Selection</option>
+            {% for value in h_values %}
+            <option value="{{ value }}">{{ value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-buttons">
+          <button type="button" onclick="prevStep1()">Back</button>
+          <button type="button" onclick="nextStep1()">Next</button>
+        </div>
+      </div>
+      <div class="form-step-1" id="update-step3" style="display: none">
+        <h1 style="text-align: center; margin-bottom: 15px">
+          Machine Settings
+        </h1>
 
-    <!-- 5 -->
-    <div class="field-group">
-      <label for="update_Feeder1_Media_Thickness">Feeder1 Media Thickness:</label>
-      <input type="text" id="update_Feeder1_Media_Thickness" name="Feeder1_Media_Thickness" placeholder="New Value">
-      <input type="text" id="update_Feeder1_Media_Thickness_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 6 -->
-    <div class="field-group">
-      <label for="update_Feeder2_Media_Thickness">Feeder2 Media Thickness:</label>
-      <input type="text" id="update_Feeder2_Media_Thickness" name="Feeder2_Media_Thickness" placeholder="New Value">
-      <input type="text" id="update_Feeder2_Media_Thickness_old" placeholder="Old Value" readonly>
-    </div>
+        <div class="form-row3">
+          <!-- 1 -->
+          <div class="field-group">
+            <label for="update_Pleat_Height">Pleat Height:</label>
+            <input
+              type="text"
+              id="update_Pleat_Height"
+              name="Pleat_Height"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Pleat_Height_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 2 -->
+          <div class="field-group">
+            <label for="update_Blade_Opening">Blade Opening:</label>
+            <input
+              type="text"
+              id="update_Blade_Opening"
+              name="Blade_Opening"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Blade_Opening_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 7 -->
-    <div class="field-group">
-      <label for="update_Feeder1_Park_Position">Feeder1 Park Position:</label>
-      <input type="text" id="update_Feeder1_Park_Position" name="Feeder1_Park_Position" placeholder="New Value">
-      <input type="text" id="update_Feeder1_Park_Position_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 8 -->
-    <div class="field-group">
-      <label for="update_Feeder2_Park_Position">Feeder2 Park Position:</label>
-      <input type="text" id="update_Feeder2_Park_Position" name="Feeder2_Park_Position" placeholder="New Value">
-      <input type="text" id="update_Feeder2_Park_Position_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 3 -->
+          <div class="field-group">
+            <label for="update_Soft_Touch">Soft Touch:</label>
+            <input
+              type="text"
+              id="update_Soft_Touch"
+              name="Soft_Touch"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Soft_Touch_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 4 -->
+          <div class="field-group">
+            <label for="update_Press_Touch">Press Touch:</label>
+            <input
+              type="text"
+              id="update_Press_Touch"
+              name="Press_Touch"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Press_Touch_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 9 -->
-    <div class="field-group">
-      <label for="update_Foil1_Length">Foil1 Length:</label>
-      <input type="text" id="update_Foil1_Length" name="Foil1_Length" placeholder="New Value">
-      <input type="text" id="update_Foil1_Length_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 10 -->
-    <div class="field-group">
-      <label for="update_Foil2_Length">Foil2 Length:</label>
-      <input type="text" id="update_Foil2_Length" name="Foil2_Length" placeholder="New Value">
-      <input type="text" id="update_Foil2_Length_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 5 -->
+          <div class="field-group">
+            <label for="update_Feeder1_Media_Thickness"
+              >Feeder1 Media Thickness:</label
+            >
+            <input
+              type="text"
+              id="update_Feeder1_Media_Thickness"
+              name="Feeder1_Media_Thickness"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Feeder1_Media_Thickness_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 6 -->
+          <div class="field-group">
+            <label for="update_Feeder2_Media_Thickness"
+              >Feeder2 Media Thickness:</label
+            >
+            <input
+              type="text"
+              id="update_Feeder2_Media_Thickness"
+              name="Feeder2_Media_Thickness"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Feeder2_Media_Thickness_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 11 -->
-    <div class="field-group">
-      <label for="update_Foil1_Length_Offset">Foil1 Length Offset:</label>
-      <input type="text" id="update_Foil1_Length_Offset" name="Foil1_Length_Offset" placeholder="New Value">
-      <input type="text" id="update_Foil1_Length_Offset_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 12 -->
-    <div class="field-group">
-      <label for="update_Foil2_Length_Offset">Foil2 Length Offset:</label>
-      <input type="text" id="update_Foil2_Length_Offset" name="Foil2_Length_Offset" placeholder="New Value">
-      <input type="text" id="update_Foil2_Length_Offset_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 7 -->
+          <div class="field-group">
+            <label for="update_Feeder1_Park_Position"
+              >Feeder1 Park Position:</label
+            >
+            <input
+              type="text"
+              id="update_Feeder1_Park_Position"
+              name="Feeder1_Park_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Feeder1_Park_Position_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 8 -->
+          <div class="field-group">
+            <label for="update_Feeder2_Park_Position"
+              >Feeder2 Park Position:</label
+            >
+            <input
+              type="text"
+              id="update_Feeder2_Park_Position"
+              name="Feeder2_Park_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Feeder2_Park_Position_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 13 -->
-    <div class="field-group">
-      <label for="update_Foil1_Width">Foil1 Width:</label>
-      <input type="text" id="update_Foil1_Width" name="Foil1_Width" placeholder="New Value">
-      <input type="text" id="update_Foil1_Width_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 14 -->
-    <div class="field-group">
-      <label for="update_Foil2_Width">Foil2 Width:</label>
-      <input type="text" id="update_Foil2_Width" name="Foil2_Width" placeholder="New Value">
-      <input type="text" id="update_Foil2_Width_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 9 -->
+          <div class="field-group">
+            <label for="update_Foil1_Length">Foil1 Length:</label>
+            <input
+              type="text"
+              id="update_Foil1_Length"
+              name="Foil1_Length"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil1_Length_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 10 -->
+          <div class="field-group">
+            <label for="update_Foil2_Length">Foil2 Length:</label>
+            <input
+              type="text"
+              id="update_Foil2_Length"
+              name="Foil2_Length"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil2_Length_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 15 -->
-    <div class="field-group">
-      <label for="update_Puller_Start_Position">Puller Start Position:</label>
-      <input type="text" id="update_Puller_Start_Position" name="Puller_Start_Position" placeholder="New Value">
-      <input type="text" id="update_Puller_Start_Position_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 16 -->
-    <div class="field-group">
-      <label for="update_Puller_End_Position">Puller End Position:</label>
-      <input type="text" id="update_Puller_End_Position" name="Puller_End_Position" placeholder="New Value">
-      <input type="text" id="update_Puller_End_Position_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 11 -->
+          <div class="field-group">
+            <label for="update_Foil1_Length_Offset">Foil1 Length Offset:</label>
+            <input
+              type="text"
+              id="update_Foil1_Length_Offset"
+              name="Foil1_Length_Offset"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil1_Length_Offset_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 12 -->
+          <div class="field-group">
+            <label for="update_Foil2_Length_Offset">Foil2 Length Offset:</label>
+            <input
+              type="text"
+              id="update_Foil2_Length_Offset"
+              name="Foil2_Length_Offset"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil2_Length_Offset_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 17 -->
-    <div class="field-group">
-      <label for="update_Autofeeding_Offset">Autofeeding Offset:</label>
-      <input type="text" id="update_Autofeeding_Offset" name="Autofeeding_Offset" placeholder="New Value">
-      <input type="text" id="update_Autofeeding_Offset_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 18 -->
-    <div class="field-group">
-      <label for="update_Puller2_Feed_Correction">Puller2 Feed Correction:</label>
-      <input type="text" id="update_Puller2_Feed_Correction" name="Puller2_Feed_Correction" placeholder="New Value">
-      <input type="text" id="update_Puller2_Feed_Correction_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 13 -->
+          <div class="field-group">
+            <label for="update_Foil1_Width">Foil1 Width:</label>
+            <input
+              type="text"
+              id="update_Foil1_Width"
+              name="Foil1_Width"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil1_Width_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 14 -->
+          <div class="field-group">
+            <label for="update_Foil2_Width">Foil2 Width:</label>
+            <input
+              type="text"
+              id="update_Foil2_Width"
+              name="Foil2_Width"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil2_Width_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 19 -->
-    <div class="field-group">
-      <label for="update_Filter_Box_Height">Filter Box Height:</label>
-      <input type="text" id="update_Filter_Box_Height" name="Filter_Box_Height" placeholder="New Value">
-      <input type="text" id="update_Filter_Box_Height_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 20 -->
-    <div class="field-group">
-      <label for="update_Puller_Extra_Stroke_Enable">Puller Extra Stroke Enable:</label>
-      <input type="text" id="update_Puller_Extra_Stroke_Enable" name="Puller_Extra_Stroke_Enable" placeholder="New Value">
-      <input type="text" id="update_Puller_Extra_Stroke_Enable_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 15 -->
+          <div class="field-group">
+            <label for="update_Puller_Start_Position"
+              >Puller Start Position:</label
+            >
+            <input
+              type="text"
+              id="update_Puller_Start_Position"
+              name="Puller_Start_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Puller_Start_Position_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 16 -->
+          <div class="field-group">
+            <label for="update_Puller_End_Position">Puller End Position:</label>
+            <input
+              type="text"
+              id="update_Puller_End_Position"
+              name="Puller_End_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Puller_End_Position_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 21 -->
-    <div class="field-group">
-      <label for="update_Filter_Box_Length">Filter Box Length:</label>
-      <input type="text" id="update_Filter_Box_Length" name="Filter_Box_Length" placeholder="New Value">
-      <input type="text" id="update_Filter_Box_Length_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 22 -->
-    <div class="field-group">
-      <label for="update_Filter_Box_Width">Filter Box Width:</label>
-      <input type="text" id="update_Filter_Box_Width" name="Filter_Box_Width" placeholder="New Value">
-      <input type="text" id="update_Filter_Box_Width_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 17 -->
+          <div class="field-group">
+            <label for="update_Autofeeding_Offset">Autofeeding Offset:</label>
+            <input
+              type="text"
+              id="update_Autofeeding_Offset"
+              name="Autofeeding_Offset"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Autofeeding_Offset_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 18 -->
+          <div class="field-group">
+            <label for="update_Puller2_Feed_Correction"
+              >Puller2 Feed Correction:</label
+            >
+            <input
+              type="text"
+              id="update_Puller2_Feed_Correction"
+              name="Puller2_Feed_Correction"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Puller2_Feed_Correction_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 23 -->
-    <div class="field-group">
-      <label for="update_Pleat_Pitch">Pleat Pitch:</label>
-      <input type="text" id="update_Pleat_Pitch" name="Pleat_Pitch" placeholder="New Value">
-      <input type="text" id="update_Pleat_Pitch_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 24 -->
-    <div class="field-group">
-      <label for="update_Lid_Placement_Enable">Lid Placement Enable:</label>
-      <input type="text" id="update_Lid_Placement_Enable" name="Lid_Placement_Enable" placeholder="New Value">
-      <input type="text" id="update_Lid_Placement_Enable_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 19 -->
+          <div class="field-group">
+            <label for="update_Filter_Box_Height">Filter Box Height:</label>
+            <input
+              type="text"
+              id="update_Filter_Box_Height"
+              name="Filter_Box_Height"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Filter_Box_Height_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 20 -->
+          <div class="field-group">
+            <label for="update_Puller_Extra_Stroke_Enable"
+              >Puller Extra Stroke Enable:</label
+            >
+            <input
+              type="text"
+              id="update_Puller_Extra_Stroke_Enable"
+              name="Puller_Extra_Stroke_Enable"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Puller_Extra_Stroke_Enable_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 25 -->
-    <div class="field-group">
-      <label for="update_Pleat_Counts">Pleat Counts:</label>
-      <input type="text" id="update_Pleat_Counts" name="Pleat_Counts" placeholder="New Value">
-      <input type="text" id="update_Pleat_Counts_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 26 -->
-    <div class="field-group">
-      <label for="update_Lid_Placement_Position">Lid Placement Position:</label>
-      <input type="text" id="update_Lid_Placement_Position" name="Lid_Placement_Position" placeholder="New Value">
-      <input type="text" id="update_Lid_Placement_Position_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 21 -->
+          <div class="field-group">
+            <label for="update_Filter_Box_Length">Filter Box Length:</label>
+            <input
+              type="text"
+              id="update_Filter_Box_Length"
+              name="Filter_Box_Length"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Filter_Box_Length_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 22 -->
+          <div class="field-group">
+            <label for="update_Filter_Box_Width">Filter Box Width:</label>
+            <input
+              type="text"
+              id="update_Filter_Box_Width"
+              name="Filter_Box_Width"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Filter_Box_Width_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 27 -->
-    <div class="field-group">
-      <label for="update_Foil_Low_Diameter">Foil Low Diameter:</label>
-      <input type="text" id="update_Foil_Low_Diameter" name="Foil_Low_Diameter" placeholder="New Value">
-      <input type="text" id="update_Foil_Low_Diameter_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 28 -->
-    <div class="field-group">
-      <label for="update_Sync_Table_Start_Position">Sync Table Start Position:</label>
-      <input type="text" id="update_Sync_Table_Start_Position" name="Sync_Table_Start_Position" placeholder="New Value">
-      <input type="text" id="update_Sync_Table_Start_Position_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 23 -->
+          <div class="field-group">
+            <label for="update_Pleat_Pitch">Pleat Pitch:</label>
+            <input
+              type="text"
+              id="update_Pleat_Pitch"
+              name="Pleat_Pitch"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Pleat_Pitch_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 24 -->
+          <div class="field-group">
+            <label for="update_Lid_Placement_Enable"
+              >Lid Placement Enable:</label
+            >
+            <input
+              type="text"
+              id="update_Lid_Placement_Enable"
+              name="Lid_Placement_Enable"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Lid_Placement_Enable_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 29 -->
-    <div class="field-group">
-      <label for="update_Feeding_Conveyor_Speed">Feeding Conveyor Speed:</label>
-      <input type="text" id="update_Feeding_Conveyor_Speed" name="Feeding_Conveyor_Speed" placeholder="New Value">
-      <input type="text" id="update_Feeding_Conveyor_Speed_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 30 -->
-    <div class="field-group">
-      <label for="update_Batch_Count">Batch Count:</label>
-      <input type="text" id="update_Batch_Count" name="Batch_Count" placeholder="New Value">
-      <input type="text" id="update_Batch_Count_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 25 -->
+          <div class="field-group">
+            <label for="update_Pleat_Counts">Pleat Counts:</label>
+            <input
+              type="text"
+              id="update_Pleat_Counts"
+              name="Pleat_Counts"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Pleat_Counts_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 26 -->
+          <div class="field-group">
+            <label for="update_Lid_Placement_Position"
+              >Lid Placement Position:</label
+            >
+            <input
+              type="text"
+              id="update_Lid_Placement_Position"
+              name="Lid_Placement_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Lid_Placement_Position_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 31 -->
-    <div class="field-group">
-      <label for="update_Pack_Transfer_Rev_Position">Pack Transfer Rev Position:</label>
-      <input type="text" id="update_Pack_Transfer_Rev_Position" name="Pack_Transfer_Rev_Position" placeholder="New Value">
-      <input type="text" id="update_Pack_Transfer_Rev_Position_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 32 -->
-    <div class="field-group">
-      <label for="update_Discharge_Conveyor_Speed">Discharge Conveyor Speed:</label>
-      <input type="text" id="update_Discharge_Conveyor_Speed" name="Discharge_Conveyor_Speed" placeholder="New Value">
-      <input type="text" id="update_Discharge_Conveyor_Speed_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 27 -->
+          <div class="field-group">
+            <label for="update_Foil_Low_Diameter">Foil Low Diameter:</label>
+            <input
+              type="text"
+              id="update_Foil_Low_Diameter"
+              name="Foil_Low_Diameter"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil_Low_Diameter_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 28 -->
+          <div class="field-group">
+            <label for="update_Sync_Table_Start_Position"
+              >Sync Table Start Position:</label
+            >
+            <input
+              type="text"
+              id="update_Sync_Table_Start_Position"
+              name="Sync_Table_Start_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Sync_Table_Start_Position_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 33 -->
-    <div class="field-group">
-      <label for="update_Foil1_Tension_Set_Point">Foil1 Tension Set Point:</label>
-      <input type="text" id="update_Foil1_Tension_Set_Point" name="Foil1_Tension_Set_Point" placeholder="New Value">
-      <input type="text" id="update_Foil1_Tension_Set_Point_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 34 -->
-    <div class="field-group">
-      <label for="update_Pack_Transfer_Park_Position">Pack Transfer Park Position:</label>
-      <input type="text" id="update_Pack_Transfer_Park_Position" name="Pack_Transfer_Park_Position" placeholder="New Value">
-      <input type="text" id="update_Pack_Transfer_Park_Position_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 29 -->
+          <div class="field-group">
+            <label for="update_Feeding_Conveyor_Speed"
+              >Feeding Conveyor Speed:</label
+            >
+            <input
+              type="text"
+              id="update_Feeding_Conveyor_Speed"
+              name="Feeding_Conveyor_Speed"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Feeding_Conveyor_Speed_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 30 -->
+          <div class="field-group">
+            <label for="update_Batch_Count">Batch Count:</label>
+            <input
+              type="text"
+              id="update_Batch_Count"
+              name="Batch_Count"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Batch_Count_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-    <!-- 35 -->
-    <div class="field-group">
-      <label for="update_Foil2_Tension_Set_Point">Foil2 Tension Set Point:</label>
-      <input type="text" id="update_Foil2_Tension_Set_Point" name="Foil2_Tension_Set_Point" placeholder="New Value">
-      <input type="text" id="update_Foil2_Tension_Set_Point_old" placeholder="Old Value" readonly>
-    </div>
-    <!-- 36 -->
-    <div class="field-group">
-      <label for="update_Media_Tension_Set_Point">Media Tension Set Point:</label>
-      <input type="text" id="update_Media_Tension_Set_Point" name="Media_Tension_Set_Point" placeholder="New Value">
-      <input type="text" id="update_Media_Tension_Set_Point_old" placeholder="Old Value" readonly>
-    </div>
+          <!-- 31 -->
+          <div class="field-group">
+            <label for="update_Pack_Transfer_Rev_Position"
+              >Pack Transfer Rev Position:</label
+            >
+            <input
+              type="text"
+              id="update_Pack_Transfer_Rev_Position"
+              name="Pack_Transfer_Rev_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Pack_Transfer_Rev_Position_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 32 -->
+          <div class="field-group">
+            <label for="update_Discharge_Conveyor_Speed"
+              >Discharge Conveyor Speed:</label
+            >
+            <input
+              type="text"
+              id="update_Discharge_Conveyor_Speed"
+              name="Discharge_Conveyor_Speed"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Discharge_Conveyor_Speed_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-  </div>
+          <!-- 33 -->
+          <div class="field-group">
+            <label for="update_Foil1_Tension_Set_Point"
+              >Foil1 Tension Set Point:</label
+            >
+            <input
+              type="text"
+              id="update_Foil1_Tension_Set_Point"
+              name="Foil1_Tension_Set_Point"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil1_Tension_Set_Point_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 34 -->
+          <div class="field-group">
+            <label for="update_Pack_Transfer_Park_Position"
+              >Pack Transfer Park Position:</label
+            >
+            <input
+              type="text"
+              id="update_Pack_Transfer_Park_Position"
+              name="Pack_Transfer_Park_Position"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Pack_Transfer_Park_Position_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
 
-  <div class="form-buttons">
-    <button type="button" onclick="prevStep1()">Back</button>
-    <button type="button" onclick="nextStep1()">Next</button>
-  </div>
-</div>
+          <!-- 35 -->
+          <div class="field-group">
+            <label for="update_Foil2_Tension_Set_Point"
+              >Foil2 Tension Set Point:</label
+            >
+            <input
+              type="text"
+              id="update_Foil2_Tension_Set_Point"
+              name="Foil2_Tension_Set_Point"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Foil2_Tension_Set_Point_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- 36 -->
+          <div class="field-group">
+            <label for="update_Media_Tension_Set_Point"
+              >Media Tension Set Point:</label
+            >
+            <input
+              type="text"
+              id="update_Media_Tension_Set_Point"
+              name="Media_Tension_Set_Point"
+              placeholder="New Value"
+            />
+            <input
+              type="text"
+              id="update_Media_Tension_Set_Point_old"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+        </div>
 
+        <div class="form-buttons">
+          <button type="button" onclick="prevStep1()">Back</button>
+          <button type="button" onclick="nextStep1()">Next</button>
+        </div>
+      </div>
 
-              
-        <div class="form-step-1" id="update-step4" style="display:none;">
-            <h1 style="display: block; margin: 0 auto; text-align: center; margin-bottom: 15px;">
-              Air Inspection Settings
-            </h1>
-          
-            <div class="form-grid">
-              <div class="field-row">
-                <label for="update_databaseAvailable">Database Available:</label>
-                <input type="text" id="update_databaseAvailable" name="databaseAvailable">
-                <input type="text" id="old_databaseAvailable" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Width">Width:</label>
-                <input type="text" id="update_Width" name="Width">
-                <input type="text" id="old_Width" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Height">Height:</label>
-                <input type="text" id="update_Height" name="Height">
-                <input type="text" id="old_Height" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Depth">Depth:</label>
-                <input type="text" id="update_Depth" name="Depth">
-                <input type="text" id="old_Depth" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Art_Num">Art Number:</label>
-                <input type="text" id="update_Art_Num" name="Art_Num">
-                <input type="text" id="old_Art_Num" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Air_Flow_Set">Air Flow Set:</label>
-                <input type="text" id="update_Air_Flow_Set" name="Air_Flow_Set">
-                <input type="text" id="old_Air_Flow_Set" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Pressure_Drop_Setpoint">Pressure Drop Setpoint:</label>
-                <input type="text" id="update_Pressure_Drop_Setpoint" name="Pressure_Drop_Setpoint">
-                <input type="text" id="old_Pressure_Drop_Setpoint" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Lower_Tolerance1">Lower Tolerance1:</label>
-                <input type="text" id="update_Lower_Tolerance1" name="Lower_Tolerance1">
-                <input type="text" id="old_Lower_Tolerance1" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Lower_Tolerance2">Lower Tolerance2:</label>
-                <input type="text" id="update_Lower_Tolerance2" name="Lower_Tolerance2">
-                <input type="text" id="old_Lower_Tolerance2" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Upper_Tolerance1">Upper Tolerance1:</label>
-                <input type="text" id="update_Upper_Tolerance1" name="Upper_Tolerance1">
-                <input type="text" id="old_Upper_Tolerance1" class="old-value" placeholder="Old Value" readonly>
-              </div>
-          
-              <div class="field-row">
-                <label for="update_Upper_Tolerance2">Upper Tolerance2:</label>
-                <input type="text" id="update_Upper_Tolerance2" name="Upper_Tolerance2">
-                <input type="text" id="old_Upper_Tolerance2" class="old-value" placeholder="Old Value" readonly>
-              </div>
-              <!-- <div class="field-row">
+      <div class="form-step-1" id="update-step4" style="display: none">
+        <h1
+          style="
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+            margin-bottom: 15px;
+          "
+        >
+          Air Inspection Settings
+        </h1>
+
+        <div class="form-grid">
+          <div class="field-row">
+            <label for="update_databaseAvailable">Database Available:</label>
+            <input
+              type="text"
+              id="update_databaseAvailable"
+              name="databaseAvailable"
+            />
+            <input
+              type="text"
+              id="old_databaseAvailable"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Width">Width:</label>
+            <input type="text" id="update_Width" name="Width" />
+            <input
+              type="text"
+              id="old_Width"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Height">Height:</label>
+            <input type="text" id="update_Height" name="Height" />
+            <input
+              type="text"
+              id="old_Height"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Depth">Depth:</label>
+            <input type="text" id="update_Depth" name="Depth" />
+            <input
+              type="text"
+              id="old_Depth"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Art_Num">Art Number:</label>
+            <input type="text" id="update_Art_Num" name="Art_Num" />
+            <input
+              type="text"
+              id="old_Art_Num"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Air_Flow_Set">Air Flow Set:</label>
+            <input type="text" id="update_Air_Flow_Set" name="Air_Flow_Set" />
+            <input
+              type="text"
+              id="old_Air_Flow_Set"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Pressure_Drop_Setpoint"
+              >Pressure Drop Setpoint:</label
+            >
+            <input
+              type="text"
+              id="update_Pressure_Drop_Setpoint"
+              name="Pressure_Drop_Setpoint"
+            />
+            <input
+              type="text"
+              id="old_Pressure_Drop_Setpoint"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Lower_Tolerance1">Lower Tolerance1:</label>
+            <input
+              type="text"
+              id="update_Lower_Tolerance1"
+              name="Lower_Tolerance1"
+            />
+            <input
+              type="text"
+              id="old_Lower_Tolerance1"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Lower_Tolerance2">Lower Tolerance2:</label>
+            <input
+              type="text"
+              id="update_Lower_Tolerance2"
+              name="Lower_Tolerance2"
+            />
+            <input
+              type="text"
+              id="old_Lower_Tolerance2"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Upper_Tolerance1">Upper Tolerance1:</label>
+            <input
+              type="text"
+              id="update_Upper_Tolerance1"
+              name="Upper_Tolerance1"
+            />
+            <input
+              type="text"
+              id="old_Upper_Tolerance1"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+
+          <div class="field-row">
+            <label for="update_Upper_Tolerance2">Upper Tolerance2:</label>
+            <input
+              type="text"
+              id="update_Upper_Tolerance2"
+              name="Upper_Tolerance2"
+            />
+            <input
+              type="text"
+              id="old_Upper_Tolerance2"
+              class="old-value"
+              placeholder="Old Value"
+              readonly
+            />
+          </div>
+          <!-- <div class="field-row">
                 <label for="update_Lower_Fan_Speed">Lower_Fan_Speed:</label>
                 <input type="text" id="update_Lower_Fan_Speed" name="Lower_Fan_Speed">
                 <input type="text" id="old_Lower_Fan_Speed"  placeholder="Old Value" readonly>
@@ -928,661 +2036,766 @@ input[readonly] {
                 <input type="text" id="update_Upper_Fan_Speed" name="Upper_Fan_Speed">
                 <input type="text" id="old_Upper_Fan_Speed"  placeholder="Old Value" readonly>
              </div> -->
-           
-            </div>
-          
-            <div class="form-buttons">
-              <button type="button" onclick="prevStep1()">Back</button>
-              <button type="submit" class="submit-button1">Update Recipe</button>
-            </div>
-          </div>
-          
-          
-          
-     </form>
-        <script>
-            let currentStep1 = 1;
-        
-            function showStep1(stepIndex) {
-                const steps = document.querySelectorAll(".form-step-1");
-        
-                // Hide all steps
-                steps.forEach(function(stepDiv) {
-                    stepDiv.style.display = 'none';
-                });
-        
-                // Show the selected step
-                document.getElementById('update-step' + stepIndex).style.display = 'block';
-            }
-        
-            function nextStep1() {
-                if (currentStep1 < 4) {
-                    currentStep1++;
-                    showStep1(currentStep1);
-                }
-            }
-        
-            function prevStep1() {
-                if (currentStep1 > 1) {
-                    currentStep1--;
-                    showStep1(currentStep1);
-                }
-            }
-        
-            // Initially show the first step
-            showStep1(currentStep1);
+        </div>
 
-        </script>
-    </div>
+        <div class="form-buttons">
+          <button type="button" onclick="prevStep1()">Back</button>
+          <button type="submit" class="submit-button1">Update Recipe</button>
+        </div>
+      </div>
+    </form>
+    <script>
+      let currentStep1 = 1;
+
+      function showStep1(stepIndex) {
+        const steps = document.querySelectorAll(".form-step-1");
+
+        // Hide all steps
+        steps.forEach(function (stepDiv) {
+          stepDiv.style.display = "none";
+        });
+
+        // Show the selected step
+        document.getElementById("update-step" + stepIndex).style.display =
+          "block";
+      }
+
+      function nextStep1() {
+        if (currentStep1 < 4) {
+          currentStep1++;
+          showStep1(currentStep1);
+        }
+      }
+
+      function prevStep1() {
+        if (currentStep1 > 1) {
+          currentStep1--;
+          showStep1(currentStep1);
+        }
+      }
+
+      // Initially show the first step
+      showStep1(currentStep1);
+    </script>
+  </div>
 </div>
 
-
 <div class="table-container">
-    <table id="recipetable">
-        <thead>
-            <tr>
-                <th>Serial No.</th>
-                <th >Recipe ID</th>
-                <th>Recipe Name</th>
-                <th>Filter Size</th>
-                <th>Filter Code</th>
-                <th>Art No</th>
-                <th>Action</th>
-                <th>Update</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for recipe in recipes %}
-            <tr id="row-{{ recipe.Recipe_ID }}">
-                <td>{{ (page-1)*per_page + loop.index }}</td>
-                <td class="highlighted-header" style="font-style: white;"><a href="{{ url_for('recipe_details', recipe_id=recipe.Recipe_ID) }}">{{ recipe.Recipe_ID }}</a></td>
-                <td>{{recipe.Recipe_Name}}</td>
-                <td>{{ recipe.Filter_Size }}</td>
-                <td>{{ recipe.Filter_Code }}</td>
-                <td>{{ recipe.Art_No }}</td>
-                <td>
-                    <!-- Delete Button -->
-                    <button class="delete-button" onclick="confirmDeleteRecipe('{{ recipe.Recipe_ID }}')">
-                        <i class="fa fa-trash"></i> 
-                    </button>
-                </td>
-                <td>
-                    <!-- Update Button -->
-                    <button class="update-button" onclick="openUpdatePopup('{{ recipe.Recipe_ID }}')">
-                        <i class="fa-regular fa-pen-to-square"></i> 
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <table id="recipetable">
+    <thead>
+      <tr>
+        <th>Serial No.</th>
+        <th>Recipe ID</th>
+        <th>Recipe Name</th>
+        <th>Filter Size</th>
+        <th>Filter Code</th>
+        <th>Art No</th>
+        <th>Action</th>
+        <th>Update</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for recipe in recipes %}
+      <tr id="row-{{ recipe.Recipe_ID }}">
+        <td>{{ (page-1)*per_page + loop.index }}</td>
+        <td class="highlighted-header" style="font-style: white">
+          <a href="{{ url_for('recipe_details', recipe_id=recipe.Recipe_ID) }}"
+            >{{ recipe.Recipe_ID }}</a
+          >
+        </td>
+        <td>{{recipe.Recipe_Name}}</td>
+        <td>{{ recipe.Filter_Size }}</td>
+        <td>{{ recipe.Filter_Code }}</td>
+        <td>{{ recipe.Art_No }}</td>
+        <td>
+          <!-- Delete Button -->
+          <button
+            class="delete-button"
+            onclick="confirmDeleteRecipe('{{ recipe.Recipe_ID }}')"
+          >
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+        <td>
+          <!-- Update Button -->
+          <button
+            class="update-button"
+            onclick="openUpdatePopup('{{ recipe.Recipe_ID }}')"
+          >
+            <i class="fa-regular fa-pen-to-square"></i>
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 
 <div class="pagination-container">
-    {% if page > 1 %}
-      <a href="{{ url_for('recipe_list', page=page - 1) }}" class="pagination-btn">Previous</a>
-    {% else %}
-      <span class="pagination-btn disabled">Previous</span>
-    {% endif %}
-    
-    {% for p in range(1, total_pages + 1) %}
-      <a href="{{ url_for('recipe_list', page=p) }}" class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
-    {% endfor %}
-    
-    {% if page < total_pages %}
-      <a href="{{ url_for('recipe_list', page=page + 1) }}" class="pagination-btn">Next</a>
-    {% else %}
-      <span class="pagination-btn disabled">Next</span>
-    {% endif %}
+  {% if page > 1 %}
+  <a href="{{ url_for('recipe_list', page=page - 1) }}" class="pagination-btn"
+    >Previous</a
+  >
+  {% else %}
+  <span class="pagination-btn disabled">Previous</span>
+  {% endif %} {% for p in range(1, total_pages + 1) %}
+  <a
+    href="{{ url_for('recipe_list', page=p) }}"
+    class="pagination-btn {% if p == page %}active{% endif %}"
+    >{{ p }}</a
+  >
+  {% endfor %} {% if page < total_pages %}
+  <a href="{{ url_for('recipe_list', page=page + 1) }}" class="pagination-btn"
+    >Next</a
+  >
+  {% else %}
+  <span class="pagination-btn disabled">Next</span>
+  {% endif %}
 </div>
 
-
 <script>
-const nextRecipeId = "{{ next_recipe_id }}";
-function loadRecipe() {
+  const nextRecipeId = "{{ next_recipe_id }}";
+  function loadRecipe() {
     const recipeId = document.getElementById("load_recipe_id").value;
     const recipeName = document.getElementById("load_recipe_name").value;
 
     if (!recipeId && !recipeName) {
-        alert("Please enter either a Recipe ID or a Recipe Name to load!");
-        return;
+      alert("Please enter either a Recipe ID or a Recipe Name to load!");
+      return;
     }
 
     console.log("Sending recipe ID:", recipeId, "and Recipe Name:", recipeName); // Debug log
 
-    fetch(`/get_recipe?recipe_id=${recipeId}&recipe_name=${encodeURIComponent(recipeName)}`, {
+    fetch(
+      `/get_recipe?recipe_id=${recipeId}&recipe_name=${encodeURIComponent(
+        recipeName
+      )}`,
+      {
         method: "GET",
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            console.log("Response data:", data); // Debug log
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Response data:", data); // Debug log
 
-            if (data.success) {
-                // Step 1: Basic info
-                document.getElementById("recipe_id").value = nextRecipeId;
-                document.getElementById("recipe_name").value = (data.recipe_name ?? "") + "_copy";
+        if (data.success) {
+          // Step 1: Basic info
+          document.getElementById("recipe_id").value = nextRecipeId;
+          document.getElementById("recipe_name").value =
+            (data.recipe_name ?? "") + "_copy";
 
-                document.getElementById("filter_size").value = data.filter_size || "";
-                document.getElementById("filter_code").value = data.filter_code || "";
-                document.getElementById("art_no").value = data.art_no || "";
+          document.getElementById("filter_size").value = data.filter_size || "";
+          document.getElementById("filter_code").value = data.filter_code || "";
+          document.getElementById("art_no").value = data.art_no || "";
 
-                // Step 2: Roll Positions (Pos1–Pos9)
-                for (let i = 1; i <= 9; i++) {
-                    const posValue = data[`Pos${i}`];
-                    const posSelect = document.getElementById(`pos${i}`);
-                    if (posSelect) {
-                        posSelect.value = posValue || "";
-                    }
-                }
-
-                // Step 3: Machine Settings
-                document.getElementById("alu_mat").value = data.Alu_Material || "";
-                document.getElementById("house_mat").value = data.House_Material || "";
-
-                document.getElementById("Pleat_Height").value = data.Pleat_Height || "";
-                document.getElementById("Blade_Opening").value = data.Blade_Opening || "";
-                document.getElementById("Soft_Touch").value = data.Soft_Touch || "";
-                document.getElementById("Press_Touch").value = data.Press_Touch || "";
-
-                document.getElementById("Feeder1_Media_Thickness").value = data.Feeder1_Media_Thickness || "";
-                document.getElementById("Feeder1_Park_Position").value = data.Feeder1_Park_Position || "";
-                document.getElementById("Feeder2_Media_Thickness").value = data.Feeder2_Media_Thickness || "";
-                document.getElementById("Feeder2_Park_Position").value = data.Feeder2_Park_Position || "";
-
-                document.getElementById("Foil1_Length").value = data.Foil1_Length || "";
-                document.getElementById("Foil1_Length_Offset").value = data.Foil1_Length_Offset || "";
-                document.getElementById("Foil1_Width").value = data.Foil1_Width || "";
-                document.getElementById("Foil1_Tension_Set_Point").value = data.Foil1_Tension_Set_Point || "";
-
-                document.getElementById("Foil2_Length").value = data.Foil2_Length || "";
-                document.getElementById("Foil2_Length_Offset").value = data.Foil2_Length_Offset || "";
-                document.getElementById("Foil2_Width").value = data.Foil2_Width || "";
-                document.getElementById("Foil2_Tension_Set_Point").value = data.Foil2_Tension_Set_Point || "";
-
-                document.getElementById("Puller_Start_Position").value = data.Puller_Start_Position || "";
-                document.getElementById("Puller_End_Position").value = data.Puller_End_Position || "";
-                document.getElementById("Puller2_Feed_Correction").value = data.Puller2_Feed_Correction || "";
-                document.getElementById("Puller_Extra_Stroke_Enable").value = data.Puller_Extra_Stroke_Enable || "";
-
-                document.getElementById("Autofeeding_Offset").value = data.Autofeeding_Offset || "";
-                document.getElementById("Sync_Table_Start_Position").value = data.Sync_Table_Start_Position || "";
-                document.getElementById("Pack_Transfer_Rev_Position").value = data.Pack_Transfer_Rev_Position || "";
-                document.getElementById("Pack_Transfer_Park_Position").value = data.Pack_Transfer_Park_Position || "";
-
-                document.getElementById("Filter_Box_Height").value = data.Filter_Box_Height || "";
-                document.getElementById("Filter_Box_Width").value = data.Filter_Box_Width || "";
-                document.getElementById("Filter_Box_Length").value = data.Filter_Box_Length || "";
-
-                document.getElementById("Pleat_Pitch").value = data.Pleat_Pitch || "";
-                document.getElementById("Pleat_Counts").value = data.Pleat_Counts || "";
-                document.getElementById("Batch_Count").value = data.Batch_Count || "";
-
-                document.getElementById("Foil_Low_Diameter").value = data.Foil_Low_Diameter || "";
-                document.getElementById("Media_Tension_Set_Point").value = data.Media_Tension_Set_Point || "";
-                document.getElementById("Feeding_Conveyor_Speed").value = data.Feeding_Conveyor_Speed || "";
-                document.getElementById("Discharge_Conveyor_Speed").value = data.Discharge_Conveyor_Speed || "";
-
-                document.getElementById("Lid_Placement_Enable").value = data.Lid_Placement_Enable || "";
-                document.getElementById("Lid_Placement_Position").value = data.Lid_Placement_Position || "";
-
-                // Step 4: Air Inspection Settings
-                document.getElementById("databaseAvailable").value = data.databaseAvailable || "";
-                document.getElementById("Width").value = data.Width || "";
-                document.getElementById("Height").value = data.Height || "";
-                document.getElementById("Depth").value = data.Depth || "";
-                document.getElementById("Art_Num").value = data.Art_Num || "";
-                document.getElementById("Air_Flow_Set").value = data.Air_Flow_Set || "";
-                document.getElementById("Pressure_Drop_Setpoint").value = data.Pressure_Drop_Setpoint || "";
-                document.getElementById("Lower_Tolerance1").value = data.Lower_Tolerance1 || "";
-                document.getElementById("Lower_Tolerance2").value = data.Lower_Tolerance2 || "";
-                document.getElementById("Upper_Tolerance1").value = data.Upper_Tolerance1 || "";
-                document.getElementById("Upper_Tolerance2").value = data.Upper_Tolerance2 || "";
-                
-
-                alert("Recipe loaded successfully!");
-            } else {
-                alert("Recipe not found!");
+          // Step 2: Roll Positions (Pos1–Pos9)
+          for (let i = 1; i <= 9; i++) {
+            const posValue = data[`Pos${i}`];
+            const posSelect = document.getElementById(`pos${i}`);
+            if (posSelect) {
+              posSelect.value = posValue || "";
             }
-        })
-        .catch((error) => {
-            console.error("Error loading recipe:", error);
-            alert("An error occurred while loading the recipe.");
-        });
-}
+          }
 
-// /* Update function in recipe page*/
-function loadLastPLCValues() {
-    fetch('/get_last_plc_values')
-        .then(response => response.json())
-        .then(data => {
-            for (let key in data) {
-                let newField = document.getElementById(key);
-                let oldField = document.getElementById(key + "_old");
+          // Step 3: Machine Settings
+          document.getElementById("alu_mat").value = data.Alu_Material || "";
+          document.getElementById("house_mat").value =
+            data.House_Material || "";
 
-                if (newField) newField.value = data[key];
-                if (oldField) oldField.value = data[key]; // store as old too
-            }
-        })
-        .catch(err => console.error("Error loading PLC values:", err));
-}
+          document.getElementById("Pleat_Height").value =
+            data.Pleat_Height || "";
+          document.getElementById("Blade_Opening").value =
+            data.Blade_Opening || "";
+          document.getElementById("Soft_Touch").value = data.Soft_Touch || "";
+          document.getElementById("Press_Touch").value = data.Press_Touch || "";
 
-function loadLastPLCValues2() {
-    fetch('/get_last_plc_values')
-        .then(response => response.json())
-        .then(data => {
-            for (let key in data) {
-               
-                let oldField = document.getElementById(key + "_old");
+          document.getElementById("Feeder1_Media_Thickness").value =
+            data.Feeder1_Media_Thickness || "";
+          document.getElementById("Feeder1_Park_Position").value =
+            data.Feeder1_Park_Position || "";
+          document.getElementById("Feeder2_Media_Thickness").value =
+            data.Feeder2_Media_Thickness || "";
+          document.getElementById("Feeder2_Park_Position").value =
+            data.Feeder2_Park_Position || "";
 
-              
-                if (oldField) oldField.value = data[key]; // store as old too
-            }
-        })
-        .catch(err => console.error("Error loading PLC values:", err));
-}
+          document.getElementById("Foil1_Length").value =
+            data.Foil1_Length || "";
+          document.getElementById("Foil1_Length_Offset").value =
+            data.Foil1_Length_Offset || "";
+          document.getElementById("Foil1_Width").value = data.Foil1_Width || "";
+          document.getElementById("Foil1_Tension_Set_Point").value =
+            data.Foil1_Tension_Set_Point || "";
 
-loadLastPLCValues2()
+          document.getElementById("Foil2_Length").value =
+            data.Foil2_Length || "";
+          document.getElementById("Foil2_Length_Offset").value =
+            data.Foil2_Length_Offset || "";
+          document.getElementById("Foil2_Width").value = data.Foil2_Width || "";
+          document.getElementById("Foil2_Tension_Set_Point").value =
+            data.Foil2_Tension_Set_Point || "";
 
-function openUpdatePopup(recipeId) {
+          document.getElementById("Puller_Start_Position").value =
+            data.Puller_Start_Position || "";
+          document.getElementById("Puller_End_Position").value =
+            data.Puller_End_Position || "";
+          document.getElementById("Puller2_Feed_Correction").value =
+            data.Puller2_Feed_Correction || "";
+          document.getElementById("Puller_Extra_Stroke_Enable").value =
+            data.Puller_Extra_Stroke_Enable || "";
+
+          document.getElementById("Autofeeding_Offset").value =
+            data.Autofeeding_Offset || "";
+          document.getElementById("Sync_Table_Start_Position").value =
+            data.Sync_Table_Start_Position || "";
+          document.getElementById("Pack_Transfer_Rev_Position").value =
+            data.Pack_Transfer_Rev_Position || "";
+          document.getElementById("Pack_Transfer_Park_Position").value =
+            data.Pack_Transfer_Park_Position || "";
+
+          document.getElementById("Filter_Box_Height").value =
+            data.Filter_Box_Height || "";
+          document.getElementById("Filter_Box_Width").value =
+            data.Filter_Box_Width || "";
+          document.getElementById("Filter_Box_Length").value =
+            data.Filter_Box_Length || "";
+
+          document.getElementById("Pleat_Pitch").value = data.Pleat_Pitch || "";
+          document.getElementById("Pleat_Counts").value =
+            data.Pleat_Counts || "";
+          document.getElementById("Batch_Count").value = data.Batch_Count || "";
+
+          document.getElementById("Foil_Low_Diameter").value =
+            data.Foil_Low_Diameter || "";
+          document.getElementById("Media_Tension_Set_Point").value =
+            data.Media_Tension_Set_Point || "";
+          document.getElementById("Feeding_Conveyor_Speed").value =
+            data.Feeding_Conveyor_Speed || "";
+          document.getElementById("Discharge_Conveyor_Speed").value =
+            data.Discharge_Conveyor_Speed || "";
+
+          document.getElementById("Lid_Placement_Enable").value =
+            data.Lid_Placement_Enable || "";
+          document.getElementById("Lid_Placement_Position").value =
+            data.Lid_Placement_Position || "";
+
+          // Step 4: Air Inspection Settings
+          document.getElementById("databaseAvailable").value =
+            data.databaseAvailable || "";
+          document.getElementById("Width").value = data.Width || "";
+          document.getElementById("Height").value = data.Height || "";
+          document.getElementById("Depth").value = data.Depth || "";
+          document.getElementById("Art_Num").value = data.Art_Num || "";
+          document.getElementById("Air_Flow_Set").value =
+            data.Air_Flow_Set || "";
+          document.getElementById("Pressure_Drop_Setpoint").value =
+            data.Pressure_Drop_Setpoint || "";
+          document.getElementById("Lower_Tolerance1").value =
+            data.Lower_Tolerance1 || "";
+          document.getElementById("Lower_Tolerance2").value =
+            data.Lower_Tolerance2 || "";
+          document.getElementById("Upper_Tolerance1").value =
+            data.Upper_Tolerance1 || "";
+          document.getElementById("Upper_Tolerance2").value =
+            data.Upper_Tolerance2 || "";
+
+          alert("Recipe loaded successfully!");
+        } else {
+          alert("Recipe not found!");
+        }
+      })
+      .catch((error) => {
+        console.error("Error loading recipe:", error);
+        alert("An error occurred while loading the recipe.");
+      });
+  }
+
+  // /* Update function in recipe page*/
+  function loadLastPLCValues() {
+    fetch("/get_last_plc_values")
+      .then((response) => response.json())
+      .then((data) => {
+        for (let key in data) {
+          let newField = document.getElementById(key);
+          let oldField = document.getElementById(key + "_old");
+
+          if (newField) newField.value = data[key];
+          if (oldField) oldField.value = data[key]; // store as old too
+        }
+      })
+      .catch((err) => console.error("Error loading PLC values:", err));
+  }
+
+  function loadLastPLCValues2() {
+    fetch("/get_last_plc_values")
+      .then((response) => response.json())
+      .then((data) => {
+        for (let key in data) {
+          let oldField = document.getElementById(key + "_old");
+
+          if (oldField) oldField.value = data[key]; // store as old too
+        }
+      })
+      .catch((err) => console.error("Error loading PLC values:", err));
+  }
+
+  loadLastPLCValues2();
+
+  function openUpdatePopup(recipeId) {
     // Show the update popup
-    document.getElementById('update-recipe-section').style.display = 'block';
+    document.getElementById("update-recipe-section").style.display = "block";
 
     // Fetch the recipe details using recipeId
     fetch(`/get_recipe?recipe_id=${recipeId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Basic info
-                document.getElementById("update_recipe_id").value = data.recipe_id;
-                document.getElementById("update_recipe_name").value = data.recipe_name;
-                document.getElementById("update_filter_size").value = data.filter_size;
-                document.getElementById("update_filter_code").value = data.filter_code;
-                document.getElementById("update_art_no").value = data.art_no;
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          // Basic info
+          document.getElementById("update_recipe_id").value = data.recipe_id;
+          document.getElementById("update_recipe_name").value =
+            data.recipe_name;
+          document.getElementById("update_filter_size").value =
+            data.filter_size;
+          document.getElementById("update_filter_code").value =
+            data.filter_code;
+          document.getElementById("update_art_no").value = data.art_no;
 
-                // Roll Positions (Pos1–Pos9)
-                for (let i = 1; i <= 9; i++) {
-                    const posSelect = document.getElementById(`update_pos${i}`);
-                    posSelect.value = data[`Pos${i}`] || "";
-                }
+          // Roll Positions (Pos1–Pos9)
+          for (let i = 1; i <= 9; i++) {
+            const posSelect = document.getElementById(`update_pos${i}`);
+            posSelect.value = data[`Pos${i}`] || "";
+          }
 
-                // Machine Settings
-                document.getElementById("update_alu_mat").value = data.Alu_Material || "";
-                document.getElementById("update_house_mat").value = data.House_Material || "";
+          // Machine Settings
+          document.getElementById("update_alu_mat").value =
+            data.Alu_Material || "";
+          document.getElementById("update_house_mat").value =
+            data.House_Material || "";
 
-                document.getElementById("update_Pleat_Height").value = data.Pleat_Height || "";
-                document.getElementById("update_Blade_Opening").value = data.Blade_Opening || "";
-                document.getElementById("update_Soft_Touch").value = data.Soft_Touch || "";
-                document.getElementById("update_Press_Touch").value = data.Press_Touch || "";
+          document.getElementById("update_Pleat_Height").value =
+            data.Pleat_Height || "";
+          document.getElementById("update_Blade_Opening").value =
+            data.Blade_Opening || "";
+          document.getElementById("update_Soft_Touch").value =
+            data.Soft_Touch || "";
+          document.getElementById("update_Press_Touch").value =
+            data.Press_Touch || "";
 
-                document.getElementById("update_Feeder1_Media_Thickness").value = data.Feeder1_Media_Thickness || "";
-                document.getElementById("update_Feeder1_Park_Position").value = data.Feeder1_Park_Position || "";
-                document.getElementById("update_Feeder2_Media_Thickness").value = data.Feeder2_Media_Thickness || "";
-                document.getElementById("update_Feeder2_Park_Position").value = data.Feeder2_Park_Position || "";
+          document.getElementById("update_Feeder1_Media_Thickness").value =
+            data.Feeder1_Media_Thickness || "";
+          document.getElementById("update_Feeder1_Park_Position").value =
+            data.Feeder1_Park_Position || "";
+          document.getElementById("update_Feeder2_Media_Thickness").value =
+            data.Feeder2_Media_Thickness || "";
+          document.getElementById("update_Feeder2_Park_Position").value =
+            data.Feeder2_Park_Position || "";
 
-                document.getElementById("update_Foil1_Length").value = data.Foil1_Length || "";
-                document.getElementById("update_Foil1_Length_Offset").value = data.Foil1_Length_Offset || "";
-                document.getElementById("update_Foil1_Width").value = data.Foil1_Width || "";
-                document.getElementById("update_Foil1_Tension_Set_Point").value = data.Foil1_Tension_Set_Point || "";
+          document.getElementById("update_Foil1_Length").value =
+            data.Foil1_Length || "";
+          document.getElementById("update_Foil1_Length_Offset").value =
+            data.Foil1_Length_Offset || "";
+          document.getElementById("update_Foil1_Width").value =
+            data.Foil1_Width || "";
+          document.getElementById("update_Foil1_Tension_Set_Point").value =
+            data.Foil1_Tension_Set_Point || "";
 
-                document.getElementById("update_Foil2_Length").value = data.Foil2_Length || "";
-                document.getElementById("update_Foil2_Length_Offset").value = data.Foil2_Length_Offset || "";
-                document.getElementById("update_Foil2_Width").value = data.Foil2_Width || "";
-                document.getElementById("update_Foil2_Tension_Set_Point").value = data.Foil2_Tension_Set_Point || "";
+          document.getElementById("update_Foil2_Length").value =
+            data.Foil2_Length || "";
+          document.getElementById("update_Foil2_Length_Offset").value =
+            data.Foil2_Length_Offset || "";
+          document.getElementById("update_Foil2_Width").value =
+            data.Foil2_Width || "";
+          document.getElementById("update_Foil2_Tension_Set_Point").value =
+            data.Foil2_Tension_Set_Point || "";
 
-                document.getElementById("update_Puller_Start_Position").value = data.Puller_Start_Position || "";
-                document.getElementById("update_Puller_End_Position").value = data.Puller_End_Position || "";
-                document.getElementById("update_Puller2_Feed_Correction").value = data.Puller2_Feed_Correction || "";
-                document.getElementById("update_Puller_Extra_Stroke_Enable").value = data.Puller_Extra_Stroke_Enable || "";
+          document.getElementById("update_Puller_Start_Position").value =
+            data.Puller_Start_Position || "";
+          document.getElementById("update_Puller_End_Position").value =
+            data.Puller_End_Position || "";
+          document.getElementById("update_Puller2_Feed_Correction").value =
+            data.Puller2_Feed_Correction || "";
+          document.getElementById("update_Puller_Extra_Stroke_Enable").value =
+            data.Puller_Extra_Stroke_Enable || "";
 
-                document.getElementById("update_Autofeeding_Offset").value = data.Autofeeding_Offset || "";
-                document.getElementById("update_Sync_Table_Start_Position").value = data.Sync_Table_Start_Position || "";
-                document.getElementById("update_Pack_Transfer_Rev_Position").value = data.Pack_Transfer_Rev_Position || "";
-                document.getElementById("update_Pack_Transfer_Park_Position").value = data.Pack_Transfer_Park_Position || "";
+          document.getElementById("update_Autofeeding_Offset").value =
+            data.Autofeeding_Offset || "";
+          document.getElementById("update_Sync_Table_Start_Position").value =
+            data.Sync_Table_Start_Position || "";
+          document.getElementById("update_Pack_Transfer_Rev_Position").value =
+            data.Pack_Transfer_Rev_Position || "";
+          document.getElementById("update_Pack_Transfer_Park_Position").value =
+            data.Pack_Transfer_Park_Position || "";
 
-                document.getElementById("update_Filter_Box_Height").value = data.Filter_Box_Height || "";
-                document.getElementById("update_Filter_Box_Width").value = data.Filter_Box_Width || "";
-                document.getElementById("update_Filter_Box_Length").value = data.Filter_Box_Length || "";
+          document.getElementById("update_Filter_Box_Height").value =
+            data.Filter_Box_Height || "";
+          document.getElementById("update_Filter_Box_Width").value =
+            data.Filter_Box_Width || "";
+          document.getElementById("update_Filter_Box_Length").value =
+            data.Filter_Box_Length || "";
 
-                document.getElementById("update_Pleat_Pitch").value = data.Pleat_Pitch || "";
-                document.getElementById("update_Pleat_Counts").value = data.Pleat_Counts || "";
-                document.getElementById("update_Batch_Count").value = data.Batch_Count || "";
+          document.getElementById("update_Pleat_Pitch").value =
+            data.Pleat_Pitch || "";
+          document.getElementById("update_Pleat_Counts").value =
+            data.Pleat_Counts || "";
+          document.getElementById("update_Batch_Count").value =
+            data.Batch_Count || "";
 
-                document.getElementById("update_Foil_Low_Diameter").value = data.Foil_Low_Diameter || "";
-                document.getElementById("update_Media_Tension_Set_Point").value = data.Media_Tension_Set_Point || "";
-                document.getElementById("update_Feeding_Conveyor_Speed").value = data.Feeding_Conveyor_Speed || "";
-                document.getElementById("update_Discharge_Conveyor_Speed").value = data.Discharge_Conveyor_Speed || "";
+          document.getElementById("update_Foil_Low_Diameter").value =
+            data.Foil_Low_Diameter || "";
+          document.getElementById("update_Media_Tension_Set_Point").value =
+            data.Media_Tension_Set_Point || "";
+          document.getElementById("update_Feeding_Conveyor_Speed").value =
+            data.Feeding_Conveyor_Speed || "";
+          document.getElementById("update_Discharge_Conveyor_Speed").value =
+            data.Discharge_Conveyor_Speed || "";
 
-                document.getElementById("update_Lid_Placement_Enable").value = data.Lid_Placement_Enable || "";
-                document.getElementById("update_Lid_Placement_Position").value = data.Lid_Placement_Position || "";
+          document.getElementById("update_Lid_Placement_Enable").value =
+            data.Lid_Placement_Enable || "";
+          document.getElementById("update_Lid_Placement_Position").value =
+            data.Lid_Placement_Position || "";
 
-                // Air Inspection Settings
-                document.getElementById("update_databaseAvailable").value = data.databaseAvailable || "";
-                document.getElementById("update_Width").value = data.Width || "";
-                document.getElementById("update_Height").value = data.Height || "";
-                document.getElementById("update_Depth").value = data.Depth || "";
-                document.getElementById("update_Art_Num").value = data.Art_Num || "";
-                document.getElementById("update_Air_Flow_Set").value = data.Air_Flow_Set || "";
-                document.getElementById("update_Pressure_Drop_Setpoint").value = data.Pressure_Drop_Setpoint || "";
-                document.getElementById("update_Lower_Tolerance1").value = data.Lower_Tolerance1 || "";
-                document.getElementById("update_Lower_Tolerance2").value = data.Lower_Tolerance2 || "";
-                document.getElementById("update_Upper_Tolerance1").value = data.Upper_Tolerance1 || "";
-                document.getElementById("update_Upper_Tolerance2").value = data.Upper_Tolerance2 || "";
-                
+          // Air Inspection Settings
+          document.getElementById("update_databaseAvailable").value =
+            data.databaseAvailable || "";
+          document.getElementById("update_Width").value = data.Width || "";
+          document.getElementById("update_Height").value = data.Height || "";
+          document.getElementById("update_Depth").value = data.Depth || "";
+          document.getElementById("update_Art_Num").value = data.Art_Num || "";
+          document.getElementById("update_Air_Flow_Set").value =
+            data.Air_Flow_Set || "";
+          document.getElementById("update_Pressure_Drop_Setpoint").value =
+            data.Pressure_Drop_Setpoint || "";
+          document.getElementById("update_Lower_Tolerance1").value =
+            data.Lower_Tolerance1 || "";
+          document.getElementById("update_Lower_Tolerance2").value =
+            data.Lower_Tolerance2 || "";
+          document.getElementById("update_Upper_Tolerance1").value =
+            data.Upper_Tolerance1 || "";
+          document.getElementById("update_Upper_Tolerance2").value =
+            data.Upper_Tolerance2 || "";
+        } else {
+          alert("Recipe not found!");
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching recipe:", error);
+        alert("Failed to fetch recipe details.");
+      });
+  }
 
-            } else {
-                alert("Recipe not found!");
-            }
-        })
-        .catch(error => {
-            console.error("Error fetching recipe:", error);
-            alert("Failed to fetch recipe details.");
-        });
-}
+  function toggleUpdatePopup() {
+    document.getElementById("update-recipe-section").style.display = "none";
+  }
 
-function toggleUpdatePopup() {
-    document.getElementById('update-recipe-section').style.display = 'none';
-}
-
-//code for the dropdown
-document.addEventListener("DOMContentLoaded", function () {
+  //code for the dropdown
+  document.addEventListener("DOMContentLoaded", function () {
     fetchRecipes();
-});
+  });
 
-function fetchRecipes() {
+  function fetchRecipes() {
     fetch("/get_all_recipes")
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success) {
-                populateDropdown("load_recipe_id", "dropdown_recipe_id", data.recipes, "recipe_id");
-                populateDropdown("load_recipe_name", "dropdown_recipe_name", data.recipes, "recipe_name");
-            } else {
-                console.error("Error fetching recipes:", data.message);
-            }
-        })
-        .catch((error) => {
-            console.error("Error fetching recipe list:", error);
-        });
-}
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          populateDropdown(
+            "load_recipe_id",
+            "dropdown_recipe_id",
+            data.recipes,
+            "recipe_id"
+          );
+          populateDropdown(
+            "load_recipe_name",
+            "dropdown_recipe_name",
+            data.recipes,
+            "recipe_name"
+          );
+        } else {
+          console.error("Error fetching recipes:", data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching recipe list:", error);
+      });
+  }
 
-function populateDropdown(inputId, dropdownId, recipes, key) {
+  function populateDropdown(inputId, dropdownId, recipes, key) {
     const inputField = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
     const container = inputField.parentNode;
 
     recipes.forEach((recipe) => {
-        const item = document.createElement("div");
-        item.textContent = recipe[key];
-        item.classList.add("dropdown-item");
+      const item = document.createElement("div");
+      item.textContent = recipe[key];
+      item.classList.add("dropdown-item");
 
-        item.addEventListener("click", function () {
-            inputField.value = recipe[key];
-            dropdown.style.display = "none";
-        });
+      item.addEventListener("click", function () {
+        inputField.value = recipe[key];
+        dropdown.style.display = "none";
+      });
 
-        dropdown.appendChild(item);
+      dropdown.appendChild(item);
     });
 
     // Show dropdown when clicking input or icon
     container.addEventListener("click", function () {
-        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      dropdown.style.display =
+        dropdown.style.display === "block" ? "none" : "block";
     });
 
     // Hide dropdown when clicking outside
     document.addEventListener("click", function (event) {
-        if (!container.contains(event.target)) {
-            dropdown.style.display = "none";
-        }
+      if (!container.contains(event.target)) {
+        dropdown.style.display = "none";
+      }
     });
-}
+  }
 
-let currentStep = 1;
+  let currentStep = 1;
 
-    function showStep(stepIndex) {
-        const steps = document.querySelectorAll(".form-step");
+  function showStep(stepIndex) {
+    const steps = document.querySelectorAll(".form-step");
 
-        // Hide all steps
-        steps.forEach(function(stepDiv) {
-            stepDiv.style.display = 'none';
-        });
-
-        // Show the selected step
-        document.getElementById('step' + stepIndex).style.display = 'block';
-
-        // Show Load Recipe section only on Step 1
-        const loadRecipeDiv = document.getElementById("loadRecipeSection");
-        if (stepIndex === 1) {
-            loadRecipeDiv.style.display = "block";
-        } else {
-            loadRecipeDiv.style.display = "none";
-        }
-    }
-
-    function nextStep() {
-        if (currentStep < 4) {
-            currentStep++;
-            showStep(currentStep);
-        }
-    }
-
-    function prevStep() {
-        if (currentStep > 1) {
-            currentStep--;
-            showStep(currentStep);
-        }
-    }
-
-    // Initially show the first step
-    showStep(currentStep);
-
-
-      // Highlight selected roll positions
-     document.querySelectorAll(".roll-select").forEach(select => {
-        select.addEventListener("change", function () {
-            if (this.value) {
-                this.classList.add("filled");  // highlight
-            } else {
-                this.classList.remove("filled"); // back to dull
-            }
-        });
+    // Hide all steps
+    steps.forEach(function (stepDiv) {
+      stepDiv.style.display = "none";
     });
-    
-function openInfoPopup() {
-  document.getElementById("infoPopup").style.display = "flex";
-}
 
-function closeInfoPopup() {
-  document.getElementById("infoPopup").style.display = "none";
-}
+    // Show the selected step
+    document.getElementById("step" + stepIndex).style.display = "block";
+
+    // Show Load Recipe section only on Step 1
+    const loadRecipeDiv = document.getElementById("loadRecipeSection");
+    if (stepIndex === 1) {
+      loadRecipeDiv.style.display = "block";
+    } else {
+      loadRecipeDiv.style.display = "none";
+    }
+  }
+
+  function nextStep() {
+    if (currentStep < 4) {
+      currentStep++;
+      showStep(currentStep);
+    }
+  }
+
+  function prevStep() {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  }
+
+  // Initially show the first step
+  showStep(currentStep);
+
+  // Highlight selected roll positions
+  document.querySelectorAll(".roll-select").forEach((select) => {
+    select.addEventListener("change", function () {
+      if (this.value) {
+        this.classList.add("filled"); // highlight
+      } else {
+        this.classList.remove("filled"); // back to dull
+      }
+    });
+  });
+
+  function openInfoPopup() {
+    document.getElementById("infoPopup").style.display = "flex";
+  }
+
+  function closeInfoPopup() {
+    document.getElementById("infoPopup").style.display = "none";
+  }
 </script>
 
 <style>
-    /* Dull style */
-  
-      #recipetable tr:nth-child(odd) {
-        background-color: #f2f2f2; /* light grey */
-    }
-    #recipetablee tr:nth-child(even) {
-        background-color: #e0e0e0; /* slightly darker grey */
-    }
+  /* Dull style */
 
-    .popup-overlay_info {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
+  #recipetable tr:nth-child(odd) {
+    background-color: #f2f2f2; /* light grey */
+  }
+  #recipetablee tr:nth-child(even) {
+    background-color: #e0e0e0; /* slightly darker grey */
+  }
 
-.popup-content_info {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  width: 400px;
-  text-align: center;
-  position: relative;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
+  .popup-overlay_info {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
 
-.close-btn_info {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-size: 22px;
-  cursor: pointer;
-  color: #333;
-}
+  .popup-content_info {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
 
-.separator {
-    border: none;              /* remove default */
+  .close-btn_info {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 22px;
+    cursor: pointer;
+    color: #333;
+  }
+
+  .separator {
+    border: none; /* remove default */
     border-top: 2px dashed #666; /* dashed gray line */
     margin: 20px 0;
     width: 100%;
-    opacity: 0.8;              /* force visibility */
-}
+    opacity: 0.8; /* force visibility */
+  }
 
+  .roll-select {
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+    transition: 0.3s;
+  }
 
-    .roll-select {
-        background-color: #f8f8f8;
-        border: 1px solid #ccc;
-        transition: 0.3s;
-    }
+  /* Highlight when filled */
+  .roll-select.filled {
+    background-color: #d4edda; /* light green */
+    border-color: #28a745; /* green */
+    font-weight: bold;
+  }
 
-    /* Highlight when filled */
-    .roll-select.filled {
-        background-color: #d4edda; /* light green */
-        border-color: #28a745;     /* green */
-        font-weight: bold;
-    }
-
-    .recipe-form {
-        display: flex;
-        padding-left: 10px;
+  .recipe-form {
+    display: flex;
+    padding-left: 10px;
     padding-right: 10px;
-        flex-direction: column;
-        width: 100%;
-        max-width: 1200px; /* Adjust based on your layout */
-        margin: auto;
-    }
-    
-    .form-row {
-        display: grid;
-        grid-template-columns: repeat(10, 1fr); /* 4 equal columns */
-        gap: 10px; /* Space between items */
-        align-items: center;
-        /*margin-bottom: 10px; /* Space between rows */
-    }
-    .form-row3 {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* Two columns */
-  gap: 20px;
-}
+    flex-direction: column;
+    width: 100%;
+    max-width: 1200px; /* Adjust based on your layout */
+    margin: auto;
+  }
 
-.field-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr); /* 4 equal columns */
+    gap: 10px; /* Space between items */
+    align-items: center;
+    /*margin-bottom: 10px; /* Space between rows */
+  }
+  .form-row3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 20px;
+  }
 
-.field-group label {
-  width: 150px;
-  font-weight: 500;
-}
+  .field-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-.field-group input {
-  width: 110px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}  
-    .form-row1 {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr); /* 4 equal columns */
-        gap: 10px; /* Space between items */
-        align-items: center;
-        /*margin-bottom: 10px; /* Space between rows */
-    }
-    .form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
+  .field-group label {
+    width: 150px;
+    font-weight: 500;
+  }
 
-.field-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+  .field-group input {
+    width: 110px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  .form-row1 {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* 4 equal columns */
+    gap: 10px; /* Space between items */
+    align-items: center;
+    /*margin-bottom: 10px; /* Space between rows */
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
 
-.field-row label {
-  width: 150px;
-  font-weight: 500;
-}
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-.field-row input {
-  width: 100px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
+  .field-row label {
+    width: 150px;
+    font-weight: 500;
+  }
 
-    .form-buttons {
-        display: flex;
-        justify-content: center; /* Centers buttons */
-        gap: 10px; /* Adds spacing between buttons */
-        margin-bottom: 10px;
+  .field-row input {
+    width: 100px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+
+  .form-buttons {
+    display: flex;
+    justify-content: center; /* Centers buttons */
+    gap: 10px; /* Adds spacing between buttons */
+    margin-bottom: 10px;
     /* margin-top: 10px; */
+  }
+  label {
+    font-weight: bold;
+    display: block;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 992px) {
+    .form-row {
+      grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
     }
-    label {
-        font-weight: bold;
-        display: block;
+  }
+
+  @media (max-width: 600px) {
+    .form-row {
+      grid-template-columns: repeat(1, 1fr); /* 1 column on mobile */
     }
-    
-    input, select {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 992px) {
-        .form-row {
-            grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
-        }
-    }
-    
-    @media (max-width: 600px) {
-        .form-row {
-            grid-template-columns: repeat(1, 1fr); /* 1 column on mobile */
-        }
-    }
-    
-    .submit-button1 {
-        display: inline-block; /* Ensures buttons stay in line */
-        background-color: #007bff; /* Darker purple */
-        color: rgb(27, 26, 26);
-        border: none;
-        border-radius: 4px;
-        padding: 8px 12px;
-        cursor: pointer;
-        margin-right: 10px; /* Space between buttons */
-    }
-    .submit-button1:last-child {
-        margin-right: 0; /* Remove margin from the last button */
-    }
-    /* Styling for table header */
-    .highlighted-tag{
-        font-weight: bold;
-        font-size: 20px;
-    }
-.highlighted-header {
+  }
+
+  .submit-button1 {
+    display: inline-block; /* Ensures buttons stay in line */
+    background-color: #007bff; /* Darker purple */
+    color: rgb(27, 26, 26);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    margin-right: 10px; /* Space between buttons */
+  }
+  .submit-button1:last-child {
+    margin-right: 0; /* Remove margin from the last button */
+  }
+  /* Styling for table header */
+  .highlighted-tag {
+    font-weight: bold;
+    font-size: 20px;
+  }
+  .highlighted-header {
     background-color: #007bff; /* Corporate blue */
     color: white; /* White text */
     font-size: 16px;
@@ -1593,36 +2806,38 @@ function closeInfoPopup() {
     text-transform: uppercase;
     letter-spacing: 1px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
-}
+  }
 
-    /* Center align all table cells */
-    #recipetable th, #recipetable td {
-        text-align: center; /* Center-align text */
-        vertical-align: middle; /* Center-align content vertically */
-    }
+  /* Center align all table cells */
+  #recipetable th,
+  #recipetable td {
+    text-align: center; /* Center-align text */
+    vertical-align: middle; /* Center-align content vertically */
+  }
 
-    /* Optional: Adjust padding for a cleaner look */
-    #recipetable th, #recipetable td {
-        padding: 8px;
-    }
-    
-    /* Flexbox container for side-by-side layout */
-    .recipe-container {
-        display: flex;
-        justify-content: center;         /* Center the dropdowns horizontally */
-        align-items: flex-start;         /* Align tops of each dropdown */
-        gap: 15px;                       /* Space between dropdowns */
-        margin-top: 10px;
-        flex-wrap: wrap;
-    }
+  /* Optional: Adjust padding for a cleaner look */
+  #recipetable th,
+  #recipetable td {
+    padding: 8px;
+  }
 
-.dropdown-container {
+  /* Flexbox container for side-by-side layout */
+  .recipe-container {
+    display: flex;
+    justify-content: center; /* Center the dropdowns horizontally */
+    align-items: flex-start; /* Align tops of each dropdown */
+    gap: 15px; /* Space between dropdowns */
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .dropdown-container {
     position: relative;
     width: 220px; /* Slightly wider for balance */
     margin: 5px 10px;
-}
+  }
 
-.dropdown-container input[type="text"] {
+  .dropdown-container input[type="text"] {
     width: 100%;
     margin-top: 15px;
     padding: 10px 35px 10px 12px; /* Room for icon on the right */
@@ -1632,15 +2847,15 @@ function closeInfoPopup() {
     background-color: #fff;
     transition: border-color 0.3s, box-shadow 0.3s;
     box-sizing: border-box;
-}
+  }
 
-.dropdown-container input[type="text"]:focus {
+  .dropdown-container input[type="text"]:focus {
     border-color: #8e24aa; /* Match your theme */
     box-shadow: 0 0 5px rgba(142, 36, 170, 0.3);
     outline: none;
-}
+  }
 
-.dropdown-container .dropdown-icon {
+  .dropdown-container .dropdown-icon {
     position: absolute;
     right: 12px;
     top: 50%;
@@ -1648,47 +2863,43 @@ function closeInfoPopup() {
     color: #666;
     font-size: 14px;
     pointer-events: none; /* Let clicks go through */
-}
-.dropdown-list {
+  }
+  .dropdown-list {
     max-height: 200px;
     overflow-y: auto;
     border: 1px solid #ccc;
     border-radius: 6px;
     background-color: #fff;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     position: absolute;
     width: 100%;
     top: 100%;
     left: 0;
     z-index: 1000;
     display: none; /* toggle this with JS */
-}
-.dropdown-list div {
+  }
+  .dropdown-list div {
     padding: 8px 12px;
-    text-align: center;  /* Center the text */
+    text-align: center; /* Center the text */
     cursor: pointer;
     border-bottom: 1px solid #eee;
     font-size: 14px;
-}
+  }
 
-.dropdown-list div:hover {
+  .dropdown-list div:hover {
     background-color: #f2f2f2;
-}
+  }
 
-
-/* Hover effect */
-.dropdown-item:hover {
+  /* Hover effect */
+  .dropdown-item:hover {
     background: #f5f5f5;
-}
-label[for="load_recipe_id"] {
+  }
+  label[for="load_recipe_id"] {
     display: block;
     text-align: center;
     font-weight: 500;
     margin-bottom: 5px;
-}
-    
-    
+  }
 </style>
 
 {% endblock %}
-

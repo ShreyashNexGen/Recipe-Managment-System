@@ -19,260 +19,191 @@
 </div>
 
 
-<div id="details-section" class="details-section" >
-    <h2>Recipe Details</h2>
-    <table class="details-table" overflow-x: auto; /* Enable horizontal scrolling */ >
+<div id="details-section" class="details-section">
+    <h2>1️⃣ Recipe Details</h2>
+    <table class="details-table" style="overflow-x: auto;">
         <thead style="overflow-x: auto; overflow-y: hidden;">
             <tr>
-                <th>Id</th><th>Pos1</th><th>Pos2</th><th>Pos3</th>
-                <th>Pos4</th><th>Pos5</th><th>Pos6</th><th>Pos7</th>
-<tr>
-    <td style="color: {{ 'red' if not recipe_details[0][0] else 'black' }}">
-        {{ recipe_details[0][0] if recipe_details[0][0] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][1] else 'black' }}">
-        {{ recipe_details[0][1] if recipe_details[0][1] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][2] else 'black' }}">
-        {{ recipe_details[0][2] if recipe_details[0][2] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][3] else 'black' }}">
-        {{ recipe_details[0][3] if recipe_details[0][3] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][4] else 'black' }}">
-        {{ recipe_details[0][4] if recipe_details[0][4] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][5] else 'black' }}">
-        {{ recipe_details[0][5] if recipe_details[0][5] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][6] else 'black' }}">
-        {{ recipe_details[0][6] if recipe_details[0][6] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][7] else 'black' }}">
-        {{ recipe_details[0][7] if recipe_details[0][7] else 'none' }}
-    </td>
-</tr>
+                <th>1. Id</th><th>2. Pos1</th><th>3. Pos2</th><th>4. Pos3</th>
+                <th>5. Pos4</th><th>6. Pos5</th><th>7. Pos6</th><th>8. Pos7</th>
+            </tr>
+            <tr>
+                <td style="color: {{ 'red' if not recipe_details[0][0] else 'black' }}">{{ recipe_details[0][0] if recipe_details[0][0] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][1] else 'black' }}">{{ recipe_details[0][1] if recipe_details[0][1] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][2] else 'black' }}">{{ recipe_details[0][2] if recipe_details[0][2] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][3] else 'black' }}">{{ recipe_details[0][3] if recipe_details[0][3] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][4] else 'black' }}">{{ recipe_details[0][4] if recipe_details[0][4] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][5] else 'black' }}">{{ recipe_details[0][5] if recipe_details[0][5] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][6] else 'black' }}">{{ recipe_details[0][6] if recipe_details[0][6] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][7] else 'black' }}">{{ recipe_details[0][7] if recipe_details[0][7] else 'none' }}</td>
+            </tr>
 
-<tr>
-    <th>Pos8</th><th>Pos9</th><th>Alu_Material</th><th>House_Material</th>
-</tr>
-<tr>
-    <td style="color: {{ 'red' if not recipe_details[0][8] else 'black' }}">
-        {{ recipe_details[0][8] if recipe_details[0][8] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][9] else 'black' }}">
-        {{ recipe_details[0][9] if recipe_details[0][9] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][13] else 'black' }}">
-        {{ recipe_details[0][13] if recipe_details[0][13] else 'none' }}
-    </td>
-    <td style="color: {{ 'red' if not recipe_details[0][14] else 'black' }}">
-        {{ recipe_details[0][14] if recipe_details[0][14] else 'none' }}
-    </td>
-</tr>
-
+            <tr>
+                <th>9. Pos8</th><th>10. Pos9</th><th>11. Alu Material</th><th>12. House Material</th>
+            </tr>
+            <tr>
+                <td style="color: {{ 'red' if not recipe_details[0][8] else 'black' }}">{{ recipe_details[0][8] if recipe_details[0][8] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][9] else 'black' }}">{{ recipe_details[0][9] if recipe_details[0][9] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][13] else 'black' }}">{{ recipe_details[0][13] if recipe_details[0][13] else 'none' }}</td>
+                <td style="color: {{ 'red' if not recipe_details[0][14] else 'black' }}">{{ recipe_details[0][14] if recipe_details[0][14] else 'none' }}</td>
+            </tr>
         </thead>
     </table>
 </div>
 
 <div id="submenu-section" class="submenu-section">
-    <h2>Setting Parameters</h2>
-<table class="details-table">
-  <thead>
-    <tr>
-      <th>Recipe ID</th>
-      <th>Pleat Height</th>
-      <th>Soft Touch</th>
-      <th>Feeder1 Media Thickness</th>
-      <th>Feeder1 Park Position</th>
-      <th>Foil1 Length</th>
-    </tr>
-    <tr>
-      <td>{{ sub_menu['Recipe_ID'] }}</td>
-      <td>{{ sub_menu['Pleat_Height'] }}</td>
-      <td>{{ sub_menu['Soft_Touch'] }}</td>
-      <td>{{ sub_menu['Feeder1_Media_Thickness'] }}</td>
-      <td>{{ sub_menu['Feeder1_Park_Position'] }}</td>
-      <td>{{ sub_menu['Foil1_Length'] }}</td>
-    </tr>
-
-    <tr>
-      <th>Foil1 Length Offset</th>
-      <th>Foil1 Width</th>
-      <th>Puller Start Position</th>
-      <th>Autofeeding Offset</th>
-      <th>Filter Box Height</th>
-      <th>Filter Box Length</th>
-    </tr>
-    <tr>
-      <td>{{ sub_menu['Foil1_Length_Offset'] }}</td>
-      <td>{{ sub_menu['Foil1_Width'] }}</td>
-      <td>{{ sub_menu['Puller_Start_Position'] }}</td>
-      <td>{{ sub_menu['Autofeeding_Offset'] }}</td>
-      <td>{{ sub_menu['Filter_Box_Height'] }}</td>
-      <td>{{ sub_menu['Filter_Box_Length'] }}</td>
-    </tr>
-
-    <tr>
-      <th>Pleat Pitch</th>
-      <th>Pleat Counts</th>
-      <th>Foil Low Diameter</th>
-      <th>Feeding Conveyor Speed</th>
-      <th>Pack Transfer Rev Position</th>
-      <th>Foil1 Tension Set Point</th>
-    </tr>
-    <tr>
-      <td>{{ sub_menu['Pleat_Pitch'] }}</td>
-      <td>{{ sub_menu['Pleat_Counts'] }}</td>
-      <td>{{ sub_menu['Foil_Low_Diameter'] }}</td>
-      <td>{{ sub_menu['Feeding_Conveyor_Speed'] }}</td>
-      <td>{{ sub_menu['Pack_Transfer_Rev_Position'] }}</td>
-      <td>{{ sub_menu['Foil1_Tension_Set_Point'] }}</td>
-    </tr>
-
-    <tr>
-      <th>Foil2 Tension Set Point</th>
-      <th>Blade Opening</th>
-      <th>Press Touch</th>
-      <th>Feeder2 Media Thickness</th>
-      <th>Feeder2 Park Position</th>
-      <th>Foil2 Length</th>
-    </tr>
-    <tr>
-      <td>{{ sub_menu['Foil2_Tension_Set_Point'] }}</td>
-      <td>{{ sub_menu['Blade_Opening'] }}</td>
-      <td>{{ sub_menu['Press_Touch'] }}</td>
-      <td>{{ sub_menu['Feeder2_Media_Thickness'] }}</td>
-      <td>{{ sub_menu['Feeder2_Park_Position'] }}</td>
-      <td>{{ sub_menu['Foil2_Length'] }}</td>
-    </tr>
-
-    <tr>
-      <th>Foil2 Length Offset</th>
-      <th>Foil2 Width</th>
-      <th>Puller End Position</th>
-      <th>Puller2 Feed Correction</th>
-      <th>Puller Extra Stroke Enable</th>
-      <th>Filter Box Width</th>
-    </tr>
-    <tr>
-      <td>{{ sub_menu['Foil2_Length_Offset'] }}</td>
-      <td>{{ sub_menu['Foil2_Width'] }}</td>
-      <td>{{ sub_menu['Puller_End_Position'] }}</td>
-      <td>{{ sub_menu['Puller2_Feed_Correction'] }}</td>
-      <td>{{ sub_menu['Puller_Extra_Stroke_Enable'] }}</td>
-      <td>{{ sub_menu['Filter_Box_Width'] }}</td>
-    </tr>
-
-    <tr>
-      <th>Lid Placement Enable</th>
-      <th>Lid Placement Position</th>
-      <th>Sync Table Start Position</th>
-      <th>Batch Count</th>
-      <th>Discharge Conveyor Speed</th>
-      <th>Pack Transfer Park Position</th>
-    </tr>
-    <tr>
-      <td>{{ sub_menu['Lid_Placement_Enable'] }}</td>
-      <td>{{ sub_menu['Lid_Placement_Position'] }}</td>
-      <td>{{ sub_menu['Sync_Table_Start_Position'] }}</td>
-      <td>{{ sub_menu['Batch_Count'] }}</td>
-      <td>{{ sub_menu['Discharge_Conveyor_Speed'] }}</td>
-      <td>{{ sub_menu['Pack_Transfer_Park_Position'] }}</td>
-    </tr>
-
-    <tr>
-      <th>Media Tension Set Point</th>
-    </tr>
-    <tr>
-      <td>{{ sub_menu['Media_Tension_Set_Point'] }}</td>
-    </tr>
-  </thead>
-</table>
-
-    <h2>Air Inspection Settings</h2>
+    <h2>2️⃣ Setting Parameters</h2>
     <table class="details-table">
         <thead>
             <tr>
-                <th>DataBase available</th>
-                <th>Width</th>
-                <th>Height</th>
-                <th>Depth</th>
-                <th>Art No.</th>
-                <th>Air Flow Set</th>
-                <th>Pressure Drop Setpoint</th>
+                <th>1. Recipe ID</th>
+                <th>2. Pleat Height</th>
+                <th>3. Soft Touch</th>
+                <th>4. Feeder1 Media Thickness</th>
+                <th>5. Feeder1 Park Position</th>
+                <th>6. Foil1 Length</th>
             </tr>
             <tr>
+                <td>{{ sub_menu['Recipe_ID'] }}</td>
+                <td>{{ sub_menu['Pleat_Height'] }}</td>
+                <td>{{ sub_menu['Soft_Touch'] }}</td>
+                <td>{{ sub_menu['Feeder1_Media_Thickness'] }}</td>
+                <td>{{ sub_menu['Feeder1_Park_Position'] }}</td>
+                <td>{{ sub_menu['Foil1_Length'] }}</td>
+            </tr>
 
+            <tr>
+                <th>7. Foil1 Length Offset</th>
+                <th>8. Foil1 Width</th>
+                <th>9. Puller Start Position</th>
+                <th>10. Autofeeding Offset</th>
+                <th>11. Filter Box Height</th>
+                <th>12. Filter Box Length</th>
+            </tr>
+            <tr>
+                <td>{{ sub_menu['Foil1_Length_Offset'] }}</td>
+                <td>{{ sub_menu['Foil1_Width'] }}</td>
+                <td>{{ sub_menu['Puller_Start_Position'] }}</td>
+                <td>{{ sub_menu['Autofeeding_Offset'] }}</td>
+                <td>{{ sub_menu['Filter_Box_Height'] }}</td>
+                <td>{{ sub_menu['Filter_Box_Length'] }}</td>
+            </tr>
+
+            <tr>
+                <th>13. Pleat Pitch</th>
+                <th>14. Pleat Counts</th>
+                <th>15. Foil Low Diameter</th>
+                <th>16. Feeding Conveyor Speed</th>
+                <th>17. Pack Transfer Rev Position</th>
+                <th>18. Foil1 Tension Set Point</th>
+            </tr>
+            <tr>
+                <td>{{ sub_menu['Pleat_Pitch'] }}</td>
+                <td>{{ sub_menu['Pleat_Counts'] }}</td>
+                <td>{{ sub_menu['Foil_Low_Diameter'] }}</td>
+                <td>{{ sub_menu['Feeding_Conveyor_Speed'] }}</td>
+                <td>{{ sub_menu['Pack_Transfer_Rev_Position'] }}</td>
+                <td>{{ sub_menu['Foil1_Tension_Set_Point'] }}</td>
+            </tr>
+
+            <tr>
+                <th>19. Foil2 Tension Set Point</th>
+                <th>20. Blade Opening</th>
+                <th>21. Press Touch</th>
+                <th>22. Feeder2 Media Thickness</th>
+                <th>23. Feeder2 Park Position</th>
+                <th>24. Foil2 Length</th>
+            </tr>
+            <tr>
+                <td>{{ sub_menu['Foil2_Tension_Set_Point'] }}</td>
+                <td>{{ sub_menu['Blade_Opening'] }}</td>
+                <td>{{ sub_menu['Press_Touch'] }}</td>
+                <td>{{ sub_menu['Feeder2_Media_Thickness'] }}</td>
+                <td>{{ sub_menu['Feeder2_Park_Position'] }}</td>
+                <td>{{ sub_menu['Foil2_Length'] }}</td>
+            </tr>
+
+            <tr>
+                <th>25. Foil2 Length Offset</th>
+                <th>26. Foil2 Width</th>
+                <th>27. Puller End Position</th>
+                <th>28. Puller2 Feed Correction</th>
+                <th>29. Puller Extra Stroke Enable</th>
+                <th>30. Filter Box Width</th>
+            </tr>
+            <tr>
+                <td>{{ sub_menu['Foil2_Length_Offset'] }}</td>
+                <td>{{ sub_menu['Foil2_Width'] }}</td>
+                <td>{{ sub_menu['Puller_End_Position'] }}</td>
+                <td>{{ sub_menu['Puller2_Feed_Correction'] }}</td>
+                <td>{{ sub_menu['Puller_Extra_Stroke_Enable'] }}</td>
+                <td>{{ sub_menu['Filter_Box_Width'] }}</td>
+            </tr>
+
+            <tr>
+                <th>31. Lid Placement Enable</th>
+                <th>32. Lid Placement Position</th>
+                <th>33. Sync Table Start Position</th>
+                <th>34. Batch Count</th>
+                <th>35. Discharge Conveyor Speed</th>
+                <th>36. Pack Transfer Park Position</th>
+            </tr>
+            <tr>
+                <td>{{ sub_menu['Lid_Placement_Enable'] }}</td>
+                <td>{{ sub_menu['Lid_Placement_Position'] }}</td>
+                <td>{{ sub_menu['Sync_Table_Start_Position'] }}</td>
+                <td>{{ sub_menu['Batch_Count'] }}</td>
+                <td>{{ sub_menu['Discharge_Conveyor_Speed'] }}</td>
+                <td>{{ sub_menu['Pack_Transfer_Park_Position'] }}</td>
+            </tr>
+
+            <tr>
+                <th>37. Media Tension Set Point</th>
+            </tr>
+            <tr>
+                <td>{{ sub_menu['Media_Tension_Set_Point'] }}</td>
+            </tr>
+        </thead>
+    </table>
+
+    <h2>3️⃣ Air Inspection Settings</h2>
+    <table class="details-table">
+        <thead>
+            <tr>
+                <th>1. Database Available</th>
+                <th>2. Width</th>
+                <th>3. Height</th>
+                <th>4. Depth</th>
+                <th>5. Art No.</th>
+                <th>6. Air Flow Set</th>
+                <th>7. Pressure Drop Setpoint</th>
+            </tr>
+            <tr>
                 <td>{{ inspection_menu['databaseAvailable'] }}</td>
-
                 <td>{{ inspection_menu['Width'] }}</td>
-
                 <td>{{ inspection_menu['Height'] }}</td>
-
                 <td>{{ inspection_menu['Depth'] }}</td>
-
                 <td>{{ inspection_menu['Art_No'] }}</td>
-
                 <td>{{ inspection_menu['Air_Flow_Set'] }}</td>
                 <td>{{ inspection_menu['Pressure_Drop_Setpoint'] }}</td>
-
-                
-
             </tr>
 
             <tr>
-
-              
-
-                <th>Lower Tolerance 1</th>
-
-                <th>Lower Tolerance 2</th>
-
-                <th>Upper Tolerance 1</th>
-
-                <th>Upper Tolerance 2</th>
-
-
-
+                <th>8. Lower Tolerance 1</th>
+                <th>9. Lower Tolerance 2</th>
+                <th>10. Upper Tolerance 1</th>
+                <th>11. Upper Tolerance 2</th>
             </tr>
-
             <tr>
-
-              
-
-                <td>{{inspection_menu['Lower_Tolerance1'] }}</td>
-
+                <td>{{ inspection_menu['Lower_Tolerance1'] }}</td>
                 <td>{{ inspection_menu['Lower_Tolerance2'] }}</td>
-
                 <td>{{ inspection_menu['Upper_Tolerance1'] }}</td>
-
                 <td>{{ inspection_menu['Upper_Tolerance2'] }}</td>
-
-            </tr>           
-        </tbody>
+            </tr>
+        </thead>
     </table>
 </div>
 
-
-<!-- Custom Modal for POS Value Comparison -->
-<!-- <div id="comparisonModal" class="custom-modal popup">
-    <div class="custom-modal-content">
-        <div class="custom-modal-header">
-            <h3>POS Value Comparison</h3>
-            <button type="button" class="btn-close" onclick="closeCustomModal()">X</button>
-        </div>
-        <div class="custom-modal-body">
-            <ul id="comparisonResults" class="list-group">
-                
-            </ul>
-        </div>
-        <div class="custom-modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeCustomModal()">Close</button>
-            <button id="next" type="button" class="btn btn-primary" disabled>Next</button>
-        </div>
-    </div>
-</div> -->
 <!-- Submenu Popup for Recipe Settings -->
 <div id="recipe-popup" class="popup">
     <div class="popup-content">

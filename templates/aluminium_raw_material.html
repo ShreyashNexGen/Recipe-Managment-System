@@ -93,7 +93,6 @@ function closeInfoPopup() {
 }
 </script>
 
-<!-- ✅ CSS -->
 <style>
 .info-icon {
   cursor: pointer;
@@ -519,14 +518,14 @@ document.addEventListener("DOMContentLoaded", function () {
 function updateTableRow(material_Id, thickness, width,part_no, make, user, materialType,barcode) {
     const row = document.getElementById(`row-${material_Id}`);
     if (row) {
-        row.cells[1].innerText = material_Id;
-        row.cells[2].innerText = thickness;
-        row.cells[3].innerText = width;
-        row.cells[4].innerText = part_no;
-        row.cells[5].innerText = make;
-        row.cells[6].innerText = user;
-        row.cells[7].innerText = `${width}x${thickness}:${part_no}`;
-        row.cells[8].innerHTML = `
+        
+        row.cells[1].innerText = thickness;
+        row.cells[2].innerText = width;
+        row.cells[3].innerText = part_no;
+        row.cells[4].innerText = make;
+        row.cells[5].innerText = user;
+        row.cells[6].innerText = `${width}x${thickness}:${part_no}`;
+        row.cells[7].innerHTML = `
             <button class="download-button" onclick="downloadBarcode('${(`${width}x${thickness}:${part_no}`)}')">
                 <i class="fa-solid fa-download"></i>
             </button>

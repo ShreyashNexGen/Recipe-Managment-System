@@ -1,169 +1,170 @@
-{% extends "base.html" %}
-{% block title %}Filter Log{% endblock %}
-{% block breadcrumbs %}
+{% extends "base.html" %} {% block title %}Filter Log{% endblock %} {% block
+breadcrumbs %}
 <div class="breadcrumb">
-        <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
-        <i class="fas fa-angle-right"></i>
-        <a href="/production"><span>Production</span></a>        
-        <h1> Production Log</h1>
-    </div>
-{% endblock %}
-{% block content %}
+  <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+  <i class="fas fa-angle-right"></i>
+  <a href="/production"><span>Production</span></a>
+  <h1>Production Log</h1>
+</div>
+{% endblock %} {% block content %}
 <style>
   .filter-export-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-      gap: 10px;
-      background-color: #f8f9fa;
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   }
 
   .filters {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .filters label {
-      margin: 0;
-      font-weight: bold;
+    margin: 0;
+    font-weight: bold;
   }
 
   .filters input[type="datetime-local"] {
-      padding: 5px 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
   }
 
   .filters button {
-      background-color: #0d6efd;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
   }
 
   .filters button:hover {
-      background-color: #0b5ed7;
+    background-color: #0b5ed7;
   }
 
   .export-btn button {
-      background-color: #3c7de5;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
+    background-color: #3c7de5;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
   }
 
   .export-btn button:hover {
-      background-color: #0f0779;
+    background-color: #0f0779;
   }
 </style>
 
-
-<div class="container mt-5">  
-<div class="filter-export-container">
+<div class="container mt-5">
+  <div class="filter-export-container">
     <!-- Date Filters -->
     <div class="filters">
-        <label for="startDate">From:</label>
-        <input type="datetime-local" id="startDate">
-        <label for="endDate">To:</label>
-               <input type="datetime-local" id="endDate">
-        <button onclick="applyFilter()"><i class="fas fa-filter"></i> Filter</button>
+      <label for="startDate">From:</label>
+      <input type="datetime-local" id="startDate" />
+      <label for="endDate">To:</label>
+      <input type="datetime-local" id="endDate" />
+      <button onclick="applyFilter()">
+        <i class="fas fa-filter"></i> Filter
+      </button>
     </div>
 
     <!-- Export Button -->
     <div class="export-btn">
-        <button onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Export to Excel</button>
+      <button onclick="exportToExcel()">
+        <i class="fas fa-file-excel"></i> Export to Excel
+      </button>
     </div>
+  </div>
+  <table class="table table-bordered table-striped">
+    <thead class="thead-dark">
+      <tr>
+        <th>Serial No</th>
+        <th>Recipe Name</th>
+        <th>Date/Time</th>
+        <th>Filter Code</th>
+        <th>RPM (Upper, Lower)<sub>RPM</sub></th>
+        <th>Pressure (Upper, Lower)<sub>Pa</sub></th>
+        <th>AirFlow (Upper, Lower)<sub>m³/h</sub></th>
+        <th>Pressure (Max, Min)<sub>Pa</sub></th>
+        <th>Average Motor<sub>RPM</sub></th>
+        <th>Average Air Flow<sub>m³/h</sub></th>
+        <th>Avg Pressure Diff<sub>Pa</sub></th>
+        <th>User</th>
+        <th>Test Time<sub>sec</sub></th>
+        <th>Judgement (NgStatus)</th>
+        <th>Print</th>
+      </tr>
+    </thead>
+    <tbody id="recipe-log-table">
+      <!-- Data will be dynamically inserted here -->
+    </tbody>
+  </table>
+  <!-- Pagination Controls -->
+  <div class="d-flex justify-content-between align-items-center mt-4">
+    <nav>
+      <ul class="pagination mb-0" id="pagination">
+        <!-- Dynamic pagination -->
+      </ul>
+    </nav>
+  </div>
 </div>
-<table class="table table-bordered table-striped">
-<thead class="thead-dark">
-  <tr>
-    <th>Serial No</th>
-    <th>Recipe Name</th>
-    <th> Date/Time</th>
-    <th>Filter Code</th>
-    <th>RPM (Upper, Lower)<sub>RPM</sub></th>
-    <th>Pressure (Upper, Lower)<sub>Pa</sub></th>
-    <th>AirFlow (Upper, Lower)<sub>m³/h</sub></th>
-    <th>Pressure (Max, Min)<sub>Pa</sub></th>
-    <th>Average Motor<sub>RPM</sub></th>
-    <th>Average Air Flow<sub>m³/h</sub></th>
-    <th>Avg Pressure Diff<sub>Pa</sub></th>
-    <th>User</th>
-    <th>Test Time<sub>sec</sub></th>
-    <th>Judgement (NgStatus)</th>
-    <th>Print</th>
-  </tr>
-</thead>
-        <tbody id="recipe-log-table">
-            <!-- Data will be dynamically inserted here -->
-        </tbody>
-    </table>
-     <!-- Pagination Controls -->
-<div class="d-flex justify-content-between align-items-center mt-4">
-        <nav>
-            <ul class="pagination mb-0" id="pagination">
-                <!-- Dynamic pagination -->
-            </ul>
-        </nav>
-    </div>
-</div>   
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    let fullData = [];
-    const rowsPerPage = 10;
-    let currentPage = 1;
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let fullData = [];
+  const rowsPerPage = 10;
+  let currentPage = 1;
 
-    function fetchRecipeLog() {
-        fetch('/api/recipe_log')
-            .then(response => response.json())
-            .then(data => {
-                fullData = data;
-                renderPage(currentPage);
-                setupPagination();
-            })
-            .catch(error => console.error('Error fetching recipe log:', error));
-    }
+  function fetchRecipeLog() {
+    fetch("/api/recipe_log")
+      .then((response) => response.json())
+      .then((data) => {
+        fullData = data;
+        renderPage(currentPage);
+        setupPagination();
+      })
+      .catch((error) => console.error("Error fetching recipe log:", error));
+  }
 
-function renderPage(page) { 
+  function renderPage(page) {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     const visibleData = fullData.slice(start, end);
 
-    const tableBody = document.getElementById('recipe-log-table');
-    tableBody.innerHTML = '';
+    const tableBody = document.getElementById("recipe-log-table");
+    tableBody.innerHTML = "";
 
-    visibleData.forEach(row => {
-        // Determine NgStatus badge style
-        let ngBadge = `<span class="status-badge neutral">N/A</span>`;
-        if (row.NgStatus) {
-            const status = row.NgStatus.toString().toLowerCase();
-            if (status.includes('ok')) {
-                ngBadge = `<span class="status-badge ok">OK</span>`;
-            } else if (status.includes('ng')) {
-                ngBadge = `<span class="status-badge ng">NG</span>`;
-            } else {
-                ngBadge = `<span class="status-badge neutral">${row.NgStatus}</span>`;
-            }
+    visibleData.forEach((row) => {
+      // Determine NgStatus badge style
+      let ngBadge = `<span class="status-badge neutral">N/A</span>`;
+      if (row.NgStatus) {
+        const status = row.NgStatus.toString().toLowerCase();
+        if (status.includes("ok")) {
+          ngBadge = `<span class="status-badge ok">OK</span>`;
+        } else if (status.includes("ng")) {
+          ngBadge = `<span class="status-badge ng">NG</span>`;
+        } else {
+          ngBadge = `<span class="status-badge neutral">${row.NgStatus}</span>`;
         }
+      }
 
-        tableBody.innerHTML += `
+      tableBody.innerHTML += `
             <tr>
                 <td>${row.SerialNo}</td>
                 <td>${row.Recipe_Name}</td>
@@ -188,93 +189,98 @@ function renderPage(page) {
             </tr>
         `;
     });
-}
+  }
 
-   
-function setupPagination() {
-        const totalPages = Math.ceil(fullData.length / rowsPerPage);
-        const pagination = document.getElementById('pagination');
-        pagination.innerHTML = '';
-    
-        const maxVisiblePages = 3;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        let endPage = startPage + maxVisiblePages - 1;
-    
-        if (endPage > totalPages) {
-            endPage = totalPages;
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
-        }
-    
-        // Previous
-        pagination.innerHTML += `
-            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
+  function setupPagination() {
+    const totalPages = Math.ceil(fullData.length / rowsPerPage);
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
+
+    const maxVisiblePages = 3;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = startPage + maxVisiblePages - 1;
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // Previous
+    pagination.innerHTML += `
+            <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${
+                  currentPage - 1
+                })">Previous</a>
             </li>
         `;
-    
-        // First page and dots
-        if (startPage > 1) {
-            pagination.innerHTML += `
+
+    // First page and dots
+    if (startPage > 1) {
+      pagination.innerHTML += `
                 <li class="page-item"><a class="page-link" href="#" onclick="changePage(1)">1</a></li>
                 <li class="page-item disabled"><span class="page-link">...</span></li>
             `;
-        }
-    
-        // Main page range
-        for (let i = startPage; i <= endPage; i++) {
-            pagination.innerHTML += `
-                <li class="page-item ${i === currentPage ? 'active' : ''}">
+    }
+
+    // Main page range
+    for (let i = startPage; i <= endPage; i++) {
+      pagination.innerHTML += `
+                <li class="page-item ${i === currentPage ? "active" : ""}">
                     <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
                 </li>
             `;
-        }
-    
-        // Dots and last page
-        if (endPage < totalPages) {
-            pagination.innerHTML += `
+    }
+
+    // Dots and last page
+    if (endPage < totalPages) {
+      pagination.innerHTML += `
                 <li class="page-item disabled"><span class="page-link">...</span></li>
                 <li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a></li>
             `;
-        }
-    
-        // Next
-        pagination.innerHTML += `
-            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
-            </li>
-        `;
     }
 
-    function changePage(page) {
-        const totalPages = Math.ceil(fullData.length / rowsPerPage);
-        if (page < 1 || page > totalPages) return;
-        currentPage = page;
-        renderPage(currentPage);
-        setupPagination();
-    }
-    // Initial fetch
-    fetchRecipeLog();
-    // Function to handle Re-Print button click
-function rePrint(serialNo) {
+    // Next
+    pagination.innerHTML += `
+            <li class="page-item ${
+              currentPage === totalPages ? "disabled" : ""
+            }">
+                <a class="page-link" href="#" onclick="changePage(${
+                  currentPage + 1
+                })">Next</a>
+            </li>
+        `;
+  }
+
+  function changePage(page) {
+    const totalPages = Math.ceil(fullData.length / rowsPerPage);
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    renderPage(currentPage);
+    setupPagination();
+  }
+  // Initial fetch
+  fetchRecipeLog();
+  // Function to handle Re-Print button click
+  function rePrint(serialNo) {
     console.log("Re-Printing for SerialNo:", serialNo);
 
     fetch(`/api/print_recipe/${serialNo}`, {
-        method: 'POST'
+      method: "POST",
     })
-    .then(response => response.json())
-    .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         console.log("Print Response:", data);
         if (data.success) {
-            alert('Printing successfully initiated!');
+          alert("Printing successfully initiated!");
         } else {
-            alert('Failed to initiate printing.');
+          alert("Failed to initiate printing.");
         }
-    })
-    .catch(error => console.error('Error during re-print:', error));
-}
-window.addEventListener('DOMContentLoaded', () => {
-    const endDateInput = document.getElementById('endDate');
-    const startDateInput = document.getElementById('startDate');
+      })
+      .catch((error) => console.error("Error during re-print:", error));
+  }
+  window.addEventListener("DOMContentLoaded", () => {
+    const endDateInput = document.getElementById("endDate");
+    const startDateInput = document.getElementById("startDate");
 
     const today = new Date();
     const yesterday = new Date(today);
@@ -288,181 +294,179 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Format YYYY-MM-DDTHH:MM for datetime-local without UTC conversion
     function formatDateTimeLocal(dt) {
-        const year = dt.getFullYear();
-        const month = String(dt.getMonth() + 1).padStart(2, '0');
-        const day = String(dt.getDate()).padStart(2, '0');
-        const hours = String(dt.getHours()).padStart(2, '0');
-        const minutes = String(dt.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      const year = dt.getFullYear();
+      const month = String(dt.getMonth() + 1).padStart(2, "0");
+      const day = String(dt.getDate()).padStart(2, "0");
+      const hours = String(dt.getHours()).padStart(2, "0");
+      const minutes = String(dt.getMinutes()).padStart(2, "0");
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
     startDateInput.value = formatDateTimeLocal(yesterday); // yesterday 00:00
-    endDateInput.value = formatDateTimeLocal(today);       // today 23:59
+    endDateInput.value = formatDateTimeLocal(today); // today 23:59
 
     fetchRecipeLog(); // fetch with default filter
-});
+  });
 
-function applyFilter() {
+  function applyFilter() {
     currentPage = 1; // reset pagination
     fetchRecipeLog();
-}
+  }
 
-function fetchRecipeLog() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+  function fetchRecipeLog() {
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
 
     fetch(`/api/recipe_log?start_date=${startDate}&end_date=${endDate}`)
-        .then(response => response.json())
-        .then(data => {
-            fullData = data;
-            renderPage(currentPage);
-            setupPagination();
-        })
-        .catch(error => console.error('Error fetching recipe log:', error));
-}
+      .then((response) => response.json())
+      .then((data) => {
+        fullData = data;
+        renderPage(currentPage);
+        setupPagination();
+      })
+      .catch((error) => console.error("Error fetching recipe log:", error));
+  }
 
-function exportToExcel() {
+  function exportToExcel() {
     const start = document.getElementById("startDate").value;
     const end = document.getElementById("endDate").value;
 
-    let url = '/export_recipe_log';
+    let url = "/export_recipe_log";
     if (start || end) {
-        url += `?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}`;
+      url += `?start_date=${encodeURIComponent(
+        start
+      )}&end_date=${encodeURIComponent(end)}`;
     }
 
     window.location.href = url;
-}
-
+  }
 </script>
 
-<!-- Optional CSS -->
+<!-- CSS -->
 <style>
-    nav {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    
-    .pagination {
-        display: flex;
-        flex-wrap: wrap;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        gap: 5px;
-    }
-    .pagination .page-item {
-        margin: 0 2px;
-    }
+  nav {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
 
-    .pagination .page-link {
-        color: #007bff;
-        padding: 6px 12px;
-        text-decoration: none;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-    }
-    .page-link {
-        padding: 6px 12px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        color: #007bff;
-        background-color: #fff;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        text-align: center;
-    }
-    
-    .page-item.active .page-link {
-        background-color: #007bff;
-        color: #fff;
-        border-color: #007bff;
-    }
-    
-    .page-item.disabled .page-link {
-        color: #aaa;
-        background-color: #f9f9f9;
-        cursor: not-allowed;
-    }
+  .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 5px;
+  }
+  .pagination .page-item {
+    margin: 0 2px;
+  }
 
-    .pagination .page-item.active .page-link {
-        background-color: #007bff;
-        border-color: #007bff;
-        color: white;
-    }
+  .pagination .page-link {
+    color: #007bff;
+    padding: 6px 12px;
+    text-decoration: none;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+  }
+  .page-link {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #007bff;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-align: center;
+  }
 
-    .pagination .page-item.disabled .page-link {
-        color: #fff;
+  .page-item.active .page-link {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+  }
+
+  .page-item.disabled .page-link {
+    color: #aaa;
+    background-color: #f9f9f9;
+    cursor: not-allowed;
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: #fff;
     /* size: 12px; */
-        pointer-events: none;
-        background-color: #007bff;
-    }
+    pointer-events: none;
+    background-color: #007bff;
+  }
 
-    .input-group {
-        display: flex;
-        align-items: center;
-        margin-left: 1rem;
-    }
+  .input-group {
+    display: flex;
+    align-items: center;
+    margin-left: 1rem;
+  }
 
-    .input-group input {
-        max-width: 100px;
-        margin-right: 5px;
-    }
+  .input-group input {
+    max-width: 100px;
+    margin-right: 5px;
+  }
 
-    .d-flex {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        margin-top: 10px;
-        font-size: 14px;
-        align-items: center;
-    }
-    .print-btn {
-        background-color: orange;
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        font-size: 14px;
-        cursor: pointer;
-        border-radius: 5px;
-    }
+  .d-flex {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 14px;
+    align-items: center;
+  }
+  .print-btn {
+    background-color: orange;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
 
-    .print-btn:hover {
-        background-color: darkorange;
-    }
+  .print-btn:hover {
+    background-color: darkorange;
+  }
+
+  #recipe-log-table tr:nth-child(odd) {
+    background-color: #f2f2f2; /* light grey */
+  }
+  #recipe-log-table tr:nth-child(even) {
+    background-color: #e0e0e0; /* slightly darker grey */
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    text-align: center;
+    min-width: 45px;
+  }
+
+  .status-badge.ok {
+    background-color: #28a745; /* Green */
+  }
+
+  .status-badge.ng {
+    background-color: #dc3545; /* Red */
+  }
+
+  .status-badge.neutral {
+    background-color: #6c757d; /* Gray */
+  }
 </style>
-<style>
-    #recipe-log-table tr:nth-child(odd) {
-        background-color: #f2f2f2; /* light grey */
-    }
-    #recipe-log-table tr:nth-child(even) {
-        background-color: #e0e0e0; /* slightly darker grey */
-    }
-</style>
-<style>
-.status-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-  text-align: center;
-  min-width: 45px;
-}
-
-.status-badge.ok {
-  background-color: #28a745; /* Green */
-}
-
-.status-badge.ng {
-  background-color: #dc3545; /* Red */
-}
-
-.status-badge.neutral {
-  background-color: #6c757d; /* Gray */
-}
-</style>
-
 
 {% endblock %}

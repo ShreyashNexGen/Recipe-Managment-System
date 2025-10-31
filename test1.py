@@ -16,8 +16,7 @@ import json
 import logging
 import datetime
 import webbrowser
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from flask_socketio import SocketIO, emit
 from opcua import Client, ua
 from flask import send_from_directory
@@ -50,6 +49,10 @@ import json
 from openpyxl import Workbook
 from flask import send_file
 import io
+import openpyxl
+from openpyxl.styles import Alignment
+from io import BytesIO
+from flask import send_file, flash, redirect, url_for
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
@@ -851,9 +854,6 @@ def recipe_list():
     )
 
 
-from datetime import datetime, timedelta
-
-
 @app.route("/api/recipe_log", methods=["GET"])
 def get_recipe_log():
     conn = get_db_connection()
@@ -1240,139 +1240,6 @@ def update_batch_status():
         client.disconnect()
         print("Disconnected from OPC UA Server")
 
-
-# def opcua_monitoring():
-
-#     """Continuously reads OPC UA values, updates MSSQL, and writes required values to OPC UA."""
-
-#     client = Client(ENDPOINT_URL)
-
-
-#     try:
-
-#         client.connect()
-
-#         print("Connected to OPC UA Server")
-
-
-#         while True:  # Continuous monitoring loop
-
-#             try:
-
-#                 testComplete = client.get_node(f'{Test_Complete}"testComplete"').get_value()
-
-
-#                 if testComplete:
-#                     print("TestComplete is true")
-
-#                     # Step 1: Read Serial Number
-
-#                     serial_no = client.get_node(f'{Test_Complete2}"qrCodeDropAir_1"').get_value()
-
-#                     avgAirFlow = client.get_node(f'{Test_Complete}"avgAirFlow"').get_value()
-
-
-#                     avgResult = client.get_node(f'{Test_Complete}"avgResult"').get_value()
-#                     print("TestComplete is true2:",avgResult)
-
-#                     testResult = client.get_node(f'{Test_Complete}"testResult"').get_value()
-
-#                     print(serial_no)
-
-#                     ng_status = ['FILTER_OK','gdg','gdgfdf']
-
-
-#                     # Determine test status
-
-#                     if testResult == 1:
-
-#                         ng_status = 'FILTER_OK'
-
-#                     elif testResult == 2:
-
-#                         ng_status = 'Ok'
-#                     elif testResult == 2:
-
-#                         ng_status = 'Ok'
-#                     elif testResult == 3:
-
-#                         ng_status = 'Ok'
-
-#                     elif testResult == 4:
-
-#                         ng_status = 'Ok'
-
-#                     elif testResult == 5:
-
-#                         ng_status = 'Ok'
-
-#                     elif testResult == 8:
-
-#                         ng_status = 'Ok'
-
-#                     elif testResult == 9:
-
-#                         ng_status = 'NG_Airflow()'
-
-#                     else:
-
-#                         ng_status = 'Not Ok'
-
-
-#                     # Step 2: Fetch Recipe_ID using serial_no from recipe_log
-
-#                     recipe_id = 0
-
-#                     conn = get_db_connection()
-
-#                     cursor = conn.cursor()
-
-
-#                     cursor.execute("SELECT Recipe_ID FROM recipe_log WHERE SerialNo = ?", (serial_no,))
-
-#                     row = cursor.fetchone()
-
-#                     if row:
-
-#                         recipe_id = row[0]
-
-
-#                     test_complete_node = client.get_node(f'{Test_Complete}"testComplete"')
-
-#                     test_complete_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
-
-
-#                     # Step 6: Update Recipe Log
-
-#                     update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status,recipe_id)
-
-
-#                     # Close database connection
-
-#                     conn.close()
-
-
-#                 time.sleep(1)  # Wait 1 second before next read
-
-
-#             except Exception as e:
-
-#                 print(f"Error reading/writing OPC UA: {e}")
-
-#                 time.sleep(2)  # Wait before retrying
-
-
-#     except Exception as e:
-
-#         print(f"OPC UA Connection Error: {e}")
-
-
-#     finally:
-
-#         client.disconnect()
-
-#         print("Disconnected from OPC UA Server")
-
 Test_Complete = 'ns=3;s="dbReport"."airDropTestData".'
 Test_Complete1 = 'ns=3;s="dbReport"."forAirDropTest".'
 Test_Complete2 = 'ns=3;s="dbReport".'
@@ -1550,7 +1417,7 @@ def opcua_qrcode_monitoring():
                             """
                             SELECT databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set, 
                                    Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, 
-                                   Upper_Tolerance1, Upper_Tolerance2, Lower_Fan_Speed,Upper_Fan_Speed
+                                   Upper_Tolerance1, Upper_Tolerance2
                             FROM Recipe_Log WHERE Recipe_ID = ?
                         """,
                             (recipe_id,),
@@ -1571,8 +1438,6 @@ def opcua_qrcode_monitoring():
                                 "Lower_Tolerance2",
                                 "Upper_Tolerance1",
                                 "Upper_Tolerance2",
-                                "Lower_fan_speed",
-                                "Upper_fan_Speed",
                             ]
 
                             for i, submenu_value in enumerate(settings):
@@ -1629,132 +1494,7 @@ def opcua_qrcode_monitoring():
         client.disconnect()
         print("🔌 Disconnected from OPC UA Server (qrCode monitoring)")
 
-
-# def opcua_monitoring_combined():
-#     """Continuously checks qrCodeDropAir, then testComplete, and executes logic accordingly."""
-
-#     client = Client(ENDPOINT_URL)
-
-#     try:
-#         client.connect()
-#         print("✅ Connected to OPC UA Server (Combined Monitoring)")
-
-#         while True:
-#             try:
-#                 # Step 1: Read qrCodeDropAir
-#                 qr_code_node = client.get_node(f'{Test_Complete}"qrCodeDropAir"')
-#                 qr_code_value = qr_code_node.get_value()
-
-#                 if qr_code_value and qr_code_value!="NO READ":  # Not empty / not zero
-#                     print(f"📌 New QR Code detected: {qr_code_value}")
-#                     qr_code2_node = client.get_node(f'{Test_Complete}"qrCode2"')
-#                     qr_code2_node.set_value(ua.DataValue(ua.Variant(qr_code_value, ua.VariantType.String)))
-#                     print(f"➡️ QR Code copied to qrCode2: {qr_code_value}")
-
-#                     # Step 2: Wait 1 sec before checking testComplete
-#                     print("waiting for 5 sec")
-#                     time.sleep(5)
-
-#                     testComplete = client.get_node(f'{Test_Complete}"testComplete"').get_value()
-
-#                     if testComplete:
-#                         # 🔹 TestComplete Logic
-#                         serial_no = qr_code_value
-#                         avgAirFlow = client.get_node(f'{Test_Complete}"avgAirFlow"').get_value()
-#                         avgResult = client.get_node(f'{Test_Complete}"avgResult"').get_value()
-#                         testResult = client.get_node(f'{Test_Complete}"testResult"').get_value()
-
-#                         if testResult == 0:
-#                             ng_status = 'no_Result'
-#                         elif testResult == 1:
-#                             ng_status = 'Ok'
-#                         else:
-#                             ng_status = 'Not Ok'
-
-#                         conn = get_db_connection()
-#                         cursor = conn.cursor()
-#                         cursor.execute("SELECT Recipe_ID FROM recipe_log WHERE SerialNo = ?", (serial_no,))
-#                         row = cursor.fetchone()
-#                         recipe_id = row[0] if row else 0
-
-#                         update_recipe_log(serial_no, avgAirFlow, avgResult, ng_status, recipe_id)
-#                         conn.close()
-
-#                         # Reset testComplete
-#                         test_complete_node = client.get_node(f'{Test_Complete}"testComplete"')
-#                         test_complete_node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
-#                         qr_code_node.set_value(ua.DataValue(ua.Variant("", ua.VariantType.String)))
-#                         print("🔄 qrCodeDropAir reset to empty")
-#                         print("✅ Test complete logic executed")
-
-#                     else:
-#                         # 🔹 QR Code Logic
-#                         recipe_id = 0
-#                         conn = get_db_connection()
-#                         cursor = conn.cursor()
-
-#                         cursor.execute("SELECT Recipe_ID FROM recipe_log WHERE SerialNo = ?", (qr_code_value,))
-#                         row = cursor.fetchone()
-#                         if row:
-#                             recipe_id = row[0]
-
-#                         if recipe_id:
-#                             cursor.execute("""
-#                                 SELECT databaseAvailable, Width, Height, Depth, Art_No, Air_Flow_Set,
-#                                        Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2,
-#                                        Upper_Tolerance1, Upper_Tolerance2
-#                                 FROM Inspection_Settings WHERE Recipe_ID = ?
-#                             """, (recipe_id,))
-#                             settings = cursor.fetchone()
-
-#                             if settings:
-#                                 opcua_nodes = [
-#                                     "databaseAvailable", "Width", "Height", "Depth", "Art No.",
-#                                     "Air Flow set", "Pressure Drop Setpoint", "Lower_Tolerance1",
-#                                     "Lower_Tolerance2", "Upper_Tolerance1", "Upper_Tolerance2"
-#                                 ]
-
-#                                 for i, submenu_value in enumerate(settings):
-#                                     node = client.get_node(f'{Test_Complete1}"{opcua_nodes[i]}"')
-#                                     data_type = node.get_data_type_as_variant_type()
-
-#                                     if data_type == ua.VariantType.Float:
-#                                         value = float(submenu_value)
-#                                     elif data_type in (ua.VariantType.Int32, ua.VariantType.Int16):
-#                                         value = int(submenu_value)
-#                                     elif data_type == ua.VariantType.Boolean:
-#                                         value = bool(submenu_value)
-#                                     else:
-#                                         print(f"⚠️ Skipping {opcua_nodes[i]} (unknown type: {data_type})")
-#                                         continue
-
-#                                     node.set_value(ua.DataValue(ua.Variant(value, data_type)))
-
-#                                 print(f"✅ Inspection settings written for Recipe_ID {recipe_id}")
-#                             else:
-#                                 print(f"⚠️ No Inspection Settings found for Recipe_ID {recipe_id}")
-
-#                         conn.close()
-
-#                         # Reset qrCodeDropAir
-#                         qr_code_node.set_value(ua.DataValue(ua.Variant("", ua.VariantType.String)))
-#                         print("🔄 qrCodeDropAir reset to empty")
-
-#                 # Always wait before next cycle
-#                 time.sleep(1)
-
-#             except Exception as e:
-#                 print(f"❌ Error in Combined Monitoring Loop: {e}")
-#                 time.sleep(2)
-
-#     except Exception as e:
-#         print(f"❌ OPC UA Connection Error: {e}")
-
-#     finally:
-#         client.disconnect()
-#         print("🔌 Disconnected from OPC UA Server")
-
-
+#need to update this funtion when i will get info about which fileds are available and at which plc location 
 def update_recipe_log(
     serial_no,
     avgResult,
@@ -2911,7 +2651,7 @@ def raw_material1():
 
             # Auto-generate fields
             make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            user = "admin"
+            user = session.get("username")
             # barcode = f"-{type_code}-{lot_no}"  # Example barcode
             material_type = f"{width}x{type1}:{part_no}"
             barcode = material_type
@@ -3080,7 +2820,7 @@ def update_raw_material1(material_Id):
         width = data.get("width")
         part_no = data.get("part_no")
         make = data.get("make")
-        user = data.get("user")
+        user = session.get("username")
         barcode = f"{width}x{type1}:{part_no}"
         materialType = f"{width}x{type1}:{part_no}"
 
@@ -3181,7 +2921,7 @@ def raw_material2():
 
             # Auto-generate fields
             make = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            user = "admin"
+            user = session.get("username")
             # barcode = f"-{type_code}-{lot_no}"  # Example barcode
             material_type = f"{width}x{height}:{part_no}"
             barcode = material_type
@@ -3359,7 +3099,7 @@ def update_raw_material2(material_Id):
         height = data.get("height")
         part_no = data.get("part_no")
         make = data.get("make")
-        user = data.get("user")
+        user = session.get("username")
         barcode = f"{width}x{height}:{part_no}"
         materialType = f"{width}x{height}:{part_no}"
 
@@ -3508,13 +3248,6 @@ def fetch_data_as_dict(cursor):
     for row in cursor.fetchall():
         result.append(dict(zip(columns, row)))
     return result
-
-
-import openpyxl
-from openpyxl.styles import Alignment
-from io import BytesIO
-from flask import send_file, flash, redirect, url_for
-
 
 @app.route("/export_recipe/<int:recipe_id>")
 def export_recipe(recipe_id):
@@ -4911,155 +4644,155 @@ def fetch_plc_info():
         conn.close()  # Ensure the connection is closed
 
 
-# def upload_live_log_to_mongodb():
-#     """
-#     Fetch records from MSSQL, format them, send them to Flask API, and clean up MSSQL.
-#     """
-#     try:
-#         # Fetch plcId and serialKey from Plc_Table
-#         plc_id, serial_key = fetch_plc_info()
-#         if plc_id is None or serial_key is None:
-#             print("❌ Error: plcId or serialKey not found in Plc_Table.")
-#             return
+def upload_live_log_to_mongodb():
+    """
+    Fetch records from MSSQL, format them, send them to Flask API, and clean up MSSQL.
+    """
+    try:
+        # Fetch plcId and serialKey from Plc_Table
+        plc_id, serial_key = fetch_plc_info()
+        if plc_id is None or serial_key is None:
+            print("❌ Error: plcId or serialKey not found in Plc_Table.")
+            return
 
-#         # Connect to MSSQL
-#         conn = get_db_connection()
-#         if not conn:
-#             return
+        # Connect to MSSQL
+        conn = get_db_connection()
+        if not conn:
+            return
 
-#         try:
-#             cursor = conn.cursor()
+        try:
+            cursor = conn.cursor()
 
-#             # Fetch all records grouped by timestamp
-#             cursor.execute('''
-#                 SELECT id, tagName, value, timestamp
-#                 FROM Live_Log
-#                 ORDER BY timestamp ASC, id ASC
-#             ''')
-#             records = cursor.fetchall()
+            # Fetch all records grouped by timestamp
+            cursor.execute('''
+                SELECT id, tagName, value, timestamp
+                FROM Live_Log
+                ORDER BY timestamp ASC, id ASC
+            ''')
+            records = cursor.fetchall()
 
-#             if not records:
-#                 print("✅ No records to upload.")
-#                 return
+            if not records:
+                print("✅ No records to upload.")
+                return
 
-#             # Group records by timestamp
-#             grouped_data = {}
-#             record_ids = []
+            # Group records by timestamp
+            grouped_data = {}
+            record_ids = []
 
-#             for record in records:
-#                 record_id, tag_name, value, timestamp = record
+            for record in records:
+                record_id, tag_name, value, timestamp = record
 
-#                 # Convert timestamp to epoch format
-#                 epoch_timestamp = timestamp_to_epoch(timestamp)
-#                 if epoch_timestamp is None:
-#                     continue  # Skip if timestamp conversion failed
+                # Convert timestamp to epoch format
+                epoch_timestamp = timestamp_to_epoch(timestamp)
+                if epoch_timestamp is None:
+                    continue  # Skip if timestamp conversion failed
 
-#                 # Parse value if it's JSON
-#                 parsed_value = json.loads(value) if is_json(value) else value
+                # Parse value if it's JSON
+                parsed_value = json.loads(value) if is_json(value) else value
 
-#                 # Process value to split arrays into separate fields
-#                 processed_data = process_value(tag_name, parsed_value)
+                # Process value to split arrays into separate fields
+                processed_data = process_value(tag_name, parsed_value)
 
-#                 if epoch_timestamp not in grouped_data:
-#                     grouped_data[epoch_timestamp] = []
-#                 grouped_data[epoch_timestamp].append(processed_data)
+                if epoch_timestamp not in grouped_data:
+                    grouped_data[epoch_timestamp] = []
+                grouped_data[epoch_timestamp].append(processed_data)
 
-#                 # Collect record IDs for cleanup
-#                 record_ids.append(record_id)
+                # Collect record IDs for cleanup
+                record_ids.append(record_id)
 
-#             # Prepare the batch format
-#             batches = []
-#             for epoch_timestamp, tags in grouped_data.items():
-#                 # Combine all tags for the same timestamp into one dictionary
-#                 combined_tags = {}
-#                 for tag in tags:
-#                     combined_tags.update(tag)
+            # Prepare the batch format
+            batches = []
+            for epoch_timestamp, tags in grouped_data.items():
+                # Combine all tags for the same timestamp into one dictionary
+                combined_tags = {}
+                for tag in tags:
+                    combined_tags.update(tag)
 
-#                 batch = {
-#                     "plcId": plc_id,
-#                     "serialNo": serial_key,
-#                     "values": [{
-#                         "dbId": 3,
-#                         "dbNo": 1001,
-#                         "dbName": "dbCloud",
-#                         "data": [{
-#                             "temp": 1,
-#                             "timeStamp": epoch_timestamp * 1000,
-#                             **combined_tags
-#                         }]
-#                     }]
-#                 }
-#                 batches.append(batch)
+                batch = {
+                    "plcId": plc_id,
+                    "serialNo": serial_key,
+                    "values": [{
+                        "dbId": 3,
+                        "dbNo": 1001,
+                        "dbName": "dbCloud",
+                        "data": [{
+                            "temp": 1,
+                            "timeStamp": epoch_timestamp * 1000,
+                            **combined_tags
+                        }]
+                    }]
+                }
+                batches.append(batch)
 
-#             successful_batches = 0
+            successful_batches = 0
 
-#             # Send data in batches of 10
-#             for i in range(0, len(batches), BATCH_SIZE):
-#                 batch_to_send = batches[i:i + BATCH_SIZE]
+            # Send data in batches of 10
+            for i in range(0, len(batches), BATCH_SIZE):
+                batch_to_send = batches[i:i + BATCH_SIZE]
 
-#                 response = requests.post(API_URL, json=batch_to_send)
+                response = requests.post(API_URL, json=batch_to_send)
 
-#                 if response.status_code in [200, 201]:
-#                     print(f"✅ Batch {i // BATCH_SIZE + 1} uploaded successfully.")
-#                     successful_batches += 1
+                if response.status_code in [200, 201]:
+                    print(f"✅ Batch {i // BATCH_SIZE + 1} uploaded successfully.")
+                    successful_batches += 1
 
-#                     # Clean up uploaded records
-#                     clean_live_log_last_batch(record_ids, chunk_size=500)
-#                 else:
-#                     print(f"❌ Failed to upload batch {i // BATCH_SIZE + 1}. Status code: {response.status_code}")
-#                     print(f"Response: {response.text}")
+                    # Clean up uploaded records
+                    clean_live_log_last_batch(record_ids, chunk_size=500)
+                else:
+                    print(f"❌ Failed to upload batch {i // BATCH_SIZE + 1}. Status code: {response.status_code}")
+                    print(f"Response: {response.text}")
 
-#             # Update batch count in MSSQL
-#             update_batch_count(successful_batches)
-#             print("✅ Process completed.")
+            # Update batch count in MSSQL
+            update_batch_count(successful_batches)
+            print("✅ Process completed.")
 
-#         except pyodbc.Error as e:
-#             print(f"❌ Database query error: {e}")
+        except pyodbc.Error as e:
+            print(f"❌ Database query error: {e}")
 
-#         finally:
-#             conn.close()  # Ensure the connection is closed
+        finally:
+            conn.close()  # Ensure the connection is closed
 
-#     except Exception as e:
-#         print(f"❌ Error: {e}")
+    except Exception as e:
+        print(f"❌ Error: {e}")
 
-# def schedule_live_log_upload_background(interval=100000):
-#     """
-#     Run the upload function in a background thread every `interval` milliseconds.
-#     """
-#     def background_task():
-#         while True:
-#             try:
-#                 conn = get_db_connection()
-#                 if not conn:
-#                     print("❌ Skipping task due to DB connection failure.")
-#                     time.sleep(interval / 1000)
-#                     continue
+def schedule_live_log_upload_background(interval=100000):
+    """
+    Run the upload function in a background thread every `interval` milliseconds.
+    """
+    def background_task():
+        while True:
+            try:
+                conn = get_db_connection()
+                if not conn:
+                    print("❌ Skipping task due to DB connection failure.")
+                    time.sleep(interval / 1000)
+                    continue
 
-#                 try:
-#                     cursor = conn.cursor()
-#                     cursor.execute("SELECT COUNT(*) FROM Live_Log")
-#                     count = cursor.fetchone()[0]
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT COUNT(*) FROM Live_Log")
+                    count = cursor.fetchone()[0]
 
-#                     if count > 1000:
-#                         print("📢 More than 1000 records found. Uploading...")
-#                         upload_live_log_to_mongodb()
-#                     else:
-#                         print("ℹ️ Less than 1000 records in Live_Log. Skipping upload...")
+                    if count > 1000:
+                        print("📢 More than 1000 records found. Uploading...")
+                        upload_live_log_to_mongodb()
+                    else:
+                        print("ℹ️ Less than 1000 records in Live_Log. Skipping upload...")
 
-#                 except pyodbc.Error as e:
-#                     print(f"❌ Error executing query: {e}")
+                except pyodbc.Error as e:
+                    print(f"❌ Error executing query: {e}")
 
-#                 finally:
-#                     conn.close()  # Ensure connection is closed properly
+                finally:
+                    conn.close()  # Ensure connection is closed properly
 
-#             except Exception as e:
-#                 print(f"❌ Error in background task: {e}")
+            except Exception as e:
+                print(f"❌ Error in background task: {e}")
 
-#             time.sleep(interval / 1000)  # Wait before the next check
+            time.sleep(interval / 1000)  # Wait before the next check
 
-#     # Start the background task in a separate daemon thread
-#     thread = threading.Thread(target=background_task, daemon=True)
-#     thread.start()
+    # Start the background task in a separate daemon thread
+    # thread = threading.Thread(target=background_task, daemon=True)
+    # thread.start()
 
 # Call this function to start the background thread
 # schedule_live_log_upload_background(interval=15000)
@@ -5911,26 +5644,6 @@ def run_periodic_update3():
         time.sleep(sleep_time)  # Sleep for the specified interval
 
 
-# Sleep for the specified interval
-def run_periodic_update2():
-    count = 1
-    while True:
-
-        update_batch_status()
-
-        time.sleep(1)  # Update every 1 seconds
-
-
-thread_running = False
-
-
-def start_periodic_update():
-    global thread_running
-    if not thread_running:
-        thread_running = True
-        threading.Thread(target=run_periodic_update2, daemon=True).start()
-
-
 if __name__ == "__main__":
     print("Starting Flask app...")
     # schedule_live_log_upload_background(interval=10000)
@@ -5938,9 +5651,7 @@ if __name__ == "__main__":
     # threading.Thread(target=run_periodic_update3, daemon=True).start()
     thread = threading.Thread(target=opcua_monitoring, daemon=True).start()
     thread = threading.Thread(target=opcua_qrcode_monitoring, daemon=True).start()
-
-    threading.Thread(target=log_status, daemon=True).start()
-    # socketio.run(app, host='0.0.0.0', port=5000)
-    start_periodic_update()
+    thread = threading.Thread(target=update_batch_status, daemon=True).start()
+    thread=threading.Thread(target=log_status, daemon=True).start()
 
     app.run(host="127.0.0.1", port=5000, debug=True)

@@ -1,122 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Recipe Management{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.2.1/dist/gridstack.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/gridstack@9.2.1/dist/gridstack.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/gridstack@9.2.1/dist/gridstack-h5.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style1.css') }}">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style1.css') }}"
+    />
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Sidebar -->
-<!-- Top Navigation Bar -->
-<nav class="top-navbar">
-  <div class="logo">
-    <img src="{{ url_for('static', filename='logonew.png') }}" alt="Logo" style="height:45px; margin-left: 11px; margin-top: 3px;">
-  </div>
-  <ul class="nav-links">
-    {% if session.get('username') %}
-      {% if 'dashboard' in session.get('user_roles', []) %}
-        <li><a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
-      {% endif %}
-      {% if 'production' in session.get('user_roles', []) %}
-        <li><a href="/production" class="{% if request.path == '/production' %}active{% endif %}"><i class="fa-solid fa-list-check"></i> Production Log</a></li>
-      {% endif %}
-      {% if 'raw_material' in session.get('user_roles', []) %}
+    <!-- Top Navigation Bar -->
+    <nav class="top-navbar">
+      <div class="logo">
+        <img
+          src="{{ url_for('static', filename='logonew.png') }}"
+          alt="Logo"
+          style="height: 45px; margin-left: 11px; margin-top: 3px"
+        />
+      </div>
+      <ul class="nav-links">
+        {% if session.get('username') %} {% if 'dashboard' in
+        session.get('user_roles', []) %}
+        <li>
+          <a
+            href="/dashboard"
+            class="{% if request.path == '/dashboard' %}active{% endif %}"
+            ><i class="fa-solid fa-chart-line"></i> Dashboard</a
+          >
+        </li>
+        {% endif %} {% if 'production' in session.get('user_roles', []) %}
+        <li>
+          <a
+            href="/production"
+            class="{% if request.path == '/production' %}active{% endif %}"
+            ><i class="fa-solid fa-list-check"></i> Production Log</a
+          >
+        </li>
+        {% endif %} {% if 'raw_material' in session.get('user_roles', []) %}
         <li class="dropdown">
-          <a href="javascript:void(0);" class="{% if request.path.startswith('/raw-material') or request.path.startswith('/alu-raw-material')or request.path.startswith('/h-raw-material') %}active{% endif %}"><i class="fa-solid fa-cubes"></i> Raw Material <span class="arrow">&#8250;</span></a>
+          <a
+            href="javascript:void(0);"
+            class="{% if request.path.startswith('/raw-material') or request.path.startswith('/alu-raw-material')or request.path.startswith('/h-raw-material') %}active{% endif %}"
+            ><i class="fa-solid fa-cubes"></i> Raw Material
+            <span class="arrow">&#8250;</span></a
+          >
           <ul class="dropdown-content">
-            <li><a href="/raw-material" class="{% if request.path == '/raw-material' %}active{% endif %}"><i class="fa-solid fa-filter"></i> Filter Media</a></li>
-            <li><a href="/alu-raw-material" class="{% if request.path == '/alu-raw-material' %}active{% endif %}"><i class="fa-solid fa-gem"></i> Aluminium</a></li>
-            <li><a href="/h-raw-material" class="{% if request.path == '/h-raw-material' %}active{% endif %}"><i class="fa-solid fa-house"></i> Housing</a></li>
+            <li>
+              <a
+                href="/raw-material"
+                class="{% if request.path == '/raw-material' %}active{% endif %}"
+                ><i class="fa-solid fa-filter"></i> Filter Media</a
+              >
+            </li>
+            <li>
+              <a
+                href="/alu-raw-material"
+                class="{% if request.path == '/alu-raw-material' %}active{% endif %}"
+                ><i class="fa-solid fa-gem"></i> Aluminium</a
+              >
+            </li>
+            <li>
+              <a
+                href="/h-raw-material"
+                class="{% if request.path == '/h-raw-material' %}active{% endif %}"
+                ><i class="fa-solid fa-house"></i> Housing</a
+              >
+            </li>
           </ul>
         </li>
-      {% endif %}
-      {% if 'recipe' in session.get('user_roles', []) %}
-        <li><a href="/recipe" class="{% if request.path == '/recipe' %}active{% endif %}"><i class="fa-solid fa-clipboard-list"></i> Recipe</a></li>
-      {% endif %}
-      {% if 'report' in session.get('user_roles', []) %}
-        <li><a href="/report" class="{% if request.path == '/report' %}active{% endif %}"><i class="fa-solid fa-file-lines"></i> Report</a></li>
-      {% endif %}
-      {% if 'tag' in session.get('user_roles', []) %}
+        {% endif %} {% if 'recipe' in session.get('user_roles', []) %}
+        <li>
+          <a
+            href="/recipe"
+            class="{% if request.path == '/recipe' %}active{% endif %}"
+            ><i class="fa-solid fa-clipboard-list"></i> Recipe</a
+          >
+        </li>
+        {% endif %} {% if 'report' in session.get('user_roles', []) %}
+        <li>
+          <a
+            href="/report"
+            class="{% if request.path == '/report' %}active{% endif %}"
+            ><i class="fa-solid fa-file-lines"></i> Report</a
+          >
+        </li>
+        {% endif %} {% if 'tag' in session.get('user_roles', []) %}
         <li class="dropdown">
-          <a href="javascript:void(0);" class="{% if request.path.startswith('/tag') or request.path.startswith('/live-tag') %}active{% endif %}"><i class="fa-solid fa-tags"></i> Tags <span class="arrow">&#8250;</span></a>
+          <a
+            href="javascript:void(0);"
+            class="{% if request.path.startswith('/tag') or request.path.startswith('/live-tag') %}active{% endif %}"
+            ><i class="fa-solid fa-tags"></i> Tags
+            <span class="arrow">&#8250;</span></a
+          >
           <ul class="dropdown-content">
-            <li><a href="/tag-overview" class="{% if request.path == '/tag-overview' %}active{% endif %}"><i class="fa-solid fa-table-list"></i> Tag Overview</a></li>
-            <li><a href="/live-tag" class="{% if request.path == '/live-tag' %}active{% endif %}"><i class="fa-solid fa-circle-dot"></i> Live Tag</a></li>
+            <li>
+              <a
+                href="/tag-overview"
+                class="{% if request.path == '/tag-overview' %}active{% endif %}"
+                ><i class="fa-solid fa-table-list"></i> Tag Overview</a
+              >
+            </li>
+            <li>
+              <a
+                href="/live-tag"
+                class="{% if request.path == '/live-tag' %}active{% endif %}"
+                ><i class="fa-solid fa-circle-dot"></i> Live Tag</a
+              >
+            </li>
           </ul>
         </li>
-      {% endif %}
-      {% if session.get('username') == 'Admin' %}
+        {% endif %} {% if session.get('username') == 'Admin' %}
         <li class="dropdown">
-          <a href="javascript:void(0);"class="{% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-user"></i> Admin<span class="arrow">&#8250;</span></a>
+          <a
+            href="javascript:void(0);"
+            class="{% if request.path == '/' %}active{% endif %}"
+            ><i class="fa-solid fa-user"></i> Admin<span class="arrow"
+              >&#8250;</span
+            ></a
+          >
           <ul class="dropdown-content">
-            <li><a href="/plc" class="{% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-microchip"></i> PLC</a></li>
-            <li><a href="/users"class="{% if request.path == '/users' %}active{% endif %}"><i class="fa-solid fa-user-group"></i> Users</a></li>
-            <li><a href="/role"class="{% if request.path == '/role' %}active{% endif %}"><i class="fa-solid fa-user-gear"></i> Assign Role</a></li>
-            <li><a href="/event_log"class="{% if request.path == '/event_log' %}active{% endif %}"><i class="fa-solid fa-clock-rotate-left"></i> Event Log</a></li>
+            <li>
+              <a
+                href="/plc"
+                class="{% if request.path == '/dashboard' %}active{% endif %}"
+                ><i class="fa-solid fa-microchip"></i> PLC</a
+              >
+            </li>
+            <li>
+              <a
+                href="/users"
+                class="{% if request.path == '/users' %}active{% endif %}"
+                ><i class="fa-solid fa-user-group"></i> Users</a
+              >
+            </li>
+            <li>
+              <a
+                href="/role"
+                class="{% if request.path == '/role' %}active{% endif %}"
+                ><i class="fa-solid fa-user-gear"></i> Assign Role</a
+              >
+            </li>
+            <li>
+              <a
+                href="/event_log"
+                class="{% if request.path == '/event_log' %}active{% endif %}"
+                ><i class="fa-solid fa-clock-rotate-left"></i> Event Log</a
+              >
+            </li>
           </ul>
         </li>
-      {% endif %}
-      <li><a href="/logout"class="{% if request.path == '/logout' %}active{% endif %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-    {% else %}
-      <li><a href="/login"class="{% if request.path == '/login' %}active{% endif %}"><i class="fa-solid fa-right-to-bracket"></i> Login</a></li>
-      <li><a href="/register"class="{% if request.path == '/register' %}active{% endif %}"><i class="fa-solid fa-user-plus"></i> Register</a></li>
-    {% endif %}
-  </ul>
-</nav>
-<!-- Breadcrumb Section -->
-<div class="breadcrumb-container">
-    {% block breadcrumbs %}
-    <!-- Default empty breadcrumbs -->
-    {% endblock %}
-</div>
- <!-- Main Content -->
+        {% endif %}
+        <li>
+          <a
+            href="/logout"
+            class="{% if request.path == '/logout' %}active{% endif %}"
+            ><i class="fas fa-sign-out-alt"></i> Logout</a
+          >
+        </li>
+        {% else %}
+        <li>
+          <a
+            href="/login"
+            class="{% if request.path == '/login' %}active{% endif %}"
+            ><i class="fa-solid fa-right-to-bracket"></i> Login</a
+          >
+        </li>
+        <li>
+          <a
+            href="/register"
+            class="{% if request.path == '/register' %}active{% endif %}"
+            ><i class="fa-solid fa-user-plus"></i> Register</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    <!-- Breadcrumb Section -->
+    <div class="breadcrumb-container">
+      {% block breadcrumbs %}
+      <!-- Default empty breadcrumbs -->
+      {% endblock %}
+    </div>
+    <!-- Main Content -->
     <div class="main-content">
-        <!-- Page-specific Content -->
-        <div class="page-content">
-            {% block content %}
-            <!-- Default content -->
-            {% endblock %}
-        </div>
+      <!-- Page-specific Content -->
+      <div class="page-content">
+        {% block content %}
+        <!-- Default content -->
+        {% endblock %}
+      </div>
     </div>
-    
-    <!-- Admin Password Popup -->
-    <div id="admin-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);">
-        <h4>Enter Admin Password</h4>
-        <form id="admin-password-form">
-            <input type="password" id="admin-password" placeholder="Admin Password" required>
-            <button type="submit" id="admin-submit">Submit</button>
-            <button type="button" id="cancel-button">Cancel</button>
-        </form>
-    </div>
-    <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
-    
 
-   
+    <!-- Admin Password Popup -->
+    <div
+      id="admin-popup"
+      style="
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      "
+    >
+      <h4>Enter Admin Password</h4>
+      <form id="admin-password-form">
+        <input
+          type="password"
+          id="admin-password"
+          placeholder="Admin Password"
+          required
+        />
+        <button type="submit" id="admin-submit">Submit</button>
+        <button type="button" id="cancel-button">Cancel</button>
+      </form>
+    </div>
+    <div
+      id="overlay"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      "
+    ></div>
+
     <style>
-        /* .mainheads {
+      /* .mainheads {
             font-size: 28px;
     font-weight: 700;
     text-align: center;
     color: #4b367c;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         } */
-        
-   
-        .main-content {
-            margin-left: 250px;
-            transition: all 0.3s ease;
-        }
-        .main-content.expanded {
-            margin-left: 0;
-        }
-        /* .toggle-btn {
+
+      .main-content {
+        margin-left: 250px;
+        transition: all 0.3s ease;
+      }
+      .main-content.expanded {
+        margin-left: 0;
+      }
+      /* .toggle-btn {
             background: none;
             border: none;
             color: #333;
@@ -124,145 +273,145 @@
             cursor: pointer;
             margin-right: 20px;
         } */
-        #admin-popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            text-align: center;
-        }
-        
-        #overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
-        
-        #admin-popup input {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        
-        #admin-popup button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            background-color: #007bff;
-            color: #fff;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        #admin-popup button:hover {
-            background-color: #0056b3;
-        }
-        
+      #admin-popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
+
+      #overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+
+      #admin-popup input {
+        width: 80%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      #admin-popup button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        background-color: #007bff;
+        color: #fff;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #admin-popup button:hover {
+        background-color: #0056b3;
+      }
     </style>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const adminLink = document.getElementById('admin-link');
-            const adminPopup = document.getElementById('admin-popup');
-            const overlay = document.getElementById('overlay');
-            const adminForm = document.getElementById('admin-password-form');
-            const cancelButton = document.getElementById('cancel-button');
-        
-            // Show popup on clicking Admin
-            adminLink.addEventListener('click', function (event) {
-                event.preventDefault(); // Prevent default link behavior
-                adminPopup.style.display = 'block';
-                overlay.style.display = 'block';
-            });
-        
-            // Cancel the password popup
-            cancelButton.addEventListener('click', function () {
-                adminPopup.style.display = 'none';
-                overlay.style.display = 'none';
-            });
-        
-            // Submit password and verify
-            adminForm.addEventListener('submit', async function (event) {
-                event.preventDefault(); // Prevent form submission
-                const inputPassword = document.getElementById('admin-password').value;
-        
-                try {
-                    const response = await fetch('/validate-admin-password', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ password: inputPassword }),
-                    });
-        
-                    const result = await response.json();
-        
-                    if (result.success) {
-                        alert('Access granted!');
-                        adminPopup.style.display = 'none';
-                        overlay.style.display = 'none';
-                        // Redirect to admin dashboard or other relevant page
-                        window.location.href = "/admin-dashboard"; // Adjust URL as needed
-                    } else {
-                        alert('Invalid password!');
-                    }
-                } catch (error) {
-                    console.error('Error validating password:', error);
-                }
-            });
+      document.addEventListener("DOMContentLoaded", function () {
+        const adminLink = document.getElementById("admin-link");
+        const adminPopup = document.getElementById("admin-popup");
+        const overlay = document.getElementById("overlay");
+        const adminForm = document.getElementById("admin-password-form");
+        const cancelButton = document.getElementById("cancel-button");
+
+        // Show popup on clicking Admin
+        adminLink.addEventListener("click", function (event) {
+          event.preventDefault(); // Prevent default link behavior
+          adminPopup.style.display = "block";
+          overlay.style.display = "block";
         });
-        
-        
+
+        // Cancel the password popup
+        cancelButton.addEventListener("click", function () {
+          adminPopup.style.display = "none";
+          overlay.style.display = "none";
+        });
+
+        // Submit password and verify
+        adminForm.addEventListener("submit", async function (event) {
+          event.preventDefault(); // Prevent form submission
+          const inputPassword = document.getElementById("admin-password").value;
+
+          try {
+            const response = await fetch("/validate-admin-password", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ password: inputPassword }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              alert("Access granted!");
+              adminPopup.style.display = "none";
+              overlay.style.display = "none";
+              // Redirect to admin dashboard or other relevant page
+              window.location.href = "/admin-dashboard"; // Adjust URL as needed
+            } else {
+              alert("Invalid password!");
+            }
+          } catch (error) {
+            console.error("Error validating password:", error);
+          }
+        });
+      });
     </script>
-  <script>
-    document.getElementById('sidebarToggle').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('collapsed');
-        document.querySelector('.main-content').classList.toggle('expanded');
-    });
-    const sidebarLinks = document.querySelectorAll('.sidebar ul li a');
-
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', function () {
-            // Remove active class from all links
-            sidebarLinks.forEach(l => l.classList.remove('active'));
-
-            // Add active class to the clicked link
-            this.classList.add('active');
+    <script>
+      document
+        .getElementById("sidebarToggle")
+        .addEventListener("click", function () {
+          document.querySelector(".sidebar").classList.toggle("collapsed");
+          document.querySelector(".main-content").classList.toggle("expanded");
         });
-    });
-</script>
+      const sidebarLinks = document.querySelectorAll(".sidebar ul li a");
 
-<script>
-document.querySelectorAll('.dropdown > a').forEach(button => {
-    button.addEventListener('click', function(e) {
-        e.preventDefault();
-        const parent = this.parentElement;
-        document.querySelectorAll('.dropdown').forEach(d => {
-            if (d !== parent) d.classList.remove('open');
+      sidebarLinks.forEach((link) => {
+        link.addEventListener("click", function () {
+          // Remove active class from all links
+          sidebarLinks.forEach((l) => l.classList.remove("active"));
+
+          // Add active class to the clicked link
+          this.classList.add("active");
         });
-        parent.classList.toggle('open');
-    });
-});
+      });
+    </script>
 
-// Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.dropdown')) {
-        document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
-    }
-});
-</script>
+    <script>
+      document.querySelectorAll(".dropdown > a").forEach((button) => {
+        button.addEventListener("click", function (e) {
+          e.preventDefault();
+          const parent = this.parentElement;
+          document.querySelectorAll(".dropdown").forEach((d) => {
+            if (d !== parent) d.classList.remove("open");
+          });
+          parent.classList.toggle("open");
+        });
+      });
 
-</body>
+      // Close dropdown when clicking outside
+      document.addEventListener("click", function (e) {
+        if (!e.target.closest(".dropdown")) {
+          document
+            .querySelectorAll(".dropdown")
+            .forEach((d) => d.classList.remove("open"));
+        }
+      });
+    </script>
+  </body>
 </html>
