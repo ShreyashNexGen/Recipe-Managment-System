@@ -11,8 +11,48 @@ block breadcrumbs %}
 {% endblock %} {% block content %}
 <div class="content-header">
   <h1>Recipe Overview</h1>
-  <button onclick="toggleRecipeForm()" class="add-button">+ Add Recipe</button>
+  <!-- <button onclick="toggleRecipeForm()" class="add-button">+ Add Recipe</button> -->
 </div>
+<!-- 🔍 Search + Entries Selector -->
+<!-- 🔧 Top Filter Section -->
+<!-- 🔧 TOP FILTER ROW -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+
+    <!-- LEFT: Entries Dropdown -->
+    <form method="GET" action="/recipe" id="limitForm">
+        <select name="limit"
+                onchange="document.getElementById('limitForm').submit()"
+                style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
+            {% for opt in [5, 10, 15, 20, 50] %}
+            <option value="{{ opt }}" {% if limit == opt %}selected{% endif %}>
+                Show {{ opt }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <input type="hidden" name="search" value="{{ search }}">
+    </form>
+
+    <!-- CENTER: Search Bar -->
+<div style="display: flex; align-items: middle; gap: 10px;">
+
+    <input style="background-color: #f7f7f7;" type="text"
+           name="search"
+           placeholder="Search Recipe Name..."
+           value="{{ search }}"
+           class="search-input">
+
+    <button type="submit" class="btn-apply">Apply</button>
+
+    <a href="/recipe" class="btn-reset">Reset</a>
+</div>
+
+
+    <!-- RIGHT: Add Recipe Button (your existing one) -->
+    <button onclick="toggleRecipeForm()" class="add-button">+ Add Recipe</button>
+
+</div>
+
 
 <div id="add-recipe-section">
   <div id="recipe-form">
@@ -177,6 +217,18 @@ block breadcrumbs %}
         </h1>
         <div class="form-row3">
           <!-- 1. PLEAT HEIGHT -->
+           <div class="mini-header">
+
+     <span>Parameter</span>
+    <span>New Value</span>
+    <span>Running Value</span>
+</div>
+           <div class="mini-header">
+
+     <span>Parameter</span>
+    <span>New Value</span>
+    <span>Running Value</span>
+</div>
           <div class="field-group">
             <label for="Pleat_Height">PLEAT HEIGHT (mm):</label>
             <input
@@ -2119,7 +2171,7 @@ block breadcrumbs %}
         <td>
           <!-- Update Button -->
           <button
-            class="update-button"
+            class="update-button" 
             onclick="openUpdatePopup('{{ recipe.Recipe_ID }}')"
           >
             <i class="fa-regular fa-pen-to-square"></i>
@@ -2132,26 +2184,30 @@ block breadcrumbs %}
 </div>
 
 <div class="pagination-container">
+
   {% if page > 1 %}
-  <a href="{{ url_for('recipe_list', page=page - 1) }}" class="pagination-btn"
-    >Previous</a
-  >
+  <a href="{{ url_for('recipe_list', page=page-1, search=search, limit=limit) }}"
+     class="pagination-btn">Previous</a>
   {% else %}
   <span class="pagination-btn disabled">Previous</span>
-  {% endif %} {% for p in range(1, total_pages + 1) %}
-  <a
-    href="{{ url_for('recipe_list', page=p) }}"
-    class="pagination-btn {% if p == page %}active{% endif %}"
-    >{{ p }}</a
-  >
-  {% endfor %} {% if page < total_pages %}
-  <a href="{{ url_for('recipe_list', page=page + 1) }}" class="pagination-btn"
-    >Next</a
-  >
+  {% endif %}
+
+  {% for p in range(1, total_pages + 1) %}
+  <a href="{{ url_for('recipe_list', page=p, search=search, limit=limit) }}"
+     class="pagination-btn {% if p == page %}active{% endif %}">
+     {{ p }}
+  </a>
+  {% endfor %}
+
+  {% if page < total_pages %}
+  <a href="{{ url_for('recipe_list', page=page+1, search=search, limit=limit) }}"
+     class="pagination-btn">Next</a>
   {% else %}
   <span class="pagination-btn disabled">Next</span>
   {% endif %}
+
 </div>
+
 
 <script>
   const nextRecipeId = "{{ next_recipe_id }}";
@@ -2610,6 +2666,31 @@ block breadcrumbs %}
 
 <style>
   /* Dull style */
+.mini-header {
+    display: grid;
+    grid-template-columns: 35% 32% 32%;
+    font-weight: bold;
+    font-size: larger;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border: 2px solid #ddd;
+    align-content: stretch;
+    align-items: center;
+    justify-content: space-evenly;
+    justify-items: start;
+}
+
+.field-group {
+    display: grid;
+    grid-template-columns: 35% 32% 32%;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.field-group input, 
+.field-group select {
+    width: 90%;
+}
 
   #recipetable tr:nth-child(odd) {
     background-color: #f2f2f2; /* light grey */
@@ -2900,6 +2981,43 @@ block breadcrumbs %}
     font-weight: 500;
     margin-bottom: 5px;
   }
+  .search-input {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    height: 38px;   
+   background-color: #f7f7f7;       /* Make input height consistent */
+}
+
+.btn-apply {
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    height: 38px;          /* EXACT MATCH to input */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-reset {
+    padding: 8px 16px;
+    background: #6c757d;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    height: 38px;          /* Same height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 </style>
+<script>
+window.onload = function() {
+    loadPermissions("recipe");
+};
+</script>
 
 {% endblock %}

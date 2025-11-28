@@ -612,10 +612,10 @@ padding: 20px;
     const rawMaterialBarChart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Material 1', 'Material 2', 'Material 3', 'Material 4', 'Material 5', 'Material 6', 'Material 7'],
+        labels: ['Decoiler 1', 'Decoiler 2', 'Decoiler 3', 'Decoiler 4', 'Decoiler 5', 'Decoiler 6', 'Decoiler 7', 'Decoiler 8', 'Decoiler 9'],
         datasets: [{
           label: 'Quantity Used (kg)',
-          data: [120, 90, 150, 80, 200, 70, 60],
+          data: [120, 90, 150, 80, 200, 70, 60, 70, 110],
           backgroundColor: [
             '#0077b6',
             '#00b4d8',
@@ -623,7 +623,9 @@ padding: 20px;
             '#90e0ef',
             '#0077b6',
             '#00b4d8',
-            '#48cae4'
+            '#48cae4',
+            '#90e0ef',
+            '#0077b6'
           ],
           borderRadius: 6,
           borderWidth: 1
@@ -939,4 +941,9 @@ setInterval(fetchStatusSummary1, 60000);
 }
 
 </style>
+<script>
+window.onload = () => {
+    loadPermissions("dashboard");
+};
+</script>
 {% endblock %}

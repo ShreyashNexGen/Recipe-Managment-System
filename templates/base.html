@@ -136,13 +136,13 @@
             ></a
           >
           <ul class="dropdown-content">
-            <li>
+            <!-- <li>
               <a
                 href="/plc"
                 class="{% if request.path == '/dashboard' %}active{% endif %}"
                 ><i class="fa-solid fa-microchip"></i> PLC</a
               >
-            </li>
+            </li> -->
             <li>
               <a
                 href="/users"
@@ -391,6 +391,66 @@
         });
       });
     </script>
+<!-- ========================== -->
+<!-- GLOBAL PERMISSION HANDLER -->
+<!-- ========================== -->
+<script>
+let permissions = {};   // holds user permissions returned by backend
+
+// Fetch permissions for logged-in user
+async function loadPermissions(pageName) {
+    try {
+        const res = await fetch("/get_user_access", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: "{{ session['username'] }}" })
+        });
+
+        const data = await res.json();
+        permissions = data.permissions;   // FIXED
+
+        console.log("Permissions received:", permissions);
+
+        applyPermissions(pageName);
+
+    } catch (err) {
+        console.error("Error loading user permissions:", err);
+    }
+}
+
+// Apply permissions to hide buttons
+function applyPermissions(page) {
+    const perms = permissions[page];
+
+    if (!perms) {
+        console.warn("⚠ No permissions found for page:", page);
+        return;
+    }
+
+    // Hide Add Button
+    if (!perms.add) {
+        document.querySelectorAll(".add-button").forEach(btn => {
+            btn.style.display = "none";
+        });
+    }
+
+    // Hide Edit Buttons
+    if (!perms.edit) {
+        document.querySelectorAll(".update-button").forEach(btn => {
+            btn.style.display = "none";
+        });
+    }
+
+    // Hide Delete Buttons
+    if (!perms.delete) {
+        document.querySelectorAll(".delete-button").forEach(btn => {
+            btn.style.display = "none";
+        });
+    }
+
+    console.log("Permissions applied for:", page, perms);
+}
+</script>
 
     <script>
       document.querySelectorAll(".dropdown > a").forEach((button) => {

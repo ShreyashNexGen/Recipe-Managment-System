@@ -108,8 +108,8 @@ breadcrumbs %}
         <th>Avg Pressure Diff<sub>Pa</sub></th>
         <th>User</th>
         <th>Test Time<sub>sec</sub></th>
-        <th>Judgement (NgStatus)</th>
-        <th>Print</th>
+        <th>Test Result (OK/NG)</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody id="recipe-log-table">
@@ -130,19 +130,48 @@ breadcrumbs %}
   let fullData = [];
   const rowsPerPage = 10;
   let currentPage = 1;
+  let filterStart = "";
+  let filterEnd = "";
 
   function fetchRecipeLog() {
-    fetch("/api/recipe_log")
-      .then((response) => response.json())
-      .then((data) => {
-        fullData = data;
-        renderPage(currentPage);
-        setupPagination();
-      })
-      .catch((error) => console.error("Error fetching recipe log:", error));
-  }
+  console.log("🔎 Sending Filter →", {
+    startDate: filterStart,
+    endDate: filterEnd
+  });
+
+  const startDate = filterStart;
+  const endDate = filterEnd;
+
+  fetch(`/api/recipe_log?start_date=${startDate}&end_date=${endDate}`)
+    .then(res => res.json())
+    .then(data => {
+      console.log("📥 Received Records:", data.length);
+      fullData = data;
+      currentPage = 1;
+      renderPage(currentPage);
+      setupPagination();
+    })
+    .catch(err => console.error("❌ Error fetching recipe log:", err));
+}
+
+
+function applyFilter() {
+  filterStart = document.getElementById("startDate").value;
+  filterEnd = document.getElementById("endDate").value;
+
+  console.log("🟦 APPLY FILTER CLICKED");
+  console.log("📝 New Filter Values:", { filterStart, filterEnd });
+
+  currentPage = 1;
+  fetchRecipeLog();
+}
+
+
 
   function renderPage(page) {
+    // 🔥 Restore filter inputs so they never reset visually
+    document.getElementById("startDate").value = filterStart;
+    document.getElementById("endDate").value = filterEnd;
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     const visibleData = fullData.slice(start, end);
@@ -151,43 +180,33 @@ breadcrumbs %}
     tableBody.innerHTML = "";
 
     visibleData.forEach((row) => {
-      // Determine NgStatus badge style
       let ngBadge = `<span class="status-badge neutral">N/A</span>`;
       if (row.NgStatus) {
         const status = row.NgStatus.toString().toLowerCase();
-        if (status.includes("ok")) {
-          ngBadge = `<span class="status-badge ok">OK</span>`;
-        } else if (status.includes("ng")) {
-          ngBadge = `<span class="status-badge ng">NG</span>`;
-        } else {
-          ngBadge = `<span class="status-badge neutral">${row.NgStatus}</span>`;
-        }
+        if (status.includes("ok")) ngBadge = `<span class="status-badge ok">OK</span>`;
+        else if (status.includes("ng")) ngBadge = `<span class="status-badge ng">NG</span>`;
+        else ngBadge = `<span class="status-badge neutral">${row.NgStatus}</span>`;
       }
 
       tableBody.innerHTML += `
-            <tr>
-                <td>${row.SerialNo}</td>
-                <td>${row.Recipe_Name}</td>
-                <td>${row.Timestamp}</td>
-                <td>${row.Article_No}</td>
-
-                <td>${row.RPM_Upper}, ${row.RPM_Lower}</td>
-                <td>${row.Pressure_Upper}, ${row.Pressure_Lower}</td>
-                <td>${row.AirFlow_Upper}, ${row.AirFlow_Lower}</td>
-                <td>${row.Pressure_Max}, ${row.Pressure_Min}</td>
-
-                <td>${row.Avg_Motor_RPM}</td>
-                <td>${row.Avg_Air_Flow}</td>
-                <td>${row.Avg_Pressure_Diff}</td>
-                <td>${row.User_Id}</td>
-                <td>${row.Test_Duration}</td>
-
-                <!-- NgStatus with badge -->
-                <td>${ngBadge}</td>
-
-                <td><button class="print-btn" onclick="rePrint(${row.SerialNo})">Re-Print</button></td>
-            </tr>
-        `;
+        <tr>
+          <td>${row.SerialNo}</td>
+          <td>${row.Recipe_Name}</td>
+          <td>${row.Timestamp}</td>
+          <td>${row.Article_No}</td>
+          <td>${row.RPM_Upper}, ${row.RPM_Lower}</td>
+          <td>${row.Pressure_Upper}, ${row.Pressure_Lower}</td>
+          <td>${row.AirFlow_Upper}, ${row.AirFlow_Lower}</td>
+          <td>${row.Pressure_Max}, ${row.Pressure_Min}</td>
+          <td>${row.Avg_Motor_RPM}</td>
+          <td>${row.Avg_Air_Flow}</td>
+          <td>${row.Avg_Pressure_Diff}</td>
+          <td>${row.User_Id}</td>
+          <td>${row.Test_Duration}</td>
+          <td>${ngBadge}</td>
+          <td><button class="print-btn" onclick="rePrint(${row.SerialNo})">Print Barcode</button></td>
+        </tr>
+      `;
     });
   }
 
@@ -205,50 +224,39 @@ breadcrumbs %}
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
 
-    // Previous
     pagination.innerHTML += `
-            <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
-                <a class="page-link" href="#" onclick="changePage(${
-                  currentPage - 1
-                })">Previous</a>
-            </li>
-        `;
+      <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+        <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
+      </li>
+    `;
 
-    // First page and dots
     if (startPage > 1) {
       pagination.innerHTML += `
-                <li class="page-item"><a class="page-link" href="#" onclick="changePage(1)">1</a></li>
-                <li class="page-item disabled"><span class="page-link">...</span></li>
-            `;
+        <li class="page-item"><a class="page-link" href="#" onclick="changePage(1)">1</a></li>
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+      `;
     }
 
-    // Main page range
     for (let i = startPage; i <= endPage; i++) {
       pagination.innerHTML += `
-                <li class="page-item ${i === currentPage ? "active" : ""}">
-                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
-                </li>
-            `;
+        <li class="page-item ${i === currentPage ? "active" : ""}">
+          <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+        </li>
+      `;
     }
 
-    // Dots and last page
     if (endPage < totalPages) {
       pagination.innerHTML += `
-                <li class="page-item disabled"><span class="page-link">...</span></li>
-                <li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a></li>
-            `;
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        <li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a></li>
+      `;
     }
 
-    // Next
     pagination.innerHTML += `
-            <li class="page-item ${
-              currentPage === totalPages ? "disabled" : ""
-            }">
-                <a class="page-link" href="#" onclick="changePage(${
-                  currentPage + 1
-                })">Next</a>
-            </li>
-        `;
+      <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+        <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
+      </li>
+    `;
   }
 
   function changePage(page) {
@@ -258,89 +266,31 @@ breadcrumbs %}
     renderPage(currentPage);
     setupPagination();
   }
-  // Initial fetch
-  fetchRecipeLog();
-  // Function to handle Re-Print button click
-  function rePrint(serialNo) {
-    console.log("Re-Printing for SerialNo:", serialNo);
 
-    fetch(`/api/print_recipe/${serialNo}`, {
-      method: "POST",
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Print Response:", data);
-        if (data.success) {
-          alert("Printing successfully initiated!");
-        } else {
-          alert("Failed to initiate printing.");
-        }
-      })
-      .catch((error) => console.error("Error during re-print:", error));
-  }
   window.addEventListener("DOMContentLoaded", () => {
     const endDateInput = document.getElementById("endDate");
     const startDateInput = document.getElementById("startDate");
 
     const today = new Date();
     const yesterday = new Date(today);
-
-    // Set yesterday to 00:00 local
     yesterday.setDate(today.getDate() - 1);
     yesterday.setHours(0, 0, 0, 0);
-
-    // Set today to 23:59 local
     today.setHours(23, 59, 0, 0);
 
-    // Format YYYY-MM-DDTHH:MM for datetime-local without UTC conversion
     function formatDateTimeLocal(dt) {
-      const year = dt.getFullYear();
-      const month = String(dt.getMonth() + 1).padStart(2, "0");
-      const day = String(dt.getDate()).padStart(2, "0");
-      const hours = String(dt.getHours()).padStart(2, "0");
-      const minutes = String(dt.getMinutes()).padStart(2, "0");
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+      return dt.toISOString().slice(0, 16);
     }
 
-    startDateInput.value = formatDateTimeLocal(yesterday); // yesterday 00:00
-    endDateInput.value = formatDateTimeLocal(today); // today 23:59
+    startDateInput.value = formatDateTimeLocal(yesterday);
+    endDateInput.value = formatDateTimeLocal(today);
 
-    fetchRecipeLog(); // fetch with default filter
-  });
+    filterStart = startDateInput.value;
+    filterEnd = endDateInput.value;
 
-  function applyFilter() {
-    currentPage = 1; // reset pagination
     fetchRecipeLog();
-  }
-
-  function fetchRecipeLog() {
-    const startDate = document.getElementById("startDate").value;
-    const endDate = document.getElementById("endDate").value;
-
-    fetch(`/api/recipe_log?start_date=${startDate}&end_date=${endDate}`)
-      .then((response) => response.json())
-      .then((data) => {
-        fullData = data;
-        renderPage(currentPage);
-        setupPagination();
-      })
-      .catch((error) => console.error("Error fetching recipe log:", error));
-  }
-
-  function exportToExcel() {
-    const start = document.getElementById("startDate").value;
-    const end = document.getElementById("endDate").value;
-
-    let url = "/export_recipe_log";
-    if (start || end) {
-      url += `?start_date=${encodeURIComponent(
-        start
-      )}&end_date=${encodeURIComponent(end)}`;
-    }
-
-    window.location.href = url;
-  }
+  });
 </script>
+
 
 <!-- CSS -->
 <style>
@@ -468,5 +418,9 @@ breadcrumbs %}
     background-color: #6c757d; /* Gray */
   }
 </style>
-
+<script>
+window.onload = () => {
+    loadPermissions("production");
+};
+</script>
 {% endblock %}

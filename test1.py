@@ -60,7 +60,9 @@ CORS(app)  # Enable CORS for frontend communication
 # OPC UA connection options
 # Connection details
 # server = 'DESKTOP-9G39B01\WINCC'
-# database = 'A2Z_DB'3
+# database = 'A2Z_DB'
+CURRENT_USER = None
+
 server = "SHREYASHNEXGEN\WINCCFLEX2014"
 database = "Shreyash"
 conn = pyodbc.connect(
@@ -115,6 +117,22 @@ def init_db():
                     plcId NVARCHAR(255) NOT NULL
                 )
             """,
+            "Barcode_Data": """
+              CREATE TABLE Barcode_Data (
+              id INT IDENTITY(1,1) PRIMARY KEY,
+              recipe_id INT NOT NULL,
+              pos_bar1 VARCHAR(MAX) NULL,
+              pos_bar2 VARCHAR(MAX) NULL,
+              pos_bar3 VARCHAR(MAX) NULL,
+              pos_bar4 VARCHAR(MAX) NULL,
+              pos_bar5 VARCHAR(MAX) NULL,
+              pos_bar6 VARCHAR(MAX) NULL,
+              pos_bar7 VARCHAR(MAX) NULL,
+              pos_bar8 VARCHAR(MAX) NULL,
+              pos_bar9 VARCHAR(MAX) NULL,
+              created_at DATETIME DEFAULT GETDATE()
+             )
+           """,
             "Raw_Materials": """
                     CREATE TABLE Raw_Materials (
                         material_Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -197,14 +215,23 @@ def init_db():
         Filter_Code NVARCHAR(255),
         Art_No NVARCHAR(255),
         Pos1 NVARCHAR(255),
+        Pos1_Barcode NVARCHAR(MAX),
         Pos2 NVARCHAR(255),
+        Pos2_Barcode NVARCHAR(MAX),
         Pos3 NVARCHAR(255),
+        Pos3_Barcode NVARCHAR(MAX),
         Pos4 NVARCHAR(255),
+        Pos4_Barcode NVARCHAR(MAX),
         Pos5 NVARCHAR(255),
+        Pos5_Barcode NVARCHAR(MAX),
         Pos6 NVARCHAR(255),
+        Pos6_Barcode NVARCHAR(MAX),
         Pos7 NVARCHAR(255),
+        Pos7_Barcode NVARCHAR(MAX),
         Pos8 NVARCHAR(255),
+        Pos8_Barcode NVARCHAR(MAX),
         Pos9 NVARCHAR(255),
+        Pos9_Barcode NVARCHAR(MAX),
         Alu_Material NVARCHAR(255),
         House_Material NVARCHAR(255),
         Pleat_Height NVARCHAR(255),
@@ -406,6 +433,25 @@ def init_db():
                     number_of_batches_created INT NOT NULL
                 )
             """,
+            "roles": """
+                CREATE TABLE roles (
+                role_id INT IDENTITY PRIMARY KEY,
+                role_name VARCHAR(100) NOT NULL
+                )
+            """,
+            "user_permissions": """
+                CREATE TABLE user_permissions (
+    id INT IDENTITY PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    page_name VARCHAR(100) NOT NULL,
+    can_view BIT DEFAULT 0,
+    can_add BIT DEFAULT 0,
+    can_edit BIT DEFAULT 0,
+    can_delete BIT DEFAULT 0
+);
+
+            """,
+
         }
 
         for table, query in tables.items():
@@ -794,50 +840,72 @@ def dashboard():
 
 @app.route("/recipe")
 def recipe_list():
-    """Fetch and display paginated recipe list from MSSQL."""
-    if "username" not in session:  # Check if the user is logged in
+    """Fetch paginated + searchable recipe list."""
+    if "username" not in session:
         return redirect(url_for("login"))
 
-    # Pagination logic
+    # ---------------------------
+    # 🌟 READ FILTERS FROM QUERY
+    # ---------------------------
+    search = request.args.get("search", "", type=str).strip()
+    per_page = request.args.get("limit", 5, type=int)  # dropdown option
     page = request.args.get("page", 1, type=int)
-    per_page = 5
     offset = (page - 1) * per_page
 
     conn = get_db_connection()
-    if not conn:
-        return redirect(url_for("login"))  # Redirect if DB connection fails
-
     cursor = conn.cursor()
 
-    # Fetch paginated recipes
-    cursor.execute(
-        """
-        SELECT * FROM Recipe 
+    # ---------------------------
+    # 🌟 APPLY SEARCH CONDITION
+    # ---------------------------
+    search_condition = ""
+    params = []
+
+    if search:
+        search_condition = "WHERE Recipe_Name LIKE ?"
+        params.append(f"%{search}%")
+
+    # ---------------------------
+    # 🌟 FETCH PAGINATED DATA
+    # ---------------------------
+    query = f"""
+        SELECT Recipe_ID, Recipe_Name, Filter_Size, Filter_Code, Art_No 
+        FROM Recipe
+        {search_condition}
         ORDER BY Recipe_ID
         OFFSET ? ROWS 
         FETCH NEXT ? ROWS ONLY
-    """,
-        (offset, per_page),
-    )
+    """
+
+    cursor.execute(query, tuple(params + [offset, per_page]))
     recipes = cursor.fetchall()
 
-    # Fetch distinct material types
+    # ---------------------------
+    # 🌟 FETCH TOTAL COUNT
+    # ---------------------------
+    count_query = f"SELECT COUNT(*) FROM Recipe {search_condition}"
+    cursor.execute(count_query, tuple(params))
+    total_count = cursor.fetchone()[0]
+
+    total_pages = (total_count + per_page - 1) // per_page
+
+    # ---------------------------
+    # RAW MATERIAL DATA
+    # ---------------------------
     cursor.execute("SELECT DISTINCT materialType FROM Raw_Materials")
     pos_values = [row[0] for row in cursor.fetchall()]
+
     cursor.execute("SELECT DISTINCT materialType FROM Alu_Raw_Materials")
     alu_values = [row[0] for row in cursor.fetchall()]
+
     cursor.execute("SELECT DISTINCT materialType FROM h_Raw_Materials")
     h_values = [row[0] for row in cursor.fetchall()]
 
-    # Get total recipe count
-    cursor.execute("SELECT COUNT(*) FROM Recipe")
-    total_count = cursor.fetchone()[0]
-    total_pages = (total_count + per_page - 1) // per_page
-
-    # ✅ Fetch last Recipe_ID
+    # ---------------------------
+    # NEXT RECIPE ID
+    # ---------------------------
     cursor.execute("SELECT ISNULL(MAX(Recipe_ID), 0) FROM Recipe")
-    last_recipe_id = cursor.fetchone()[0]
-    next_recipe_id = last_recipe_id + 1  # default next ID
+    next_recipe_id = cursor.fetchone()[0] + 1
 
     conn.close()
 
@@ -850,7 +918,9 @@ def recipe_list():
         page=page,
         per_page=per_page,
         total_pages=total_pages,
-        next_recipe_id=next_recipe_id,  # ✅ pass to template
+        next_recipe_id=next_recipe_id,
+        search=search,            # 🔥 Pass search term back to frontend
+        limit=per_page,           # 🔥 Pass selected limit
     )
 
 
@@ -859,27 +929,60 @@ def get_recipe_log():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Date filter support
-    start_date = request.args.get("start_date")
-    end_date = request.args.get("end_date")
+    # Raw inputs
+    raw_start = request.args.get("start_date", "")
+    raw_end = request.args.get("end_date", "")
+
+    print("\n=== API /api/recipe_log Called ===")
+    print("Raw Start Date:", raw_start)
+    print("Raw End Date:", raw_end)
 
     today = datetime.now()
 
-    # Default end_date = today
-    if end_date and end_date.strip() != "":
-        end_date = datetime.strptime(end_date, "%Y-%m-%dT%H:%M")
-    else:
-        end_date = today
+    # -----------------------
+    # Helper: date parser
+    # -----------------------
+    def parse_date(dt):
+        if not dt or dt.strip() == "":
+            return None
 
-    # Default start_date = yesterday
-    if start_date and start_date.strip() != "":
-        start_date = datetime.strptime(start_date, "%Y-%m-%dT%H:%M")
-    else:
+        formats = [
+            "%Y-%m-%dT%H:%M",      # normal
+            "%Y-%m-%dT%H:%M:%S",   # with seconds (ISO)
+            "%Y-%m-%d %H:%M:%S"    # fallback if frontend sends space
+        ]
+
+        for fmt in formats:
+            try:
+                return datetime.strptime(dt, fmt)
+            except ValueError:
+                continue
+
+        print("⚠️ WARNING: Could not parse date:", dt)
+        return None
+
+    # Parse incoming values
+    start_date = parse_date(raw_start)
+    end_date = parse_date(raw_end)
+
+    # Apply defaults
+    if end_date is None:
+        end_date = today
+    if start_date is None:
         start_date = today - timedelta(days=1)
 
-    # Convert to string for SQL Server
+    print("Parsed Start Date:", start_date)
+    print("Parsed End Date:", end_date)
+
+    # -----------------------
+    # SQL query preparation
+    # -----------------------
     start_date_str = start_date.strftime("%Y-%m-%d %H:%M:%S")
     end_date_str = end_date.strftime("%Y-%m-%d %H:%M:%S")
+
+    print("SQL Start:", start_date_str)
+    print("SQL End:", end_date_str)
+    print("====================================\n")
 
     query = """
         SELECT 
@@ -1013,7 +1116,7 @@ def export_recipe_log():
         output = BytesIO()
         wb.save(output)
         output.seek(0)
-
+ 
         return send_file(
             output,
             as_attachment=True,
@@ -1033,7 +1136,6 @@ def export_recipe_log():
 BASE_NODE = 'ns=3;s="dbRecipe1"."Recipe"'
 from datetime import datetime
 import time
-
 
 def update_batch_status():
     """Continuously reads OPC UA values and inserts data into recipe_log."""
@@ -1075,6 +1177,8 @@ def update_batch_status():
                     today_date = datetime.now().strftime("%y%m%d")
 
                     serial_no = f"{today_date}{pack_number}"
+                    # serial_no = 250919120
+
                     batch_code = (
                         f"BATCH-{recipe_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
                     )
@@ -1087,7 +1191,7 @@ def update_batch_status():
                         cursor = conn.cursor()
                         cursor.execute(
                             """
-                    SELECT 
+                    SELECT
                     R.Recipe_ID, R.Recipe_Name, R.Filter_Size, R.Filter_Code, R.Art_No,
                      RD.Pos1, RD.Pos2, RD.Pos3, RD.Pos4, RD.Pos5, RD.Pos6, RD.Pos7, RD.Pos8, RD.Pos9,
                     RD.Alu_Material, RD.House_Material,
@@ -1114,6 +1218,31 @@ def update_batch_status():
                         recipe_full_data = cursor.fetchone()
 
                         # recipe_data = cursor.fetchone()
+                        cursor.execute("""
+                         SELECT TOP 1
+                         pos_bar1, pos_bar2, pos_bar3, pos_bar4, pos_bar5,
+                         pos_bar6, pos_bar7, pos_bar8, pos_bar9
+                         FROM barcode_data
+                          WHERE recipe_id = ?
+                         ORDER BY id DESC
+                        """, (recipe_id,))
+
+                        barcode_row = cursor.fetchone()
+
+                        if barcode_row:
+                          barcode_values = [
+                          barcode_row.pos_bar1,
+                          barcode_row.pos_bar2,
+                          barcode_row.pos_bar3,
+                          barcode_row.pos_bar4,
+                          barcode_row.pos_bar5,
+                          barcode_row.pos_bar6,
+                          barcode_row.pos_bar7,
+                          barcode_row.pos_bar8,
+                          barcode_row.pos_bar9,
+                           ]
+                        else:
+                          barcode_values = [None] * 9
 
                         if recipe_full_data:
 
@@ -1123,7 +1252,8 @@ def update_batch_status():
                         INSERT INTO Recipe_Log (
                         Batch_Code, Timestamp, SerialNo, NgStatus, Avg_Air_Flow, Avg_Result, Batch_Completion_Status,
                         Recipe_Id, Recipe_Name, Filter_Size, Filter_Code, Art_No,
-                        Pos1, Pos2, Pos3, Pos4, Pos5, Pos6, Pos7, Pos8, Pos9, Alu_Material, House_Material,
+                        Pos1, Pos2, Pos3, Pos4, Pos5, Pos6, Pos7, Pos8, Pos9, Pos1_Barcode, Pos2_Barcode, Pos3_Barcode, Pos4_Barcode, Pos5_Barcode,
+                        Pos6_Barcode, Pos7_Barcode, Pos8_Barcode, Pos9_Barcode, Alu_Material, House_Material,
                         Pleat_Height, Soft_Touch, Feeder1_Media_Thickness, Feeder1_Park_Position,
                         Foil1_Length, Foil1_Length_Offset, Foil1_Width, Puller_Start_Position, Autofeeding_Offset,
                         Filter_Box_Height, Filter_Box_Length, Pleat_Pitch, Pleat_Counts, Foil_Low_Diameter,
@@ -1135,7 +1265,7 @@ def update_batch_status():
                         Batch_Count, Discharge_Conveyor_Speed, Pack_Transfer_Park_Position, Media_Tension_Set_Point,
                         DatabaseAvailable, Width, Height, Depth, Inspection_Art_No, Air_Flow_Set,
                         Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2,Lower_Fan_Speed,Upper_Fan_Speed,user_Id
-                        ) VALUES ( ?, GETDATE(),?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)""",
+                        ) VALUES ( ?, GETDATE(),?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)""",
                                 (
                                     batch_code,
                                     serial_no,
@@ -1157,6 +1287,15 @@ def update_batch_status():
                                     recipe_full_data.Pos7,
                                     recipe_full_data.Pos8,
                                     recipe_full_data.Pos9,
+                                    barcode_values[0],
+                                    barcode_values[1],
+                                    barcode_values[2],
+                                    barcode_values[3],
+                                    barcode_values[4],
+                                    barcode_values[5],
+                                    barcode_values[6],
+                                    barcode_values[7],
+                                    barcode_values[8],
                                     recipe_full_data.Alu_Material,
                                     recipe_full_data.House_Material,
                                     recipe_full_data.Pleat_Height,
@@ -1208,7 +1347,7 @@ def update_batch_status():
                                     recipe_full_data.Upper_Tolerance2,
                                     recipe_full_data.Lower_Fan_Speed,
                                     recipe_full_data.Upper_Fan_Speed,
-                                    session.get("username", "Admin"),
+                                    CURRENT_USER,
                                 ),
                             )
 
@@ -1239,9 +1378,262 @@ def update_batch_status():
     finally:
         client.disconnect()
         print("Disconnected from OPC UA Server")
+ 
+
+# def update_batch_status():
+#     """Continuously reads OPC UA values and inserts data into recipe_log."""
+#     client = Client(ENDPOINT_URL)
+
+#     try:
+#         client.connect()
+#         print("Connected to OPC UA Server")
+
+#         while True:
+#             try:
+#                 filter_complete_field_path = 'ns=3;s="dbReport"."filterComplete"'
+#                 pack_number_field_path   = 'ns=3;s="dbReport"."packNumber"'
+#                 NODE_RECIPE_ID           = 'ns=3;s="dbRecipe1"."Recipe"."RecipeID"'
+#                 NODE_RECIPE_NAME         = 'ns=3;s="dbRecipe1"."Recipe"."RecipeName"'
+
+#                 filter_complete = client.get_node(filter_complete_field_path).get_value()
+
+#                 # ---------------------------------------------------------
+#                 # IF FILTER COMPLETE TRIGGER IS TRUE
+#                 # ---------------------------------------------------------
+#                 if filter_complete is True:
+
+#                     recipe_id   = client.get_node(NODE_RECIPE_ID).get_value()
+#                     recipe_name = client.get_node(NODE_RECIPE_NAME).get_value()
+#                     pack_number = client.get_node(pack_number_field_path).get_value()
+
+#                     # Reset trigger to False
+#                     filter_complete_node = client.get_node(filter_complete_field_path)
+#                     filter_complete_node.set_value(
+#                         ua.DataValue(ua.Variant(False, ua.VariantType.Boolean))
+#                     )
+
+#                     # ---------------------------------------------------------
+#                     # Create Batch / Serial
+#                     # ---------------------------------------------------------
+#                     today_date = datetime.now().strftime("%y%m%d")
+#                     serial_no = f"{today_date}{pack_number}"
+#                     batch_code = f"BATCH-{recipe_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+#                     conn = get_db_connection()
+#                     if conn:
+#                         cursor = conn.cursor()
+
+#                         # ---------------------------------------------------------
+#                         # 1. FETCH RECIPE FULL DATA
+#                         # ---------------------------------------------------------
+#                         cursor.execute("""
+#                             SELECT 
+#                                 R.Recipe_ID, R.Recipe_Name, R.Filter_Size, R.Filter_Code, R.Art_No,
+#                                 RD.Pos1, RD.Pos2, RD.Pos3, RD.Pos4, RD.Pos5, RD.Pos6, RD.Pos7, RD.Pos8, RD.Pos9,
+#                                 RD.Alu_Material, RD.House_Material,
+#                                 SM.Pleat_Height, SM.Soft_Touch, SM.Feeder1_Media_Thickness, SM.Feeder1_Park_Position,
+#                                 SM.Foil1_Length, SM.Foil1_Length_Offset, SM.Foil1_Width, SM.Puller_Start_Position, SM.Autofeeding_Offset,
+#                                 SM.Filter_Box_Height, SM.Filter_Box_Length, SM.Pleat_Pitch, SM.Pleat_Counts, SM.Foil_Low_Diameter,
+#                                 SM.Feeding_Conveyor_Speed, SM.Pack_Transfer_Rev_Position, SM.Foil1_Tension_Set_Point, SM.Foil2_Tension_Set_Point,
+#                                 SM.Blade_Opening, SM.Press_Touch, SM.Feeder2_Media_Thickness, SM.Feeder2_Park_Position,
+#                                 SM.Foil2_Length, SM.Foil2_Length_Offset, SM.Foil2_Width, SM.Puller_End_Position,
+#                                 SM.Puller2_Feed_Correction, SM.Puller_Extra_Stroke_Enable, SM.Filter_Box_Width,
+#                                 SM.Lid_Placement_Enable, SM.Lid_Placement_Position, SM.Sync_Table_Start_Position,
+#                                 SM.Batch_Count, SM.Discharge_Conveyor_Speed, SM.Pack_Transfer_Park_Position, SM.Media_Tension_Set_Point,
+#                                 IS1.databaseAvailable, IS1.Width, IS1.Height, IS1.Depth, IS1.Art_No AS Inspection_Art_No,
+#                                 IS1.Air_Flow_Set, IS1.Pressure_Drop_Setpoint, IS1.Lower_Tolerance1, IS1.Lower_Tolerance2,
+#                                 IS1.Upper_Tolerance1, IS1.Upper_Tolerance2, IS1.Lower_Fan_Speed, IS1.Upper_Fan_Speed
+#                             FROM Recipe R
+#                             LEFT JOIN Recipe_Details1 RD ON R.Recipe_ID = RD.Recipe_ID
+#                             LEFT JOIN Sub_Menu SM ON R.Recipe_ID = SM.Recipe_ID
+#                             LEFT JOIN Inspection_Settings IS1 ON R.Recipe_ID = IS1.Recipe_ID
+#                             WHERE R.Recipe_ID = ?
+#                         """, (recipe_id,))
+
+#                         recipe_full_data = cursor.fetchone()
+
+#                         # ---------------------------------------------------------
+#                         # 2. FETCH BARCODE VALUES FROM barcode_data TABLE
+#                         # ---------------------------------------------------------
+#                         cursor.execute("""
+#                             SELECT TOP 1 
+#                                 pos_bar1, pos_bar2, pos_bar3, pos_bar4, pos_bar5,
+#                                 pos_bar6, pos_bar7, pos_bar8, pos_bar9
+#                             FROM barcode_data
+#                             WHERE recipe_id = ?
+#                             ORDER BY id DESC
+#                         """, (recipe_id,))
+
+#                         barcode_row = cursor.fetchone()
+
+#                         if barcode_row:
+#                             barcode_values = [
+#                                 barcode_row.pos_bar1,
+#                                 barcode_row.pos_bar2,
+#                                 barcode_row.pos_bar3,
+#                                 barcode_row.pos_bar4,
+#                                 barcode_row.pos_bar5,
+#                                 barcode_row.pos_bar6,
+#                                 barcode_row.pos_bar7,
+#                                 barcode_row.pos_bar8,
+#                                 barcode_row.pos_bar9,
+#                             ]
+#                         else:
+#                             barcode_values = [None] * 9
+
+#                         # ---------------------------------------------------------
+#                         # 3. INSERT INTO RECIPE_LOG
+#                         # ---------------------------------------------------------
+#                         if recipe_full_data:
+
+#                             cursor.execute("""
+#                                 INSERT INTO Recipe_Log (
+#                                     Batch_Code, Timestamp, SerialNo, NgStatus, Avg_Air_Flow, Avg_Result, Batch_Completion_Status,
+#                                     Recipe_Id, Recipe_Name, Filter_Size, Filter_Code, Art_No,
+#                                     Pos1, Pos2, Pos3, Pos4, Pos5, Pos6, Pos7, Pos8, Pos9,
+#                                     Pos1_Barcode, Pos2_Barcode, Pos3_Barcode, Pos4_Barcode, Pos5_Barcode,
+#                                     Pos6_Barcode, Pos7_Barcode, Pos8_Barcode, Pos9_Barcode,
+#                                     Alu_Material, House_Material,
+#                                     Pleat_Height, Soft_Touch, Feeder1_Media_Thickness, Feeder1_Park_Position,
+#                                     Foil1_Length, Foil1_Length_Offset, Foil1_Width, Puller_Start_Position, Autofeeding_Offset,
+#                                     Filter_Box_Height, Filter_Box_Length, Pleat_Pitch, Pleat_Counts, Foil_Low_Diameter,
+#                                     Feeding_Conveyor_Speed, Pack_Transfer_Rev_Position, Foil1_Tension_Set_Point, Foil2_Tension_Set_Point,
+#                                     Blade_Opening, Press_Touch, Feeder2_Media_Thickness, Feeder2_Park_Position,
+#                                     Foil2_Length, Foil2_Length_Offset, Foil2_Width, Puller_End_Position,
+#                                     Puller2_Feed_Correction, Puller_Extra_Stroke_Enable, Filter_Box_Width,
+#                                     Lid_Placement_Enable, Lid_Placement_Position, Sync_Table_Start_Position,
+#                                     Batch_Count, Discharge_Conveyor_Speed, Pack_Transfer_Park_Position, Media_Tension_Set_Point,
+#                                     DatabaseAvailable, Width, Height, Depth, Inspection_Art_No, Air_Flow_Set,
+#                                     Pressure_Drop_Setpoint, Lower_Tolerance1, Lower_Tolerance2, Upper_Tolerance1, Upper_Tolerance2,
+#                                     Lower_Fan_Speed, Upper_Fan_Speed, user_Id
+#                                 )
+#                                 VALUES (
+#                                     ?, GETDATE(), ?, ?, ?, ?, ?, 
+#                                     ?, ?, ?, ?, ?,
+#                                     ?, ?, ?, ?, ?, ?, ?, ?, ?,
+#                                     ?, ?, ?, ?, ?,
+#                                     ?, ?, ?, ?,
+#                                     ?, ?,
+#                                     ?, ?, ?, ?,
+#                                     ?, ?, ?, ?, ?, 
+#                                     ?, ?, ?, ?, ?, 
+#                                     ?, ?, ?, ?, ?,
+#                                     ?, ?, ?, ?, ?,
+#                                     ?, ?, ?, ?,
+#                                     ?, ?, ?, ?, ?,
+#                                     ?, ?, ?, ?, ?, 
+#                                     ?, ?, ?, ?, ?, 
+#                                     ?, ?, ?, ?
+#                                 )
+#                             """, (
+#                                 batch_code,
+#                                 serial_no,
+#                                 "NA", "NA", "NA", "Completed",
+#                                 recipe_full_data.Recipe_ID,
+#                                 recipe_full_data.Recipe_Name,
+#                                 recipe_full_data.Filter_Size,
+#                                 recipe_full_data.Filter_Code,
+#                                 recipe_full_data.Art_No,
+
+#                                 recipe_full_data.Pos1,
+#                                 recipe_full_data.Pos2,
+#                                 recipe_full_data.Pos3,
+#                                 recipe_full_data.Pos4,
+#                                 recipe_full_data.Pos5,
+#                                 recipe_full_data.Pos6,
+#                                 recipe_full_data.Pos7,
+#                                 recipe_full_data.Pos8,
+#                                 recipe_full_data.Pos9,
+
+#                                 barcode_values[0],
+#                                 barcode_values[1],
+#                                 barcode_values[2],
+#                                 barcode_values[3],
+#                                 barcode_values[4],
+#                                 barcode_values[5],
+#                                 barcode_values[6],
+#                                 barcode_values[7],
+#                                 barcode_values[8],
+
+#                                 recipe_full_data.Alu_Material,
+#                                 recipe_full_data.House_Material,
+#                                 recipe_full_data.Pleat_Height,
+#                                 recipe_full_data.Soft_Touch,
+#                                 recipe_full_data.Feeder1_Media_Thickness,
+#                                 recipe_full_data.Feeder1_Park_Position,
+#                                 recipe_full_data.Foil1_Length,
+#                                 recipe_full_data.Foil1_Length_Offset,
+#                                 recipe_full_data.Foil1_Width,
+#                                 recipe_full_data.Puller_Start_Position,
+#                                 recipe_full_data.Autofeeding_Offset,
+#                                 recipe_full_data.Filter_Box_Height,
+#                                 recipe_full_data.Filter_Box_Length,
+#                                 recipe_full_data.Pleat_Pitch,
+#                                 recipe_full_data.Pleat_Counts,
+#                                 recipe_full_data.Foil_Low_Diameter,
+#                                 recipe_full_data.Feeding_Conveyor_Speed,
+#                                 recipe_full_data.Pack_Transfer_Rev_Position,
+#                                 recipe_full_data.Foil1_Tension_Set_Point,
+#                                 recipe_full_data.Foil2_Tension_Set_Point,
+#                                 recipe_full_data.Blade_Opening,
+#                                 recipe_full_data.Press_Touch,
+#                                 recipe_full_data.Feeder2_Media_Thickness,
+#                                 recipe_full_data.Feeder2_Park_Position,
+#                                 recipe_full_data.Foil2_Length,
+#                                 recipe_full_data.Foil2_Length_Offset,
+#                                 recipe_full_data.Foil2_Width,
+#                                 recipe_full_data.Puller_End_Position,
+#                                 recipe_full_data.Puller2_Feed_Correction,
+#                                 recipe_full_data.Puller_Extra_Stroke_Enable,
+#                                 recipe_full_data.Filter_Box_Width,
+#                                 recipe_full_data.Lid_Placement_Enable,
+#                                 recipe_full_data.Lid_Placement_Position,
+#                                 recipe_full_data.Sync_Table_Start_Position,
+#                                 recipe_full_data.Batch_Count,
+#                                 recipe_full_data.Discharge_Conveyor_Speed,
+#                                 recipe_full_data.Pack_Transfer_Park_Position,
+#                                 recipe_full_data.Media_Tension_Set_Point,
+#                                 recipe_full_data.databaseAvailable,
+#                                 recipe_full_data.Width,
+#                                 recipe_full_data.Height,
+#                                 recipe_full_data.Depth,
+#                                 recipe_full_data.Inspection_Art_No,
+#                                 recipe_full_data.Air_Flow_Set,
+#                                 recipe_full_data.Pressure_Drop_Setpoint,
+#                                 recipe_full_data.Lower_Tolerance1,
+#                                 recipe_full_data.Lower_Tolerance2,
+#                                 recipe_full_data.Upper_Tolerance1,
+#                                 recipe_full_data.Upper_Tolerance2,
+#                                 recipe_full_data.Lower_Fan_Speed,
+#                                 recipe_full_data.Upper_Fan_Speed,
+#                                 CURRENT_USER,
+#                             ))
+
+#                             conn.commit()
+
+#                             print("Going for print")
+#                             printdata(recipe_name, recipe_full_data.Art_No, serial_no)
+#                             print(f"Inserted into Recipe_Log: {recipe_id}, {recipe_name}, {serial_no}")
+
+#                         cursor.close()
+#                         conn.close()
+
+#                 time.sleep(1)
+
+#             except Exception as e:
+#                 print(f"Error in OPC UA read: {e}")
+#                 time.sleep(2)
+
+#     except Exception as e:
+#         print(f"OPC UA Connection Error: {e}")
+
+#     finally:
+#         client.disconnect()
+#         print("Disconnected from OPC UA Server")
 
 Test_Complete = 'ns=3;s="dbReport"."airDropTestData".'
 Test_Complete1 = 'ns=3;s="dbReport"."forAirDropTest".'
+Test_Complete1_copy = 'ns=3;s="dbCrossPlcComm"."airToMc"."Recipe".'
 Test_Complete2 = 'ns=3;s="dbReport".'
 Test_Complete3 = 'ns=3;s="dbCrossPlcComm"."airToMc".'
 
@@ -1254,7 +1646,38 @@ STATUS_MAP = {
     8: "NG AIRFLOW LESS",
     9: "NG AIRFLOW GREATER",
 }
+opcua_nodes = [
+    "databaseAvailable",
+    "Width",
+    "Height",
+    "Depth",
+    "Art No.",
+    "Air Flow set",
+    "Pressure Drop Setpoint",
+    "Lower_Tolerance1",
+    "Lower_Tolerance2",
+    "Upper_Tolerance1",
+    "Upper_Tolerance2",
+]
 
+def read_recipe_params(client):
+    """
+    Reads all recipe parameters from OPC UA using Test_Complete1_copy prefix.
+    Returns a dict mapping field_name -> value.
+    """
+    prefix = Test_Complete1_copy
+
+    recipe_data = {}
+
+    for node in opcua_nodes:
+        full_path = f"{prefix}{node}"
+        try:
+            value = client.get_node(full_path).get_value()
+        except:
+            value = None  # If OPC tag missing
+        recipe_data[node] = value
+    
+    return recipe_data
 
 def opcua_monitoring():
     """
@@ -1282,6 +1705,8 @@ def opcua_monitoring():
                 serial_no = client.get_node(
                     f"{Test_Complete2}qrCodeDropAir_1"
                 ).get_value()
+                recipe_params = read_recipe_params(client)
+                print("Recipe Parameters:", recipe_params)
                 # avgAirFlow  = client.get_node(f"{Test_Complete}avgAirFlow").get_value()
                 avgResult = client.get_node(f"{Test_Complete}avgResult").get_value()
                 testResult = client.get_node(f"{Test_Complete}testResult").get_value()
@@ -1350,6 +1775,7 @@ def opcua_monitoring():
                     avg_pressure,
                     lower_rpm,
                     upper_rpm,
+                    recipe_params
                 )
 
                 conn.close()
@@ -1366,6 +1792,163 @@ def opcua_monitoring():
     finally:
         client.disconnect()
         print("Disconnected from OPC UA Server")
+
+
+def log_barcode_data():
+    """Continuously reads OPC UA boolean trigger and updates barcode_data table intelligently."""
+    client = Client(ENDPOINT_URL)
+
+    NODE_TRIGGER = 'ns=3;s="HMI"."Barcode_Update"[1]'
+    NODE_RECIPE_ID = 'ns=3;s="dbRecipe1"."Recipe"."RecipeID"'
+    NODE_BARCODE = 'ns=3;s="HMI"."Batch_Number_Decoiler"[{}]'  # {1..9}
+
+    try:
+        client.connect()
+        print("Connected to OPC UA Server for Barcode Logging")
+
+        while True:
+            try:
+                trigger_value = client.get_node(NODE_TRIGGER).get_value()
+
+                if trigger_value is True:
+
+                    # ----------------------------------------
+                    # READ RECIPE ID
+                    # ----------------------------------------
+                    recipe_id = client.get_node(NODE_RECIPE_ID).get_value()
+                    print(f"Trigger ON → Recipe ID = {recipe_id}")
+
+                    # ----------------------------------------
+                    # FETCH RAW BARCODE VALUES FROM OPC
+                    # ----------------------------------------
+                    raw_values = []
+                    for i in range(1, 10):
+                        val = client.get_node(NODE_BARCODE.format(i)).get_value()
+                        raw_values.append(val)
+
+                    # Clean incoming values (ignore EMPTY or blank)
+                    cleaned = []
+                    for v in raw_values:
+                        if v is None:
+                            cleaned.append(None)
+                        else:
+                            s = str(v).strip()
+                            if s == "" or s.upper() == "EMPTY":
+                                cleaned.append(None)
+                            else:
+                                cleaned.append(s)
+
+                    # ----------------------------------------
+                    # SQL OPERATIONS
+                    # ----------------------------------------
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+
+                    # Check if row already exists for this recipe_id
+                    cursor.execute("""
+                        SELECT TOP 1
+                            id,
+                            pos_bar1, pos_bar2, pos_bar3, pos_bar4, pos_bar5,
+                            pos_bar6, pos_bar7, pos_bar8, pos_bar9
+                        FROM barcode_data
+                        WHERE recipe_id = ?
+                        ORDER BY id DESC
+                    """, (recipe_id,))
+
+                    row = cursor.fetchone()
+
+                    # ----------------------------------------
+                    # IF ROW EXISTS → CHECK IF SAME BARCODE AS BEFORE
+                    # ----------------------------------------
+                    if row:
+                        db_id = row.id
+                        print("Row exists → Checking if data changed")
+
+                        last_values = [row[i + 1] for i in range(9)]  # i+1 because row[0] = id
+
+                        # If values exactly match → skip update completely
+                        if cleaned == last_values:
+                            print("⚠️ No change in barcode → SKIPPING UPDATE")
+                        else:
+                            print("Changes detected → Updating only non-empty fields")
+
+                            update_fields = []
+                            update_values = []
+
+                            for i in range(9):
+                                new_val = cleaned[i]
+                                old_val = last_values[i]
+
+                                if new_val is not None:  # only update non-empty inputs
+                                    if old_val and str(old_val).strip():
+                                        combined = old_val + "/" + new_val
+                                    else:
+                                        combined = "/" + new_val
+
+                                    update_fields.append(f"pos_bar{i+1} = ?")
+                                    update_values.append(combined)
+
+                            if update_fields:
+                                update_query = f"""
+                                    UPDATE barcode_data
+                                    SET {', '.join(update_fields)}
+                                    WHERE id = ?
+                                """
+                                update_values.append(db_id)
+
+                                cursor.execute(update_query, tuple(update_values))
+                                conn.commit()
+
+                                print(f"UPDATED BARCODE LOG for Recipe {recipe_id}")
+                                print(update_values)
+
+                    # ----------------------------------------
+                    # ROW DOES NOT EXIST → INSERT NEW CLEANED FIELDS
+                    # ----------------------------------------
+                    else:
+                        print("No row exists → Creating new entry")
+
+                        cursor.execute("""
+                            INSERT INTO barcode_data (
+                                recipe_id, pos_bar1, pos_bar2, pos_bar3, pos_bar4,
+                                pos_bar5, pos_bar6, pos_bar7, pos_bar8, pos_bar9
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (
+                            recipe_id,
+                            cleaned[0], cleaned[1], cleaned[2], cleaned[3],
+                            cleaned[4], cleaned[5], cleaned[6], cleaned[7], cleaned[8]
+                        ))
+
+                        conn.commit()
+
+                        print(f"NEW BARCODE ROW CREATED for Recipe {recipe_id}")
+                        print(cleaned)
+
+                    cursor.close()
+                    conn.close()
+
+                    # ----------------------------------------
+                    # RESET TRIGGER
+                    # ----------------------------------------
+                    trigger_node = client.get_node(NODE_TRIGGER)
+                    trigger_node.set_value(
+                        ua.DataValue(ua.Variant(False, ua.VariantType.Boolean))
+                    )
+
+                    print("Trigger reset.\n")
+
+                time.sleep(0.5)
+
+            except Exception as e:
+                print(f"[ERROR] OPC Loop: {e}")
+                time.sleep(1)
+
+    except Exception as e:
+        print(f"OPC Connection Error: {e}")
+
+    finally:
+        client.disconnect()
+        print("Disconnected from OPC Server.")
 
 
 def opcua_qrcode_monitoring():
@@ -1494,7 +2077,8 @@ def opcua_qrcode_monitoring():
         client.disconnect()
         print("🔌 Disconnected from OPC UA Server (qrCode monitoring)")
 
-#need to update this funtion when i will get info about which fileds are available and at which plc location 
+
+# need to update this funtion when i will get info about which fileds are available and at which plc location
 def update_recipe_log(
     serial_no,
     avgResult,
@@ -1508,6 +2092,7 @@ def update_recipe_log(
     avg_pressure,
     lower_rpm,
     upper_rpm,
+    recipe_params,
 ):
     """Updates the MSSQL recipe_log table with additional PLC values."""
     try:
@@ -1553,22 +2138,33 @@ def update_recipe_log(
 
             cursor.execute(
                 """
-                INSERT INTO Recipe_Log 
-                (Batch_Code, Timestamp, Recipe_Id, Recipe_Name, Arte_No, 
-                 Filter_Size, FilterSize, NgStatus, SerialNo, 
-                 Avg_Air_Flow, Avg_Result, Batch_Completion_Status,
-                 testing_duration, Average_motor_RPM, Airflow_lower_limit, 
-                 Airflow_upper_limit, Average_Pressure,Lower_fan_Speed,Upper_fan_Speed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
-            """,
+    INSERT INTO Recipe_Log 
+    (Batch_Code, Timestamp, Recipe_Id, Recipe_Name,databaseAvailable, Art_No, 
+     Width, Height, Depth, Air_Flow_Set, Pressure_Drop_Setpoint,
+     Lower_Tolerance1, Lower_Tolerance2,
+     Upper_Tolerance1, Upper_Tolerance2,
+     NgStatus, SerialNo, 
+     Avg_Air_Flow, Avg_Result, Batch_Completion_Status,
+     testing_duration, Average_motor_RPM, Airflow_lower_limit, 
+     Airflow_upper_limit, Average_Pressure, Lower_fan_Speed, Upper_fan_Speed,user_Id)
+    VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
+""",
                 (
                     batch_code,
                     datetime.now(),
                     recipe_id,
-                    "NA",
-                    "NA",
-                    "NA",
-                    "NA",
+                    "NA",  # Recipe Name placeholder
+                    recipe_params["databaseAvailable"],
+                    recipe_params["Art No."],  # Art Number
+                    recipe_params["Width"],
+                    recipe_params["Height"],
+                    recipe_params["Depth"],
+                    recipe_params["Air Flow set"],
+                    recipe_params["Pressure Drop Setpoint"],
+                    recipe_params["Lower_Tolerance1"],
+                    recipe_params["Lower_Tolerance2"],
+                    recipe_params["Upper_Tolerance1"],
+                    recipe_params["Upper_Tolerance2"],
                     ng_status,
                     serial_no,
                     avg_airflow,
@@ -1581,6 +2177,8 @@ def update_recipe_log(
                     avg_pressure,
                     lower_rpm,
                     upper_rpm,
+                    CURRENT_USER
+                    
                 ),
             )
 
@@ -1672,49 +2270,45 @@ def send_to_printer(data):
 
 def printdata(recipe_name, article_no, serial_no):
     """Function to print the slip and generate a PDF."""
-    print_data = f"""  
-CT~~CD,~CC^~CT~
-^XA
-~TA000
+    print_data = f"""^XA
+^SZ2^JMA
+^MCY^PMN
+^PW1201
 ~JSN
-^LT0
-^MNW
-^MTT
-^PON
-^PMN
-^LH0,0
-^JMA
-^PR4,4
-~SD24
-^JUS
-^LRN
-^CI27
-^PA0,1,1,0
+^MD25
+^JZY
+^LH0,0^LRN
 ^XZ
+~DGR:SSGFX000.GRF,49000,98,:Z64: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:B8AB
 ^XA
-^MMT
-^PW1200
-^LL600
-^LS0
-^FT391,114^A0I,157,213^FH\^CI28^FDv^FS^CI27
-^FT384,195^A0N,108,109^FH\^CI28^FDbsolent^FS^CI27
-^FO434,88^GFA,217,507,13,:Z64:eJxdkbsRAjEMRMUQXKgSaIEKcGlHaSrFJRBewLDoY3GzKLGfLWvXkkiE3eUXmz1OGDas9xfYOBrUAQ17wKz9FQHvglsCngkoeKXIgk+KLICFiIdXBw5ZSx25SCZE3nSRlMg1smbZADRzpd5qVpGqqu0jXGk7jBJ/N/yGqp065IC8sWv6D/2Ue0Dd4b5RR6nXPAWaD02OZ9rT/gKar9Ka:EB81
-^FO750,105^GB0,101,4^FS
-^FT766,149^A0N,25,25^FH\^CI28^FDPart of Absolent^FS^CI27
-^FT766,175^A0N,25,25^FH\^CI28^FDAir Care Group^FS^CI27
-^FT49,273^A0N,60,61^FH\^CI28^FDType:^FS^CI27
-^FT49,340^A0N,42,43^FH\^CI28^FDAbsolent filter ^FS^CI27
-^FT49,430^A0N,42,43^FH\^CI28^FDArt. No: ^FS^CI27
-^FT49,549^A0N,25,25^FH\^CI28^FDSerial No. :^FS^CI27
-^FO710,255^GFA,297,8064,32,:Z64:eJzt11EOhDAIBNDewPvf0hvMusJQ1P10uj9Dmtjw+kegFWDsI+LYYCZh13pLJ+6jJe1yj+Kkc8+NfZ1fln29A7NF7Kt8zqcN38VZ9Zxf9ve94tYcmbRrfTj+Gjhn0tEWtbnk7XrPJtgejcL+ses803veD5Hut4Rd6onZDa1RRq+fXeX5jS1rFUnOKrvWK/pY6mftOkcFn6Xxl8CmsYu9/Z+hTSaesss9i8NXUp7n8LKv86gJ+tiyL3SOq6zPj/6wv++zELwi0B5Pdq1XVImqObb7/W1/3T/jwbSl:9062
-^FT1120,470^A0B,58,58^FH\^CI28^FDAirflow ^FS^CI27
-^FO1072,204^GFA,137,432,6,:Z64:eJztzLENgDAMBEBHRnKZETJKVmKDZLRILJIRjChIgXjsiAmo+eKq/ycKjSzcp+rKNA43XW6GW1CJAmADBmwggFUTYKV8nLdVth01gLU0HqxRpbOyij+vy/v/+90HoT9ZEA==:249F
-^FPH,6^FT328,335^ASN,40,12^FH\^FD{recipe_name}^FS
-^FPH,6^FT45,490^A0N,38,38^FH\^CI28^FD{article_no}^FS^CI27
-^FT190,553^A0N,29,28^FH\^CI28^FD{serial_no}^FS^CI27
+^FO704,232
+^BQN,2,12^FDLA,{article_no}{serial_no}^FS
+^FT43,301
+^CI27
+^A0N,42,55^FDAbsolent filter ^FS
+^FT43,389
+^A0N,51,66^FDArt. No: ^FS
+^FT43,554
+^A0N,42,55^FDSerial No. ^FS
+^FT43,237
+^A0N,55,74^FDType:^FS
+^FO780,40
+^GB0,140,4^FS
+^FT380,299
+^A0N,38,50^FD{recipe_name}^FS
+^FT57,470
+^A0N,55,73^FD{article_no}^FS
+^FT304,554
+^A0N,38,56^FD{serial_no}^FS
+^FO350,28
+^XGR:SSGFX000.GRF,1,1^FS
 ^PQ1,0,1,Y
 ^XZ
-    """
+^XA
+^IDR:SSGFX000.GRF^XZ
+
+
+"""
 
     # Send the formatted data to the printer
     send_to_printer(print_data)
@@ -1934,6 +2528,7 @@ def reset_password():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """User login with password hashing, role-based access, and activity tracking."""
+    global CURRENT_USER     
     conn = get_db_connection()
     if request.method == "POST":
         username = request.form["username"]
@@ -1955,10 +2550,8 @@ def login():
             session["id"] = user[0]
             session["username"] = user[1]
             session["is_admin"] = user[3]
-
-            # Store roles in session as a list (split by comma)
             session["user_roles"] = user[4].split(",") if user[4] else []
-
+            CURRENT_USER = user[1]
             # Insert login activity (MSSQL uses `GETDATE()` for current timestamp)
             cursor.execute(
                 "INSERT INTO user_activity (username, login_time) VALUES (?, GETDATE())",
@@ -2062,6 +2655,113 @@ def users():
     finally:
         conn.close()
 
+def check_permission(username, page, action):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT can_view, can_add, can_edit, can_delete
+        FROM user_permissions
+        WHERE username = ? AND page_name = ?
+    """, (username, page))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return False
+
+    permission_map = {
+        "view": row[0],
+        "add": row[1],
+        "edit": row[2],
+        "delete": row[3]
+    }
+
+    return permission_map.get(action, 0) == 1
+
+def require_permission(page, action="view"):
+    def wrapper(func):
+        def inner(*args, **kwargs):
+            username = session.get("username")
+            if not username:
+                return redirect(url_for("login"))
+
+            if not check_permission(username, page, action):
+                return "<h3 align='center'>Access Denied</h3>", 403
+
+            return func(*args, **kwargs)
+        return inner
+    return wrapper
+
+
+@app.route("/get_user_access", methods=["POST"])
+def get_user_access():
+    data = request.get_json()
+    username = data.get("username")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT page_name, can_view, can_add, can_edit, can_delete 
+        FROM user_permissions 
+        WHERE username = ?
+    """, (username,))
+    
+    rows = cursor.fetchall()
+    conn.close()
+
+    permissions = {
+        row[0]: {
+            "view": row[1],
+            "add": row[2],
+            "edit": row[3],
+            "delete": row[4]
+        }
+        for row in rows
+    }
+
+    return jsonify({"permissions": permissions})
+
+@app.route("/save_user_access", methods=["POST"])
+def save_user_access():
+    data = request.get_json()
+    username = data["username"]
+    permissions = data["permissions"]
+    visible_pages = data["visible_pages"]  # OLD SYSTEM
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1️⃣ Save OLD SYSTEM (Page visibility in users table)
+    roles_string = ",".join(visible_pages)
+    cursor.execute(
+        "UPDATE users SET roles = ? WHERE username = ?",
+        (roles_string, username)
+    )
+
+    # 2️⃣ Save NEW SYSTEM (View/Add/Edit/Delete)
+    cursor.execute("DELETE FROM user_permissions WHERE username = ?", (username,))
+
+    for page, perms in permissions.items():
+        cursor.execute("""
+            INSERT INTO user_permissions 
+            (username, page_name, can_view, can_add, can_edit, can_delete)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            username,
+            page,
+            perms["view"],
+            perms["add"],
+            perms["edit"],
+            perms["delete"]
+        ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"success": True})
 
 @app.route("/validate-admin-password", methods=["POST"])
 def validate_admin_password():
@@ -5653,5 +6353,7 @@ if __name__ == "__main__":
     thread = threading.Thread(target=opcua_qrcode_monitoring, daemon=True).start()
     thread = threading.Thread(target=update_batch_status, daemon=True).start()
     thread=threading.Thread(target=log_status, daemon=True).start()
+    threading.Thread(target=log_barcode_data,daemon=True).start()
+
 
     app.run(host="127.0.0.1", port=5000, debug=True)

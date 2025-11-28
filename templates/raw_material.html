@@ -188,7 +188,7 @@
                     </button>
                 </td>
                 <td>
-                    <button class="delete-button" onclick="confirmDeleteRawMaterial('{{ material.material_Id }}')">
+                    <button class="delete-button"class="delete-btn" onclick="confirmDeleteRawMaterial('{{ material.material_Id }}')">
                         <i class="fa fa-trash"></i> 
                     </button>
                 </td>
@@ -624,8 +624,13 @@ function updateTableRow(material_Id, type, width,part_no, make, user, materialTy
         }
       }
     });
+    
   </script>
   
 
-
+<script>
+window.onload = () => {
+    loadPermissions("raw_material");
+};
+</script>
 {% endblock %}

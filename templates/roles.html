@@ -1,138 +1,249 @@
 {% extends "base.html" %}
 
-{% block title %}Recipe Management - Assign Roles{% endblock %}
+{% block title %}Assign Roles & Permissions{% endblock %}
+
 {% block breadcrumbs %}
 <div class="breadcrumb">
-        <a href="/dashboard"><i class="fas fa-home"></i> Admin</a>
-        <i class="fas fa-angle-right"></i>
-        <a href="/roles"><span>Assign Roles</span></a>
-        <h1> Assign Roles</h1>
-    </div>
+    <a href="/dashboard"><i class="fas fa-home"></i> Admin</a>
+    <i class="fas fa-angle-right"></i>
+    <a href="/roles"><span>Assign Roles</span></a>
+    <h1>Assign Roles & Permissions</h1>
+</div>
 {% endblock %}
+
 {% block content %}
-<div class="row">
-        <!-- User List -->
-        <div class="col-md-44">
-            <h5 class="section-heading">Users</h5>
-            <ul class="list-group" id="user-list">
-                {% for user in users %}
-                <li class="list-group-item user-item" data-username="{{ user }}">
-                    {{ user }}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <!-- Vertical Separator -->
-        <div class="vertical-separator"></div>
-
-        <!-- Role Assignment Form -->
-        <div class="col-md-7">
-            <h5 id="role-header" class="section-heading text-muted">Select a user to assign roles</h5>
-            <form method="POST" id="role-form" class="mt-3">
-                <input type="hidden" id="selected-username" name="username">
-                
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Role</th>
-                            <th>Permission</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>DashBoard</td>
-                            <td><input type="checkbox" class="form-check-input" id="dashboard" name="roles" value="dashboard"></td>
-                        </tr>
-                        <tr>
-                            <td>Production</td>
-                            <td><input type="checkbox" class="form-check-input" id="production" name="roles" value="production"></td>
-                        </tr>
-                        <tr>
-                            <td>Raw Material</td>
-                            <td><input type="checkbox" class="form-check-input" id="raw_material" name="roles" value="raw_material"></td>
-                        </tr>
-                        <tr>
-                            <td>Recipe</td>
-                            <td><input type="checkbox" class="form-check-input" id="recipe" name="roles" value="recipe"></td>
-                        </tr>
-                        <tr>
-                            <td>Report</td>
-                            <td><input type="checkbox" class="form-check-input" id="report" name="roles" value="report"></td>
-                        </tr>
-                        <tr>
-                            <td>Tag</td>
-                            <td><input type="checkbox" class="form-check-input" id="tag" name="roles" value="tag"></td>
-                        </tr>
-                        <tr>
-                            <td>Admin</td>
-                            <td><input type="checkbox" class="form-check-input" id="admin" name="roles" value="admin"></td>
-                        </tr>
-                    </tbody>
-                </table>
-        
-                <button type="submit" class="btn btn-primary mt-3 w-50" id="save-button">Save Roles</button>
-            </form>
-        </div>
-        
-    </div>
-
-
-
-<script>
-    document.querySelectorAll('.user-item').forEach(item => {
-        item.addEventListener('click', () => {
-            // Highlight the selected user
-            document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
-            item.classList.add('active');
-
-            // Update the role header with the selected username
-            const selectedUsername = item.getAttribute('data-username');
-            document.getElementById('role-header').innerText = `Assign role for "${selectedUsername}"`;
-
-            // Populate the hidden input with the selected username
-            document.getElementById('selected-username').value = selectedUsername;
-
-            // Fetch roles for the selected user
-            fetch('/get_roles', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username: selectedUsername })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const roles = data.roles;
-
-                // Uncheck all checkboxes
-                document.querySelectorAll('#role-form .form-check-input').forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-
-                // Check the roles that the user has
-                roles.forEach(role => {
-                    const checkbox = document.getElementById(role);
-                    if (checkbox) {
-                        checkbox.checked = true;
-                    }
-                });
-
-                // Enable the save button
-                document.getElementById('save-button').disabled = false;
-            })
-            .catch(error => {
-                console.error('Error fetching roles:', error);
-            });
-        });
-    });
-
-    
-</script>
 
 <style>
-   
+/* Left user list */
+.user-item {
+    font-size: 16px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+.user-item:hover { background: #5ca8fa; }
+.user-item.active {
+    background: #0056b3;
+    border-left: 3px solid #2a70d6;
+    font-weight: 600;
+}
+
+/* Table */
+.table thead th {
+    background: #2a70d6;
+    color: white;
+    text-align: center;
+    font-size: 14px;
+}
+.table td {
+    text-align: center;
+    padding: 8px;
+    font-size: 14px;
+}
+.page-name {
+    text-align: left !important;
+    font-weight: 500;
+}
+
+/* Button Row */
+.button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.small-btn {
+    padding: 8px 14px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-select-all {
+    background: #28a745;
+    color: white;
+}
+.btn-select-none {
+    background: #dc3545;
+    color: white;
+}
+.btn-save {
+    background: #2a70d6;
+    color: white;
+}
+
+.small-btn:hover {
+    opacity: 0.85;
+}
 </style>
 
+<div class="row">
+    <!-- USER LIST -->
+    <div class="col-md-4">
+        <h5 class="section-heading">Users</h5>
+        <ul class="list-group" id="user-list">
+            {% for user in users %}
+            <li class="list-group-item user-item" data-username="{{ user }}">
+                {{ user }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- PERMISSIONS SECTION -->
+    <div class="col-md-1"></div>
+
+    <div class="col-md-7">
+
+        <h5 id="role-header" class="section-heading text-muted">
+            Select a user to assign roles & permissions
+        </h5>
+
+        <input type="hidden" id="selected-username">
+
+      
+
+        <!-- TABLE -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Page</th>
+                    <th>Visible</th>
+                    <th>View</th>
+                    <th>Add</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+
+            <tbody id="permission-body">
+                {% for page in ["dashboard","production","raw_material","recipe","report","tag","admin"] %}
+                <tr class="permission-row">
+                    <td class="page-name">{{ page.replace("_", " ")|title }}</td>
+
+                    <td><input type="checkbox" class="visible-checkbox" data-page="{{ page }}"></td>
+                    <td><input type="checkbox" data-page="{{ page }}" data-action="view"></td>
+                    <td><input type="checkbox" data-page="{{ page }}" data-action="add"></td>
+                    <td><input type="checkbox" data-page="{{ page }}" data-action="edit"></td>
+                    <td><input type="checkbox" data-page="{{ page }}" data-action="delete"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="button-row">
+    <button class="small-btn btn-select-all" onclick="selectAll(true)">Select All</button>
+    <button class="small-btn btn-select-none" onclick="selectAll(false)">Select None</button>
+    <button class="small-btn btn-save" id="save-access">Save Access</button>
+</div>
+
+    </div>
+</div>
+
+<script>
+let selectedUser = null;
+
+// ----------------- SELECT ALL / NONE -------------------
+function selectAll(flag) {
+    document.querySelectorAll("#permission-body input[type='checkbox']")
+        .forEach(chk => chk.checked = flag);
+}
+
+// ----------------- SELECT USER -------------------------
+document.querySelectorAll('.user-item').forEach(item => {
+    item.addEventListener('click', () => {
+
+        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+
+        selectedUser = item.dataset.username;
+        document.getElementById('role-header').innerHTML =
+            `Assign Access for <strong>${selectedUser}</strong>`;
+
+        // Load visible pages
+        fetch('/get_roles', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ username: selectedUser })
+        })
+        .then(r => r.json())
+        .then(data => {
+            let visible = data.roles || [];
+
+            document.querySelectorAll('.visible-checkbox').forEach(chk => chk.checked = false);
+
+            visible.forEach(page => {
+                const chk = document.querySelector(`.visible-checkbox[data-page="${page}"]`);
+                if (chk) chk.checked = true;
+            });
+        });
+
+        // Load view/add/edit/delete
+        fetch('/get_user_access', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: selectedUser })
+        })
+        .then(res => res.json())
+        .then(data => {
+            let permissions = data.permissions;
+
+            document.querySelectorAll('#permission-body input[data-action]')
+                .forEach(chk => chk.checked = false);
+
+            for (let page in permissions) {
+                for (let action in permissions[page]) {
+                    if (permissions[page][action] == 1) {
+                        let selector = `input[data-page="${page}"][data-action="${action}"]`;
+                        document.querySelector(selector).checked = true;
+                    }
+                }
+            }
+        });
+    });
+});
+
+// ----------------- SAVE ACCESS -------------------------
+document.getElementById("save-access").addEventListener("click", () => {
+
+    if (!selectedUser) {
+        alert("Please select a user first!");
+        return;
+    }
+
+    let permissionData = {};
+
+    document.querySelectorAll('#permission-body input[data-action]')
+        .forEach(chk => {
+            let page = chk.dataset.page;
+            let action = chk.dataset.action;
+
+            if (!permissionData[page]) {
+                permissionData[page] = { view: 0, add: 0, edit: 0, delete: 0 };
+            }
+
+            permissionData[page][action] = chk.checked ? 1 : 0;
+        });
+
+    let visiblePages = [];
+    document.querySelectorAll('.visible-checkbox').forEach(chk => {
+        if (chk.checked) visiblePages.push(chk.dataset.page);
+    });
+
+    fetch("/save_user_access", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: selectedUser,
+            permissions: permissionData,
+            visible_pages: visiblePages
+        })
+    })
+    .then(res => res.json())
+    .then(() => alert("Access saved successfully!"));
+});
+</script>
 
 {% endblock %}
