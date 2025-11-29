@@ -929,117 +929,54 @@ def get_recipe_log():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Raw inputs
     raw_start = request.args.get("start_date", "")
     raw_end = request.args.get("end_date", "")
 
-    print("\n=== API /api/recipe_log Called ===")
-    print("Raw Start Date:", raw_start)
-    print("Raw End Date:", raw_end)
-
     today = datetime.now()
 
-    # -----------------------
-    # Helper: date parser
-    # -----------------------
     def parse_date(dt):
         if not dt or dt.strip() == "":
             return None
-
         formats = [
-            "%Y-%m-%dT%H:%M",      # normal
-            "%Y-%m-%dT%H:%M:%S",   # with seconds (ISO)
-            "%Y-%m-%d %H:%M:%S"    # fallback if frontend sends space
+            "%Y-%m-%dT%H:%M",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M:%S"
         ]
-
         for fmt in formats:
             try:
                 return datetime.strptime(dt, fmt)
-            except ValueError:
+            except:
                 continue
-
-        print("⚠️ WARNING: Could not parse date:", dt)
         return None
 
-    # Parse incoming values
-    start_date = parse_date(raw_start)
-    end_date = parse_date(raw_end)
+    start_date = parse_date(raw_start) or (today - timedelta(days=1))
+    end_date = parse_date(raw_end) or today
 
-    # Apply defaults
-    if end_date is None:
-        end_date = today
-    if start_date is None:
-        start_date = today - timedelta(days=1)
-
-    print("Parsed Start Date:", start_date)
-    print("Parsed End Date:", end_date)
-
-    # -----------------------
-    # SQL query preparation
-    # -----------------------
     start_date_str = start_date.strftime("%Y-%m-%d %H:%M:%S")
     end_date_str = end_date.strftime("%Y-%m-%d %H:%M:%S")
 
-    print("SQL Start:", start_date_str)
-    print("SQL End:", end_date_str)
-    print("====================================\n")
-
-    query = """
-        SELECT 
-            SerialNo,
-            Timestamp,
-            Art_No,
-            Recipe_Name,
-            Filter_Code,
-            NgStatus,
-            Upper_fan_Speed,
-            Lower_fan_Speed,
-            Upper_Tolerance1,
-            Lower_Tolerance1,
-            Airflow_upper_limit,
-            Airflow_lower_limit,
-            Upper_Tolerance2,
-            Lower_Tolerance2,
-            Average_motor_RPM,
-            Avg_Air_Flow,
-            Average_Pressure,
-            testing_duration,
-            user_Id
-        FROM Recipe_Log
+    # **Fetch ALL columns**
+    cursor.execute("""
+        SELECT * FROM Recipe_Log
         WHERE Timestamp >= ? AND Timestamp <= ?
         ORDER BY Timestamp DESC
-    """
+    """, (start_date_str, end_date_str))
 
-    cursor.execute(query, (start_date_str, end_date_str))
     rows = cursor.fetchall()
 
-    recipe_logs = [
-        {
-            "SerialNo": row[0],
-            "Timestamp": row[1],
-            "Article_No": row[2],
-            "Recipe_Name": row[3],
-            "Filter_Code": row[4],
-            "NgStatus": row[5],
-            "RPM_Upper": row[6],
-            "RPM_Lower": row[7],
-            "Pressure_Upper": row[8],
-            "Pressure_Lower": row[9],
-            "AirFlow_Upper": row[10],
-            "AirFlow_Lower": row[11],
-            "Pressure_Max": row[12],
-            "Pressure_Min": row[13],
-            "Avg_Motor_RPM": row[14],
-            "Avg_Air_Flow": row[15],
-            "Avg_Pressure_Diff": row[16],
-            "Test_Duration": row[17],
-            "User_Id": row[18] if row[18] else "Admin",
-        }
-        for row in rows
-    ]
+    # **Get column names dynamically**
+    columns = [column[0] for column in cursor.description]
+
+    # Build JSON dynamically
+    result = []
+    for row in rows:
+        row_dict = {}
+        for col, val in zip(columns, row):
+            row_dict[col] = val
+        result.append(row_dict)
 
     conn.close()
-    return jsonify(recipe_logs)
+    return jsonify(result)
 
 
 @app.route("/export_recipe_log", methods=["GET"])

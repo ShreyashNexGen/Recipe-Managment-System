@@ -125,6 +125,19 @@ breadcrumbs %}
     </nav>
   </div>
 </div>
+<!-- View Details Popup -->
+<div id="detailsModal" class="modal-overlay">
+  <div class="modal-content" id="modalContent">
+    <div class="modal-header">
+      <h3>Log Details</h3>
+      <button class="close-btn" onclick="closeDetails()">✕</button>
+    </div>
+
+    <div id="detailsBody" class="details-grid"></div>
+  </div>
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   let fullData = [];
@@ -168,10 +181,10 @@ function applyFilter() {
 
 
 
-  function renderPage(page) {
-    // 🔥 Restore filter inputs so they never reset visually
+function renderPage(page) {
     document.getElementById("startDate").value = filterStart;
     document.getElementById("endDate").value = filterEnd;
+
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     const visibleData = fullData.slice(start, end);
@@ -180,35 +193,45 @@ function applyFilter() {
     tableBody.innerHTML = "";
 
     visibleData.forEach((row) => {
-      let ngBadge = `<span class="status-badge neutral">N/A</span>`;
-      if (row.NgStatus) {
-        const status = row.NgStatus.toString().toLowerCase();
-        if (status.includes("ok")) ngBadge = `<span class="status-badge ok">OK</span>`;
-        else if (status.includes("ng")) ngBadge = `<span class="status-badge ng">NG</span>`;
-        else ngBadge = `<span class="status-badge neutral">${row.NgStatus}</span>`;
-      }
+        
+        let ngBadge = `<span class="status-badge neutral">N/A</span>`;
+        if (row.NgStatus) {
+            const status = row.NgStatus.toString().toLowerCase();
+            if (status.includes("ok")) ngBadge = `<span class="status-badge ok">OK</span>`;
+            else if (status.includes("ng")) ngBadge = `<span class="status-badge ng">NG</span>`;
+            else ngBadge = `<span class="status-badge neutral">${row.NgStatus}</span>`;
+        }
 
-      tableBody.innerHTML += `
-        <tr>
-          <td>${row.SerialNo}</td>
-          <td>${row.Recipe_Name}</td>
-          <td>${row.Timestamp}</td>
-          <td>${row.Article_No}</td>
-          <td>${row.RPM_Upper}, ${row.RPM_Lower}</td>
-          <td>${row.Pressure_Upper}, ${row.Pressure_Lower}</td>
-          <td>${row.AirFlow_Upper}, ${row.AirFlow_Lower}</td>
-          <td>${row.Pressure_Max}, ${row.Pressure_Min}</td>
-          <td>${row.Avg_Motor_RPM}</td>
-          <td>${row.Avg_Air_Flow}</td>
-          <td>${row.Avg_Pressure_Diff}</td>
-          <td>${row.User_Id}</td>
-          <td>${row.Test_Duration}</td>
-          <td>${ngBadge}</td>
-          <td><button class="print-btn" onclick="rePrint(${row.SerialNo})">Print Barcode</button></td>
-        </tr>
-      `;
+        tableBody.innerHTML += `
+            <tr>
+                <td>${row.SerialNo}</td>
+                <td>${row.Recipe_Name}</td>
+                <td>${row.Timestamp}</td>
+                <td>${row.Art_No}</td>
+
+                <td>${row.Upper_fan_Speed}, ${row.Lower_fan_Speed}</td>
+                <td>${row.Upper_Tolerance1}, ${row.Lower_Tolerance1}</td>
+
+                <td>${row.Airflow_upper_limit}, ${row.Airflow_lower_limit}</td>
+                <td>${row.Upper_Tolerance2}, ${row.Lower_Tolerance2}</td>
+
+                <td>${row.Average_motor_RPM}</td>
+                <td>${row.Avg_Air_Flow}</td>
+                <td>${row.Average_Pressure}</td>
+
+                <td>${row.user_Id || "Admin"}</td>
+                <td>${row.testing_duration}</td>
+
+                <td>${ngBadge}</td>
+
+                <td>
+                    <button class="view-btn" onclick='viewDetails(${JSON.stringify(row)})'>View</button>
+                    <button class="print-btn" onclick="rePrint(${row.SerialNo})">Print</button>
+                </td>
+            </tr>
+        `;
     });
-  }
+}
 
   function setupPagination() {
     const totalPages = Math.ceil(fullData.length / rowsPerPage);
@@ -383,7 +406,15 @@ function applyFilter() {
     cursor: pointer;
     border-radius: 5px;
   }
-
+ .view-btn {
+    background-color: rgb(118, 84, 240);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
   .print-btn:hover {
     background-color: darkorange;
   }
@@ -417,10 +448,114 @@ function applyFilter() {
   .status-badge.neutral {
     background-color: #6c757d; /* Gray */
   }
+  /* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Popup box */
+.modal-content {
+  background: white;
+  width: 85%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 10px;
+  padding: 15px;
+  position: relative;
+  animation: popupFade 0.2s ease-in-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 8px;
+}
+
+.close-btn {
+  background: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* 4 columns */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+}
+
+/* Each item */
+.detail-item {
+  background: #f7f7f7;
+  border-left: 3px solid #007bff;
+  padding: 6px;
+  border-radius: 5px;
+  font-size: 12px;  /* smaller */
+  line-height: 13px;
+}
+
+@keyframes popupFade {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+
 </style>
 <script>
 window.onload = () => {
     loadPermissions("production");
 };
+function viewDetails(row) {
+    const modal = document.getElementById("detailsModal");
+    const body = document.getElementById("detailsBody");
+
+    body.innerHTML = "";
+
+    let index = 1;
+    for (const [key, val] of Object.entries(row)) {
+        body.innerHTML += `
+            <div class="detail-item">
+                <strong>${index}. ${formatKey(key)}</strong>: ${val ?? ""}
+            </div>
+        `;
+        index++;
+    }
+
+    modal.style.display = "flex";
+}
+
+function formatKey(key) {
+    return key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// Close button
+function closeDetails() {
+  document.getElementById("detailsModal").style.display = "none";
+}
+
+// Close on clicking outside
+window.addEventListener("click", function(e) {
+    const modal = document.getElementById("detailsModal");
+    if (e.target === modal) {
+        modal.style.display = "none";
+    }
+});
+
+
 </script>
 {% endblock %}
