@@ -140,66 +140,68 @@ breadcrumbs %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  let fullData = [];
-  const rowsPerPage = 10;
-  let currentPage = 1;
-  let filterStart = "";
-  let filterEnd = "";
+let fullData = [];
+let rowsPerPage = 10;
+let currentPage = 1;
 
-  function fetchRecipeLog() {
-  console.log("🔎 Sending Filter →", {
-    startDate: filterStart,
-    endDate: filterEnd
-  });
+// Store filters globally so they don't reset
+let filterStart = "";
+let filterEnd = "";
 
-  const startDate = filterStart;
-  const endDate = filterEnd;
+// ----------------------------
+// LOAD DATA WITH FILTER
+// ----------------------------
+function fetchRecipeLog() {
 
-  fetch(`/api/recipe_log?start_date=${startDate}&end_date=${endDate}`)
-    .then(res => res.json())
-    .then(data => {
-      console.log("📥 Received Records:", data.length);
-      fullData = data;
-      currentPage = 1;
-      renderPage(currentPage);
-      setupPagination();
-    })
-    .catch(err => console.error("❌ Error fetching recipe log:", err));
+    console.log("Fetching logs with:", { filterStart, filterEnd });
+
+    fetch(`/api/recipe_log?start_date=${filterStart}&end_date=${filterEnd}`)
+        .then(res => res.json())
+        .then(data => {
+            fullData = data;
+            currentPage = 1;
+            renderPage(currentPage);
+            setupPagination();
+        })
+        .catch(err => console.error("Fetch error:", err));
 }
 
-
+// ----------------------------
+// APPLY FILTER
+// ----------------------------
 function applyFilter() {
-  filterStart = document.getElementById("startDate").value;
-  filterEnd = document.getElementById("endDate").value;
+    filterStart = document.getElementById("startDate").value;
+    filterEnd = document.getElementById("endDate").value;
 
-  console.log("🟦 APPLY FILTER CLICKED");
-  console.log("📝 New Filter Values:", { filterStart, filterEnd });
-
-  currentPage = 1;
-  fetchRecipeLog();
+    fetchRecipeLog();
 }
 
-
-
+// ----------------------------
+// RENDER TABLE
+// ----------------------------
 function renderPage(page) {
+
     document.getElementById("startDate").value = filterStart;
     document.getElementById("endDate").value = filterEnd;
 
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
-    const visibleData = fullData.slice(start, end);
 
+    const visibleData = fullData.slice(start, end);
     const tableBody = document.getElementById("recipe-log-table");
+
     tableBody.innerHTML = "";
 
-    visibleData.forEach((row) => {
-        
+    visibleData.forEach(row => {
+
         let ngBadge = `<span class="status-badge neutral">N/A</span>`;
         if (row.NgStatus) {
-            const status = row.NgStatus.toString().toLowerCase();
-            if (status.includes("ok")) ngBadge = `<span class="status-badge ok">OK</span>`;
-            else if (status.includes("ng")) ngBadge = `<span class="status-badge ng">NG</span>`;
-            else ngBadge = `<span class="status-badge neutral">${row.NgStatus}</span>`;
+            const s = row.NgStatus.toString().toLowerCase();
+            ngBadge = s.includes("ok") ? 
+                `<span class="status-badge ok">OK</span>` :
+                s.includes("ng") ?
+                `<span class="status-badge ng">NG</span>` :
+                `<span class="status-badge neutral">${row.NgStatus}</span>`;
         }
 
         tableBody.innerHTML += `
@@ -208,13 +210,12 @@ function renderPage(page) {
                 <td>${row.Recipe_Name}</td>
                 <td>${row.Timestamp}</td>
                 <td>${row.Art_No}</td>
-
+                
                 <td>${row.Upper_fan_Speed}, ${row.Lower_fan_Speed}</td>
                 <td>${row.Upper_Tolerance1}, ${row.Lower_Tolerance1}</td>
-
                 <td>${row.Airflow_upper_limit}, ${row.Airflow_lower_limit}</td>
                 <td>${row.Upper_Tolerance2}, ${row.Lower_Tolerance2}</td>
-
+                
                 <td>${row.Average_motor_RPM}</td>
                 <td>${row.Avg_Air_Flow}</td>
                 <td>${row.Average_Pressure}</td>
@@ -233,86 +234,98 @@ function renderPage(page) {
     });
 }
 
-  function setupPagination() {
+// ----------------------------
+// PAGINATION
+// ----------------------------
+function setupPagination() {
+
     const totalPages = Math.ceil(fullData.length / rowsPerPage);
     const pagination = document.getElementById("pagination");
     pagination.innerHTML = "";
 
-    const maxVisiblePages = 3;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = startPage + maxVisiblePages - 1;
+    const maxPages = 3;
+    let start = Math.max(1, currentPage - Math.floor(maxPages / 2));
+    let end = Math.min(start + maxPages - 1, totalPages);
 
-    if (endPage > totalPages) {
-      endPage = totalPages;
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
+    // previous
     pagination.innerHTML += `
-      <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
-        <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
-      </li>
-    `;
-
-    if (startPage > 1) {
-      pagination.innerHTML += `
-        <li class="page-item"><a class="page-link" href="#" onclick="changePage(1)">1</a></li>
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-      `;
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pagination.innerHTML += `
-        <li class="page-item ${i === currentPage ? "active" : ""}">
-          <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+        <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
         </li>
-      `;
-    }
-
-    if (endPage < totalPages) {
-      pagination.innerHTML += `
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        <li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a></li>
-      `;
-    }
-
-    pagination.innerHTML += `
-      <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
-        <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
-      </li>
     `;
-  }
 
-  function changePage(page) {
-    const totalPages = Math.ceil(fullData.length / rowsPerPage);
-    if (page < 1 || page > totalPages) return;
-    currentPage = page;
-    renderPage(currentPage);
-    setupPagination();
-  }
-
-  window.addEventListener("DOMContentLoaded", () => {
-    const endDateInput = document.getElementById("endDate");
-    const startDateInput = document.getElementById("startDate");
-
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-    today.setHours(23, 59, 0, 0);
-
-    function formatDateTimeLocal(dt) {
-      return dt.toISOString().slice(0, 16);
+    // pages
+    for (let i = start; i <= end; i++) {
+        pagination.innerHTML += `
+            <li class="page-item ${i === currentPage ? "active" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>`;
     }
 
-    startDateInput.value = formatDateTimeLocal(yesterday);
-    endDateInput.value = formatDateTimeLocal(today);
+    // next
+    pagination.innerHTML += `
+        <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
+        </li>`;
+}
 
-    filterStart = startDateInput.value;
-    filterEnd = endDateInput.value;
+function changePage(p) {
+    const totalPages = Math.ceil(fullData.length / rowsPerPage);
+    if (p < 1 || p > totalPages) return;
+    currentPage = p;
+    renderPage(p);
+    setupPagination();
+}
+
+// ----------------------------
+// REPRINT FIXED
+// ----------------------------
+function rePrint(serialNo) {
+
+    console.log("▶ Reprint triggered:", serialNo);
+
+    fetch(`/api/print_recipe/${serialNo}`, { method: "POST" })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) alert("Print initiated");
+            else alert("Failed to print");
+        })
+        .catch(err => console.error("Print error:", err));
+}
+
+// ----------------------------
+// EXPORT FILTERED DATA ONLY
+// ----------------------------
+function exportToExcel() {
+    let url = `/export_recipe_log?start_date=${encodeURIComponent(filterStart)}&end_date=${encodeURIComponent(filterEnd)}`;
+    window.location.href = url;
+}
+
+// ----------------------------
+// INITIAL LOAD
+// ----------------------------
+document.addEventListener("DOMContentLoaded", () => {
+
+    const startInput = document.getElementById("startDate");
+    const endInput = document.getElementById("endDate");
+
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    function fmt(d) {
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    startInput.value = fmt(yesterday);
+    endInput.value = fmt(now);
+
+    filterStart = startInput.value;
+    filterEnd = endInput.value;
 
     fetchRecipeLog();
-  });
+});
 </script>
+
 
 
 <!-- CSS -->

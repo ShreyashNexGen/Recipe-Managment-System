@@ -984,76 +984,78 @@ def export_recipe_log():
     conn = None
     try:
         conn = get_db_connection()
-        if not conn:
-            flash("Database connection failed", "danger")
-            return redirect(url_for("get_recipe_log"))
-
         cursor = conn.cursor()
 
-        # Get date filters
-        start_date = request.args.get("start_date")
-        end_date = request.args.get("end_date")
+        raw_start = request.args.get("start_date", "")
+        raw_end = request.args.get("end_date", "")
 
-        # Convert to datetime objects for SQL Server
-        if start_date:
-            try:
-                start_date = datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                start_date = None
-        if end_date:
-            try:
-                end_date = datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                end_date = None
+        # ---------------------------------------------------
+        # Parse frontend datetime-local (supports multiple formats)
+        # ---------------------------------------------------
+        def parse_dt(dt):
+            if not dt:
+                return None
 
-        # Build query
+            dt = dt.replace("T", " ")  # REQUIRED FIX
+
+            fmts = [
+                "%Y-%m-%d %H:%M",
+                "%Y-%m-%d %H:%M:%S"
+            ]
+
+            for fmt in fmts:
+                try:
+                    return datetime.strptime(dt, fmt)
+                except ValueError:
+                    continue
+
+            print("❌ Date parse failed:", dt)
+            return None
+
+        start_date = parse_dt(raw_start)
+        end_date = parse_dt(raw_end)
+
+        # ---------------------------------------------------
+        # Build filtered query
+        # ---------------------------------------------------
         query = "SELECT * FROM Recipe_Log WHERE 1=1"
         params = []
+
         if start_date:
             query += " AND Timestamp >= ?"
             params.append(start_date)
+
         if end_date:
             query += " AND Timestamp <= ?"
             params.append(end_date)
 
+        print("📌 SQL Query:", query)
+        print("📌 Params:", params)
+
         cursor.execute(query, params)
         rows = cursor.fetchall()
         columns = [col[0] for col in cursor.description] if cursor.description else []
-        conn.close()
 
-        # Excel workbook (horizontal layout)
+        # ---------------------------------------------------
+        # Create Excel
+        # ---------------------------------------------------
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Recipe Log"
 
-        def normalize(val):
-            return val if val not in ("", None) else None
+        ws.append(columns)
 
-        # Write header
-        if columns:
-            ws.append(columns)
-
-        # Write data rows
         for row in rows:
-            ws.append([normalize(val) for val in row])
+            ws.append([val if val not in ("", None) else None for val in row])
 
-        # Alignment: center horizontally and vertically
-        for row in ws.iter_rows():
-            for cell in row:
-                cell.alignment = Alignment(horizontal="center", vertical="center")
-
-        # Auto-fit columns
         for col in ws.columns:
-            max_len = max(
-                (len(str(cell.value)) for cell in col if cell.value), default=0
-            )
+            max_len = max((len(str(cell.value)) for cell in col if cell.value), default=2)
             ws.column_dimensions[col[0].column_letter].width = max_len + 2
 
-        # Save to BytesIO
         output = BytesIO()
         wb.save(output)
         output.seek(0)
- 
+
         return send_file(
             output,
             as_attachment=True,
@@ -1064,8 +1066,8 @@ def export_recipe_log():
     except Exception as e:
         if conn:
             conn.close()
-        flash(f"Error exporting Excel: {str(e)}", "danger")
-        return redirect(url_for("get_recipe_log"))
+        print("❌ Export error:", e)
+        return jsonify({"error": str(e)})
 
 
 # import datetime
