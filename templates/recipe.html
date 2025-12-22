@@ -105,7 +105,7 @@ block breadcrumbs %}
             name="recipe_id"
             id="recipe_id"
             value="{{ next_recipe_id }}"
-            readonly
+            
           />
 
           <label for="recipe_name">Recipe Name:</label>
@@ -3032,5 +3032,107 @@ window.onload = function() {
     loadPermissions("recipe");
 };
 </script>
+<script>
+const FIELD_LIMITS = {
+  Width: { min: 200, max: 600 },
+  Height: { min: 320, max: 600 },
+  Depth: { min: 80, max: 310 },
+  Art_Num: { min: 92110103, max: 92110103 },
+  Air_Flow_Set: { min: 500, max: 2000 },
+  Pressure_Drop_Setpoint: { min: 80, max: 320 },
+  Lower_Tolerance1: { min: 70, max: 300 },
+  Lower_Tolerance2: { min: 50, max: 250 },
+  Upper_Tolerance1: { min: 110, max: 330 },
+  Upper_Tolerance2: { min: 120, max: 370 }
+};
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  Object.entries(FIELD_LIMITS).forEach(([id, range]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+
+    input.addEventListener("blur", () => {
+      const value = Number(input.value);
+
+      if (isNaN(value) || value < range.min || value > range.max) {
+        input.value = "";
+        input.classList.add("invalid");
+      } else {
+        input.classList.remove("invalid");
+      }
+    });
+  });
+});
+</script>
+
+<style>
+input.invalid {
+  border: 2px solid #e53935 !important;
+  background-color: #f15169 !important;
+  color: #000 !important;
+}
+</style>
+<script>
+const STEP3_LIMITS = {
+  Pleat_Height: { min: 88, max: 300 },
+  Soft_Touch: { min: 0, max: 15 },
+  Feeder1_Media_Thickness: { min: 0, max: 5 },
+  Feeder1_Park_Position: { min: 20, max: 25 },
+  Foil1_Length: { min: 500, max: 600 },
+  Foil1_Length_Offset: { min: 0, max: 30 },
+  Foil1_Width: { min: 85, max: 300 },
+  Puller_Start_Position: { min: -155, max: -40 },
+  Autofeeding_Offset: { min: 200, max: 240 },
+  Filter_Box_Height: { min: 340, max: 595 },
+  Filter_Box_Length: { min: 500, max: 600 },
+  Pleat_Pitch: { min: 10, max: 25 },
+  Pleat_Counts: { min: 10, max: 50 },
+  Foil_Low_Diameter: { min: 150, max: 250 },
+  Feeding_Conveyor_Speed: { min: 20, max: 35 },
+  Pack_Transfer_Rev_Position: { min: 0, max: 50 },
+  Foil1_Tension_Set_Point: { min: 10, max: 50 },
+  Foil2_Tension_Set_Point: { min: 10, max: 50 },
+  Blade_Opening: { min: 5, max: 15 },
+  Press_Touch: { min: 0, max: 15 },
+  Feeder2_Media_Thickness: { min: 0, max: 5 },
+  Feeder2_Park_Position: { min: 20, max: 25 },
+  Foil2_Length: { min: 500, max: 600 },
+  Foil2_Length_Offset: { min: 0, max: 30 },
+  Foil2_Width: { min: 85, max: 300 },
+  Puller_End_Position: { min: 40, max: 155 },
+  Puller2_Feed_Correction: { min: 0, max: 15 },
+  Filter_Box_Width: { min: 100, max: 300 },
+  Sync_Table_Start_Position: { min: 0, max: 3 },
+  Batch_Count: { min: 0, max: 9999 },
+  Discharge_Conveyor_Speed: { min: 20, max: 40 },
+  Pack_Transfer_Park_Position: { min: 0, max: 108 },
+  Media_Tension_Set_Point: { min: 10, max: 60 }
+};
+</script>
+<script>
+function attachMinMaxValidation(rules) {
+  Object.entries(rules).forEach(([id, range]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+
+    input.addEventListener("blur", () => {
+      const value = Number(input.value);
+
+      if (isNaN(value) || value < range.min || value > range.max) {
+        input.value = "";
+        input.classList.add("invalid");
+      } else {
+        input.classList.remove("invalid");
+      }
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  attachMinMaxValidation(STEP3_LIMITS);
+});
+</script>
+
 
 {% endblock %}

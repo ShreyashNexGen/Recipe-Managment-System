@@ -59,12 +59,12 @@ CORS(app)  # Enable CORS for frontend communication
 # socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 # OPC UA connection options
 # Connection details
-# server = 'DESKTOP-9G39B01\WINCC'
-# database = 'A2Z_DB'
+server = 'DESKTOP-9G39B01\WINCC'
+database = 'A2Z_DB'
 CURRENT_USER = None
 
-server = "SHREYASHNEXGEN\WINCCFLEX2014"
-database = "Shreyash"
+# server = "SHREYASHNEXGEN\WINCCFLEX2014"
+# database = "Shreyash"
 conn = pyodbc.connect(
     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
     f"SERVER={server};"
@@ -433,12 +433,41 @@ def init_db():
                     number_of_batches_created INT NOT NULL
                 )
             """,
+            "Machine_Status_Log": """
+                CREATE TABLE Machine_Status_Log (
+                    id INT IDENTITY(1,1) PRIMARY KEY,
+                    timestamp DATETIME NOT NULL DEFAULT GETDATE(),
+                    running_flag BIT NOT NULL,
+                    idle_flag BIT NOT NULL,
+                    stopped_flag BIT NOT NULL,
+                    fault_flag BIT NOT NULL,
+                    plc_connected BIT NOT NULL,
+                    internet_connected BIT NOT NULL
+                )
+            """,
             "roles": """
                 CREATE TABLE roles (
                 role_id INT IDENTITY PRIMARY KEY,
                 role_name VARCHAR(100) NOT NULL
                 )
             """,
+            "Raw_Material_Usage": """
+            CREATE TABLE Raw_Material_Usage (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    timestamp DATETIME NOT NULL,
+    recipe_id INT,
+    recipe_name VARCHAR(200),
+    pos1_qty FLOAT DEFAULT 0,
+    pos2_qty FLOAT DEFAULT 0,
+    pos3_qty FLOAT DEFAULT 0,
+    pos4_qty FLOAT DEFAULT 0,
+    pos5_qty FLOAT DEFAULT 0,
+    pos6_qty FLOAT DEFAULT 0,
+    pos7_qty FLOAT DEFAULT 0,
+    pos8_qty FLOAT DEFAULT 0,
+    pos9_qty FLOAT DEFAULT 0
+);
+""",
             "user_permissions": """
                 CREATE TABLE user_permissions (
     id INT IDENTITY PRIMARY KEY,
@@ -519,78 +548,130 @@ def get_status():
     try:
         cursor = conn.cursor()
 
-        # Fetch PLC IP and Interval Time
+        # =============================
+        # 1. Fetch PLC IP + Interval Time
+        # =============================
         cursor.execute("SELECT plcIp, intervalTime FROM Plc_Table")
         plc_data = cursor.fetchone()
         plc_ip = plc_data[0] if plc_data else "Not Available"
         interval_time = plc_data[1] if plc_data else "Not Set"
 
-        # Fetch Tag Count
-        cursor.execute("SELECT COUNT(*) FROM Tag_Table")
-        tags_count = cursor.fetchone()[0]
+        # =============================
+        # 2. Total Filters Created
+        # =============================
+        cursor.execute("SELECT COUNT(*) FROM Recipe_Log")
+        total_filters = cursor.fetchone()[0]
 
-        # Fetch Log Count from BatchTracker
-        cursor.execute("SELECT number_of_batches_created FROM BatchTracker")
-        result = cursor.fetchone()
-        logs_count = result[0] if result else 0
+        # =============================
+        # 3. Filters Passed / Failed
+        # =============================
+        
+        cursor.execute("SELECT NgStatus FROM Recipe_Log")
+        rows = cursor.fetchall()
 
-        # Get Serial Key
-        serial_key = platform.node()  # Fetches the computer's hostname as serial key
+        passed = 0
+        failed = 0
 
-        # Update Serial Key in Plc_Table
-        cursor.execute(
-            "UPDATE Plc_Table SET serial_Key = ? WHERE plcId = 1", (serial_key,)
-        )
-        conn.commit()
-        cursor.execute(
-            """
-         SELECT recipe_name 
-        FROM recipe 
-         WHERE recipe_id = (
-        SELECT TOP 1 recipe_id 
-        FROM recipe 
-        ORDER BY recipe_id DESC
-        )
-        """
-        )
-        result = cursor.fetchone()
-        last_Recipe = result[0] if result else "N/A"
+        for row in rows:
+            status = str(row[0]).upper() if row[0] else ""
+            if "OK" in status:
+              passed += 1
+            elif "NG" in status:
+              failed += 1
 
-        conn.commit()
-        # Internet and PLC connection statuses
+        # =============================
+        # 4. Last Recipe (Skip NULL)
+        # =============================
+        cursor.execute("""
+            SELECT TOP 1 Recipe_Name
+FROM Recipe_Log
+WHERE NULLIF(LTRIM(RTRIM(Recipe_Name)), '') IS NOT NULL
+  AND UPPER(LTRIM(RTRIM(Recipe_Name))) NOT IN ('NA', 'N/A', 'NONE', '-')
+ORDER BY [Timestamp] DESC;
+        """)
+
+        last_recipe_row = cursor.fetchone()
+        last_recipe = last_recipe_row[0] if last_recipe_row else "N/A"
+
+        # =============================
+        # 5. Internet + PLC connection
+        # =============================
         internet_connected = check_internet_connection()
         plc_connected = check_plc_connection(plc_ip)
 
-        # Fetch Recipe Name from PLC
+        # =============================
+        # 6. Fetch Current Recipe from PLC
+        # =============================
         client = get_opcua_client()
         if client:
-            recipe_name_field_path = 'ns=3;s="dbRecipe1"."Recipe"."RecipeName"'  # Example path, adjust as per your actual path
             try:
-                recipe_name = client.get_node(recipe_name_field_path).get_value()
-            except Exception as e:
-                recipe_name = "Error Retrieving"
+                recipe_name = client.get_node('ns=3;s="dbRecipe1"."Recipe"."RecipeName"').get_value()
+            except:
+                recipe_name = "Error Reading"
             client.disconnect()
         else:
-            recipe_name = "Not Connected to OPC UA Server"
+            recipe_name = "PLC Offline"
 
-        # Return the statuses
-        return jsonify(
-            {
-                "Plc_IP": plc_ip,
-                "Internet_Connected": internet_connected,
-                "Plc_Connected": plc_connected,
-                "No_Of_Tags_Created": tags_count,
-                "No_Of_Logs_Created": logs_count,
-                "Interval_Time_Of_Log_Entry": interval_time,
-                "Serial_Key": serial_key,
-                "Recipe_Name": recipe_name,
-                "Last_Recipe": last_Recipe,
-            }
-        )
-    except pyodbc.Error as e:
-        return jsonify({"error": f"Database error: {str(e)}"})
+        # =============================
+        # 7. Machine Speed & Status from PLC
+        # =============================
+        client = get_opcua_client()
+        if client:
+            try:
+                speed_node = client.get_node('ns=3;s="HMI"."Machine_Speed_Set"') 
+                running_node = client.get_node('ns=3;s="HMI"."OEE_Running_State"')
+                idle_node    = client.get_node('ns=3;s="HMI"."OEE_Idle_State"')
+                stop_node    = client.get_node('ns=3;s="HMI"."OEE_Stopped_State"')
+                fault_node   = client.get_node('ns=3;s="HMI"."OEE_Faulted_State"')
+                speed = speed_node.get_value()
+                is_running = running_node.get_value()
+                is_idle    = idle_node.get_value()
+                is_stopped = stop_node.get_value()
+                is_faulted = fault_node.get_value()
+
+            # PRIORITY HANDLING
+                if is_faulted:
+                  machine_status = "FAULTY"
+                elif is_running:
+                  machine_status = "RUNNING"
+                elif is_idle:
+                  machine_status = "IDLE"
+                elif is_stopped:
+                  machine_status = "STOPPED"
+                else:
+                  machine_status = "UNKNOWN"
+
+            except Exception as e:
+                speed = "-"
+                machine_status = "Error"
+            finally:
+                client.disconnect()
+
+        
+        else:
+            speed = "-"
+            machine_status = "PLC Offline"
+
+        # =============================
+        # 8. Return JSON
+        # =============================
+        return jsonify({
+            "Plc_IP": plc_ip,
+            "Internet_Connected": internet_connected,
+            "Plc_Connected": plc_connected,
+            "Machine_Speed": speed,
+            "Machine_Status": machine_status,
+            "Total_Filters": total_filters,
+            "Filters_Passed": passed,
+            "Filters_Failed": failed,
+            "Interval_Time_Of_Log_Entry": interval_time,
+            "Recipe_Name": recipe_name,
+            "Last_Recipe": last_recipe
+        })
+
     except Exception as e:
         return jsonify({"error": str(e)})
+
     finally:
         cursor.close()
 
@@ -1289,7 +1370,36 @@ def update_batch_status():
                                     CURRENT_USER,
                                 ),
                             )
-
+                            pleat_height = recipe_full_data.Pleat_Height or 0
+                            pleat_counts = recipe_full_data.Pleat_Counts or 0
+                            usage_mm = (pleat_height * 2 * pleat_counts) / 1000
+                            pos_values = [
+                            recipe_full_data.Pos1,
+                            recipe_full_data.Pos2,
+                            recipe_full_data.Pos3,
+                            recipe_full_data.Pos4,
+                            recipe_full_data.Pos5,
+                            recipe_full_data.Pos6,
+                            recipe_full_data.Pos7,
+                            recipe_full_data.Pos8,
+                            recipe_full_data.Pos9,
+                            ]
+                            pos_qty = [usage_mm if v else 0 for v in pos_values]
+                            cursor.execute("""
+                                 INSERT INTO Raw_Material_Usage (
+                                      timestamp, recipe_id, recipe_name,
+                                      pos1_qty, pos2_qty, pos3_qty, pos4_qty, pos5_qty,
+                                      pos6_qty, pos7_qty, pos8_qty, pos9_qty
+                                          )
+                                   VALUES (GETDATE(), ?, ?, ?,?,?,?,?,?,?,?,?)
+                            """,
+                             (
+                               recipe_full_data.Recipe_ID,
+                               recipe_full_data.Recipe_Name,
+                               pos_qty[0], pos_qty[1], pos_qty[2],
+                              pos_qty[3], pos_qty[4], pos_qty[5],
+                              pos_qty[6], pos_qty[7], pos_qty[8]
+                              ))
                             conn.commit()
                             print("Going for print")
                             printdata(recipe_name, recipe_full_data.Art_No, serial_no)
@@ -1318,6 +1428,66 @@ def update_batch_status():
         client.disconnect()
         print("Disconnected from OPC UA Server")
  
+def parse_dt(val):
+    """Safely parse datetime-local formats coming from frontend."""
+    if not val:
+        return None
+
+    formats = [
+        "%Y-%m-%dT%H:%M",        # HTML datetime-local
+        "%Y-%m-%dT%H:%M:%S",     # with seconds
+        "%Y-%m-%d %H:%M:%S",     # SQL-style
+    ]
+
+    for fmt in formats:
+        try:
+            return datetime.strptime(val, fmt)
+        except:
+            pass
+
+    print("⚠️ Could not parse datetime:", val)
+    return None
+
+
+@app.route("/api/raw_material_usage", methods=["GET"])
+def get_usage():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    raw_start = request.args.get("start_date")
+    raw_end = request.args.get("end_date")
+
+    # Parse both dates
+    start_dt = parse_dt(raw_start)
+    end_dt = parse_dt(raw_end)
+
+    # Apply defaults if missing
+    if end_dt is None:
+        end_dt = datetime.now()
+
+    if start_dt is None:
+        start_dt = end_dt.replace(hour=0, minute=0, second=0)  # start of day
+
+    # Convert to SQL-friendly format
+    start_sql = start_dt.strftime("%Y-%m-%d %H:%M:%S")
+    end_sql = end_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        SELECT 
+            SUM(pos1_qty), SUM(pos2_qty), SUM(pos3_qty),
+            SUM(pos4_qty), SUM(pos5_qty), SUM(pos6_qty),
+            SUM(pos7_qty), SUM(pos8_qty), SUM(pos9_qty)
+        FROM Raw_Material_Usage
+        WHERE timestamp >= ? AND timestamp <= ?
+    """, (start_sql, end_sql))
+
+    sums = cursor.fetchone()
+    conn.close()
+
+    return jsonify({
+        "labels": [f"Decoiler {i+1}" for i in range(9)],
+        "values": [s or 0 for s in sums]
+    })
 
 # def update_batch_status():
 #     """Continuously reads OPC UA values and inserts data into recipe_log."""
@@ -4368,7 +4538,7 @@ def update_recipe():
         cursor.execute(
             """UPDATE Inspection_Settings 
                SET databaseAvailable=?, Width=?, Height=?, Depth=?, Art_No=?, Air_Flow_Set=?, Pressure_Drop_Setpoint=?, 
-                   Lower_Tolerance1=?, Lower_Tolerance2=?, Upper_Tolerance1=?, Upper_Tolerance2=?,Lower_Fan_Speed=?,Upper_Fan_Speed=? 
+                   Lower_Tolerance1=?, Lower_Tolerance2=?, Upper_Tolerance1=?, Upper_Tolerance2=? 
                WHERE Recipe_ID=?""",
             (
                 databaseAvailable,
@@ -6282,6 +6452,195 @@ def run_periodic_update3():
 
         time.sleep(sleep_time)  # Sleep for the specified interval
 
+@app.route("/api/dashboard_stats", methods=["GET"])
+def dashboard_stats():
+    start = request.args.get("start_date")
+    end   = request.args.get("end_date")
+
+    # Convert datetime-local → SQL datetime
+    def parse(dt):
+        try:
+            return datetime.strptime(dt.replace("T", " "), "%Y-%m-%d %H:%M")
+        except:
+            return None
+
+    start_dt = parse(start)
+    end_dt   = parse(end)
+
+    if not start_dt or not end_dt:
+        return jsonify({"error": "Invalid dates"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # =========================
+    # OEE & AVAILABILITY
+    # =========================
+    cursor.execute("""
+        SELECT 
+            SUM(CAST(running_flag AS INT)),
+            SUM(CAST(idle_flag AS INT)),
+            SUM(CAST(stopped_flag AS INT)),
+            SUM(CAST(fault_flag AS INT))
+        FROM Machine_Status_Log
+        WHERE timestamp >= ? AND timestamp <= ?
+    """, (start_dt, end_dt))
+
+    running, idle, stopped, fault = cursor.fetchone()
+
+    running = running or 0
+    idle    = idle or 0
+    stopped = stopped or 0
+    fault   = fault or 0
+
+    availability = {
+        "running": running,
+        "stopped": stopped
+    }
+
+    # =========================
+    # PLC CONNECTION CHART
+    # =========================
+    cursor.execute("""
+        SELECT 
+            SUM(CAST(plc_connected AS INT)),
+            COUNT(*) - SUM(CAST(plc_connected AS INT))
+        FROM Machine_Status_Log
+        WHERE timestamp >= ? AND timestamp <= ?
+    """, (start_dt, end_dt))
+
+    plc_connected, plc_disconnected = cursor.fetchone()
+
+    plc_connected     = plc_connected or 0
+    plc_disconnected  = plc_disconnected or 0
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+        "oee": {
+            "running": running,
+            "idle": idle,
+            "stopped": stopped,
+            "fault": fault
+        },
+        "availability": availability,
+        "plc": {
+            "connected": plc_connected,
+            "disconnected": plc_disconnected
+        }
+    })
+
+def log_machine_status(is_running, is_idle, is_stopped, is_faulted, plc_connected, internet_connected):
+    """
+    Inserts a single machine status snapshot into Machine_Status_Log table.
+
+    :param is_running: bool → True/False
+    :param is_idle: bool → True/False
+    :param is_stopped: bool → True/False
+    :param is_faulted: bool → True/False
+    :param plc_connected: bool → True/False
+    :param internet_connected: bool → True/False
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO Machine_Status_Log (
+                running_flag, idle_flag, stopped_flag, fault_flag,
+                plc_connected, internet_connected, timestamp
+            ) VALUES (?, ?, ?, ?, ?, ?, GETDATE())
+        """, (
+            1 if is_running else 0,
+            1 if is_idle else 0,
+            1 if is_stopped else 0,
+            1 if is_faulted else 0,
+            1 if plc_connected else 0,
+            1 if internet_connected else 0
+        ))
+
+        conn.commit()
+
+    except Exception as e:
+        print("❌ Error inserting machine status:", e)
+
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+def get_plc_ip():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT plcIp FROM Plc_Table")
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return row[0] if row else None
+
+def poll_machine_status():
+    """Polls PLC + internet + machine status every 1 minute and saves in DB."""
+
+    while True:
+        try:
+            plc_ip = get_plc_ip()
+
+            # Internet
+            internet_connected = check_internet_connection()
+
+            # PLC manually connected?
+            plc_connected = check_plc_connection(plc_ip)
+
+            # Default flags
+            is_running = 0
+            is_idle = 0
+            is_stopped = 0
+            is_faulted = 0
+
+            # Try OPC UA read
+            client = get_opcua_client()
+            if client:
+                try:
+                    running_state  = client.get_node('ns=3;s="HMI"."OEE_Running_State"').get_value()
+                    idle_state     = client.get_node('ns=3;s="HMI"."OEE_Idle_State"').get_value()
+                    stopped_state  = client.get_node('ns=3;s="HMI"."OEE_Stopped_State"').get_value()
+                    faulted_state  = client.get_node('ns=3;s="HMI"."OEE_Faulted_State"').get_value()
+
+                    is_running = 1 if running_state else 0
+                    is_idle    = 1 if idle_state else 0
+                    is_stopped = 1 if stopped_state else 0
+                    is_faulted = 1 if faulted_state else 0
+
+                except:
+                    pass
+                finally:
+                    client.disconnect()
+
+            # Insert into DB
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                INSERT INTO Machine_Status_Log (
+                    running_flag, idle_flag, stopped_flag, fault_flag,
+                    plc_connected, internet_connected
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (is_running, is_idle, is_stopped, is_faulted, 
+                  1 if plc_connected else 0, 
+                  1 if internet_connected else 0))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+        except Exception as e:
+            print("Polling Error:", e)
+
+        time.sleep(60)   # Poll every 60 sec
 
 if __name__ == "__main__":
     print("Starting Flask app...")
@@ -6293,6 +6652,7 @@ if __name__ == "__main__":
     thread = threading.Thread(target=update_batch_status, daemon=True).start()
     thread=threading.Thread(target=log_status, daemon=True).start()
     threading.Thread(target=log_barcode_data,daemon=True).start()
+    threading.Thread(target=poll_machine_status, daemon=True).start()
 
 
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=False, use_reloader=False)

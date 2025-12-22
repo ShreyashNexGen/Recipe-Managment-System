@@ -22,37 +22,31 @@
   <div class="status-fixed-row" id="status-draggable">
     <div class="status-card" id="plc-ip-card">
         <i class="fas fa-network-wired icon"></i>
-        <p class="label">PLC IP</p>
-        <p class="value" id="plc-ip">Loading...</p>
-        <p class="label">PLC Status</p>
-        <p class="value" id="plc-connected">Loading...</p>
-       
+        <p class="label">Machine Speed</p>
+        <p class="value" id="machine-speed">Loading...</p>
+        <p class="label">Machine Status</p>
+        <p class="value" id="machine-status">Loading...</p>
+
     </div>
     <div class="status-card" id="plc-connected-card">
         <i class="fas fa-server icon"></i>
-          <p class="label">Total Logs</p>
-        <p class="value" id="logs-count">Loading...</p>
-        <p class="label">Total Tags</p>
-        <p class="value" id="tags-count">Loading...</p>
+         <p class="label">Internet Status</p>
+        <p class="value" id="internet-connected">Loading...</p>
+          <p class="label">Total Filters</p>
+        <p class="value" id="filters-count">Loading...</p>
+        
     </div>
     <div class="status-card" id="logs-card">
         <i class="fas fa-database icon"></i>
-         <p class="label">Internet Status</p>
-        <p class="value" id="internet-connected">Loading...</p>
-        <p class="label">Interval Logging</p>
-        <p class="value" id="interval-time">Loading...</p>
+         <p class="label">Filters Passed</p>
+        <p class="value" id="filters-passed">Loading...</p>
+        <p class="label">Filters Failed</p>
+        <p class="value" id="filters-failed">Loading...</p>
     </div>
-    <div class="status-card" id="serial-key-card">
-        <i class="fas fa-key icon"></i>
-        <p class="label">Serial Key</p>
-        <p class="value" id="serial-key">Loading...</p>
-          <p class="label">Database Connected</p>
-        <p class="value" id="db_connected">Connected</p>
-       
-    </div>
+
     <div class="status-card" id="recipe-name-card">
         <i class="fas fa-cogs icon"></i>
-        <p class="label">Running Recipe</p>
+        <p class="label">Current Recipe</p>
         <p class="value" id="recipe-name">Loading...</p>
          <p class="label">Last Recipe</p>
         <p class="value" id="last_recipe">Loading...</p>
@@ -138,7 +132,19 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="chart-visualization">
-  <h2>Chart Visualization</h2>
+   <h2>Chart Visualization</h2>
+  <div class="chart-filter-box">
+    <label>Start:</label>
+    <input type="datetime-local" id="oee-start">
+
+    <label>End:</label>
+    <input type="datetime-local" id="oee-end">
+
+    <button onclick="loadDashboardCharts()">Apply</button>
+    <button onclick="togglePolling()">Auto Refresh</button>
+</div>
+
+ 
   <div class="chart-cards">
     <div class="chart-card">
       <h3>OEE</h3>
@@ -223,79 +229,41 @@
     });
   });
 </script>
-<script>
-  // OEE Chart
-  const oeeeCtx = document.getElementById('oeeChart').getContext('2d');
-  new Chart(oeeeCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Running', 'Stop', 'Faulty', 'Idle'],
-      datasets: [{
-        data: [40, 30, 20, 10],
-        backgroundColor: ['#4285F4', '#FBBC05', '#EA4335', '#999']
-      }]
-    }
-  });
 
-  // Machine Availability Chart
-  const aavailabilityCtx = document.getElementById('availabilityChart').getContext('2d');
-  new Chart(aavailabilityCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Running', 'Stopped'],
-      datasets: [{
-        data: [70, 30],
-        backgroundColor: ['#7E57C2', '#FF7043']
-      }]
-    }
-  });
+   
+<div class="dashboard-flex-wrap">
+  <div class="bar-graph-section">
 
-  // PLC Connection Chart
-  const plcCtx = document.getElementById('plcChart').getContext('2d');
-  new Chart(plcCtx, {
-    type: 'pie',
-    data: {
-      labels: ['Up', 'Down'],
-      datasets: [{
-        data: [60, 40],
-        backgroundColor: ['#00BFA5', '#EC407A']
-      }]
-    }
-  });
-</script>
-   
-  <div class="dashboard-flex-wrap">
-   
-    <!-- Right Section: Filter + Bar Chart -->
-    <div class="bar-graph-section">
-      <div class="bar-chart-container wide-bar-chart">
-      <!-- Filter above graph -->
-      <div class="filter-section graph-filter">
-        <h4 class="bar-chart-title">Raw Material Analysis</h4>
-        <div class="filter-form">
-          <div class="form-group">
-            <label for="start-date">Start Date</label>
-            <input type="datetime-local" id="start-date" name="start-date">
-          </div>
-          <div class="form-group">
-            <label for="end-date">End Date</label>
-            <input type="datetime-local" id="end-date" name="end-date">
-          </div>
-          <div class="form-group button-group">
-            <button>Apply Filter</button>
-          </div>
+    <!-- Filter Section -->
+    <div class="filter-section graph-filter">
+      <h4 class="bar-chart-title">Raw Material Analysis</h4>
+
+      <div class="filter-form">
+        <div class="form-group">
+          <label for="start-date">Start Date</label>
+          <input type="datetime-local" id="start-date" />
+        </div>
+
+        <div class="form-group">
+          <label for="end-date">End Date</label>
+          <input type="datetime-local" id="end-date" />
+        </div>
+
+        <div class="form-group button-group">
+          <button id="applyFilterBtn" onclick="applyDateFilter()">Apply</button>
         </div>
       </div>
-  
-      <!-- Bar Graph Below Filter -->
-      <div class="bar-chart-container wide-bar-chart">
-        <div class="bar-chart-box">
-          <canvas id="rawMaterialBarChart"></canvas>
-        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="bar-chart-container wide-bar-chart">
+      <div class="bar-chart-box">
+        <canvas id="rawMaterialBarChart"></canvas>
       </div>
     </div>
   </div>
 </div>
+
 <style>
   .dashboard-flex-wrap {
     display: flex;
@@ -568,216 +536,38 @@ padding: 20px;
 
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const oeeCtx = document.getElementById('oeeChart').getContext('2d');
-    let oeeChart = new Chart(oeeCtx, {
-      type: 'pie',
-      data: {
-        labels: ['Running', 'Stop', 'Faulty', 'Ideal'],
-        datasets: [{
-          data: [40, 20, 25, 15],
-          backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
-        }]
-      }
-    });
-  
-    const availabilityCtx = document.getElementById('availabilityChart').getContext('2d');
-    let availabilityChart = new Chart(availabilityCtx, {
-      type: 'pie',
-      data: {
-        labels: ['Running', 'Stopped'],
-        datasets: [{
-          data: [70, 30],
-          backgroundColor: ['#28a745', '#dc3545']
-        }]
-      }
-    });
-  
-    function resetOEE() {
-      oeeChart.data.datasets[0].data = [0, 0, 0, 0];
-      oeeChart.update();
-    }
-  
-    function resetAvailability() {
-      availabilityChart.data.datasets[0].data = [0, 0];
-      availabilityChart.update();
-    }
-    function applyDateFilter() {
-        const start = document.getElementById('start-date').value;
-        const end = document.getElementById('end-date').value;
-        console.log("Filtering from", start, "to", end);
-        // You can trigger chart update logic here
-      }
-      const ctx = document.getElementById('rawMaterialBarChart').getContext('2d');
-    const rawMaterialBarChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Decoiler 1', 'Decoiler 2', 'Decoiler 3', 'Decoiler 4', 'Decoiler 5', 'Decoiler 6', 'Decoiler 7', 'Decoiler 8', 'Decoiler 9'],
-        datasets: [{
-          label: 'Quantity Used (kg)',
-          data: [120, 90, 150, 80, 200, 70, 60, 70, 110],
-          backgroundColor: [
-            '#0077b6',
-            '#00b4d8',
-            '#48cae4',
-            '#90e0ef',
-            '#0077b6',
-            '#00b4d8',
-            '#48cae4',
-            '#90e0ef',
-            '#0077b6'
-          ],
-          borderRadius: 6,
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-            labels: {
-              color: '#023e8a',
-              font: {
-                size: 14
-              }
-            }
-          },
-          tooltip: {
-            backgroundColor: '#caf0f8',
-            titleColor: '#03045e',
-            bodyColor: '#023e8a',
-            borderColor: '#0077b6',
-            borderWidth: 1
-          }
-        },
-        scales: {
-          x: {
-            ticks: {
-              color: '#023e8a',
-              font: {
-                size: 13
-              }
-            }
-          },
-          y: {
-            beginAtZero: true,
-            ticks: {
-              color: '#023e8a',
-              font: {
-                size: 13
-              }
-            }
-          }
-        }
-      }
-    });
-  </script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    document.getElementById('update-interval-btn').addEventListener('click', () => {
-    const intervalTime = document.getElementById('interval-time1').value;
-    console.log(intervalTime);
-    if (!intervalTime || intervalTime <= 0) {
-        alert('Please enter a valid interval time.');
-        return;
-    }
+    
 
-    // Send updated intervalTime to the backend
-    fetch('/api/update_interval_time', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ intervalTime: parseInt(intervalTime) })
-    })
+function fetchSystemStatus() {
+    fetch('/status')
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                alert('Interval time updated successfully!');
-                // Optionally, reload the page or refresh the dashboard to reflect changes
-            } else {
-                alert(`Error: ${data.error}`);
-            }
+
+            document.getElementById("machine-speed").innerText = data.Machine_Speed;
+            document.getElementById("machine-status").innerText = data.Machine_Status;
+
+            document.getElementById("internet-connected").innerText = data.Internet_Connected;
+            document.getElementById("filters-count").innerText = data.Total_Filters;
+
+            document.getElementById("filters-passed").innerText = data.Filters_Passed;
+            document.getElementById("filters-failed").innerText = data.Filters_Failed;
+
+            document.getElementById("recipe-name").innerText = data.Recipe_Name;
+            document.getElementById("last_recipe").innerText = data.Last_Recipe;
         })
-        .catch(error => console.error('Error updating interval time:', error));
-});
-        // Fetch and display system statuses
-    function fetchSystemStatus() {
-        fetch('/status') // Update with your actual Flask endpoint
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('plc-ip').innerText = data.Plc_IP;
-                document.getElementById('internet-connected').innerText = data.Internet_Connected;
-                document.getElementById('plc-connected').innerText = data.Plc_Connected;
-                document.getElementById('tags-count').innerText = data.No_Of_Tags_Created;
-                document.getElementById('logs-count').innerText = data.No_Of_Logs_Created;
-                document.getElementById('interval-time').innerText = data.Interval_Time_Of_Log_Entry;
-                document.getElementById('serial-key').innerText = data.Serial_Key;
-                document.getElementById('recipe-name').innerText = data.Recipe_Name;
-                document.getElementById('last_recipe').innerText = data.Last_Recipe;
-
-            })
-            .catch(error => console.error('Error fetching system status:', error));
-    }
-
-    let pieChartInstance; // Global variable to store the chart instance
-
-    setInterval(fetchSystemStatus, 2000); // Refresh every 5 seconds
-    let internetChart = null;
-    let plcChart = null;
-
-      function fetchStatusSummary1() {
-         fetch('/status1')
-        .then(response => response.json())
-        .then(data => {
-            // Destroy existing Internet Chart
-            if (internetChart) {
-                internetChart.destroy();
-            }
-
-            // Internet Pie Chart
-            const internetData = {
-                labels: ['Uptime', 'Downtime'],
-                datasets: [{
-                    data: [data.internet.uptime, data.internet.downtime],
-                    backgroundColor: ['#36A2EB', '#FF6384'],
-                }]
-            };
-            internetChart = new Chart(
-                document.getElementById('internetChart'),
-                { type: 'pie', data: internetData }
-            );
-
-            // Destroy existing PLC Chart
-            if (plcChart) {
-                plcChart.destroy();
-            }
-
-            // PLC Pie Chart
-            const plcData = {
-                labels: ['Connected', 'Disconnected'],
-                datasets: [{
-                    data: [data.plc.connected, data.plc.disconnected],
-                    backgroundColor: ['#4BC0C0', '#FF9F40'],
-                }]
-            };
-            plcChart = new Chart(
-                document.getElementById('plcChart'),
-                { type: 'pie', data: plcData }
-            );
-        })
-        .catch(error => console.error('Error fetching status summary:', error));
+        .catch(error => console.error("Status error:", error));
 }
+    setInterval(fetchSystemStatus, 2000);
+fetchSystemStatus();
 
-
-fetchStatusSummary1();
-setInterval(fetchStatusSummary1, 60000);
 
 </script>
+
 <script>
   window.onload = fetchSystemStatus;
 </script>
@@ -946,4 +736,268 @@ window.onload = () => {
     loadPermissions("dashboard");
 };
 </script>
+<script>
+let rawChart = null;
+
+// Default date filter: yesterday → today
+window.addEventListener("DOMContentLoaded", () => {
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - 1);
+
+    document.getElementById("start-date").value = formatLocal(start);
+    document.getElementById("end-date").value = formatLocal(end);
+
+    applyDateFilter(); // Load initial chart
+});
+
+// Format datetime-local in IST (add 5:30)
+function formatLocal(d) {
+    // Add 5 hours 30 minutes (IST offset)
+    d = new Date(d.getTime());
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// Handle Filter Apply
+function applyDateFilter() {
+    const start = document.getElementById("start-date").value;
+    const end = document.getElementById("end-date").value;
+
+    if (!start || !end) {
+        alert("Select both start and end date");
+        return;
+    }
+
+    fetch(`/api/raw_material_usage?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}`)
+        .then(res => res.json())
+        .then(data => updateRawMaterialChart(data))
+        .catch(err => console.error("Error loading chart:", err));
+}
+
+// Render / Update Chart
+function updateRawMaterialChart(data) {
+    const ctx = document.getElementById("rawMaterialBarChart").getContext("2d");
+
+    const labels = data.labels;
+    const values = data.values;
+
+    if (rawChart !== null) {
+        rawChart.destroy();
+    }
+
+    rawChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Consumption (meters)",
+                data: values,
+                backgroundColor: [
+                    "#0077b6", "#00b4d8", "#48cae4", "#90e0ef",
+                    "#0077b6", "#00b4d8", "#48cae4", "#90e0ef", "#0077b6"
+                ],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: "Quantity (meters)" }
+                }
+            }
+        }
+    });
+}
+</script>
+
+<script>
+/* ----------------------------------------------------------
+    CONFIG
+---------------------------------------------------------- */
+let oeeChart = null;
+let availabilityChart = null;
+let plcChart = null;
+
+/* ----------------------------------------------------------
+    FORMAT DATE TO IST (UTC + 5:30)
+---------------------------------------------------------- */
+function toISTLocal(dt) {
+    let ist = new Date(dt.getTime() + (5.5 * 60 * 60 * 1000));
+    return ist.toISOString().slice(0, 16); // yyyy-mm-ddThh:mm
+}
+
+/* ----------------------------------------------------------
+    SET DEFAULT FILTER (Yesterday → Today)
+---------------------------------------------------------- */
+window.addEventListener("DOMContentLoaded", () => {
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - 1);
+
+    document.getElementById("oee-start").value = toISTLocal(start);
+    document.getElementById("oee-end").value = toISTLocal(end);
+
+    loadDashboardCharts();
+});
+
+/* ----------------------------------------------------------
+    MAIN CONTROLLER
+---------------------------------------------------------- */
+function loadDashboardCharts() {
+    const start = document.getElementById("oee-start").value;
+    const end = document.getElementById("oee-end").value;
+
+    if (!start || !end) {
+        alert("Please select start and end date.");
+        return;
+    }
+
+    fetch(`/api/dashboard_stats?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}`)
+        .then(res => res.json())
+        .then(data => {
+            updateOEEChart(data);
+            updateAvailabilityChart(data);
+            updatePLCChart(data);
+        })
+        .catch(err => console.error("Dashboard fetch error:", err));
+}
+
+/* ----------------------------------------------------------
+    UPDATE OEE PIE CHART
+---------------------------------------------------------- */
+function updateOEEChart(data) {
+    const ctx = document.getElementById("oeeChart").getContext("2d");
+
+    if (oeeChart) oeeChart.destroy();
+
+    oeeChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: ["Running", "Stopped", "Idle", "Faulty"],
+            datasets: [{
+                data: [
+                    data.oee.running,
+                    data.oee.stopped,
+                    data.oee.idle,
+                    data.oee.fault
+                ],
+                backgroundColor: ["#28a745", "#dc3545", "#6c757d", "#ffc107"]
+            }]
+        }
+    });
+}
+
+/* ----------------------------------------------------------
+    UPDATE AVAILABILITY CHART (Running vs Stopped)
+---------------------------------------------------------- */
+function updateAvailabilityChart(data) {
+    const ctx = document.getElementById("availabilityChart").getContext("2d");
+
+    if (availabilityChart) availabilityChart.destroy();
+
+    availabilityChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: ["Running", "Stopped"],
+            datasets: [{
+                data: [
+                    data.availability.running,
+                    data.availability.stopped
+                ],
+                backgroundColor: ["#28a745", "#dc3545"]
+            }]
+        }
+    });
+}
+
+/* ----------------------------------------------------------
+    UPDATE PLC CONNECTION CHART
+---------------------------------------------------------- */
+function updatePLCChart(data) {
+    const ctx = document.getElementById("plcChart").getContext("2d");
+
+    if (plcChart) plcChart.destroy();
+
+    plcChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: ["Connected", "Disconnected"],
+            datasets: [{
+                data: [
+                    data.plc.connected,
+                    data.plc.disconnected
+                ],
+                backgroundColor: ["#0077b6", "#dc3545"]
+            }]
+        }
+    });
+}
+
+/* ----------------------------------------------------------
+    OPTIONAL: AUTO POLLING EVERY 60 SECONDS
+---------------------------------------------------------- */
+let pollingEnabled = false;
+let poller = null;
+
+function togglePolling() {
+    pollingEnabled = !pollingEnabled;
+
+    if (pollingEnabled) {
+        poller = setInterval(loadDashboardCharts, 60000);
+        alert("Auto refresh enabled (every 60 sec)");
+    } else {
+        clearInterval(poller);
+        alert("Auto refresh disabled");
+    }
+}
+</script>
+<style>
+.chart-filter-box {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width:850px;          /* makes it less wide */
+  margin: 0 auto 20px auto;  /* centers it */
+  padding: 12px 12px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  font-size: 0.92rem;
+}
+
+.chart-filter-box label { 
+  margin-right: 6px; 
+  font-weight: 500; 
+}
+
+.chart-filter-box input[type="datetime-local"] {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.chart-filter-box button {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chart-filter-box button:first-of-type { background: #3498db; color: #fff; }
+.chart-filter-box button:last-of-type  { background: #2ecc71; color: #fff; }
+</style>
 {% endblock %}

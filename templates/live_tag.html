@@ -86,7 +86,7 @@
         }
     }
     function fetchLiveData() {
-    fetch('http://localhost:5000/getLiveValues')
+    fetch('/getLiveValues')
         .then(response => response.json())
         .then(data => {
             console.log("Live Data API Response:", data); // Debugging log
@@ -124,7 +124,7 @@
 }
 
 function fetchLivePLCData() {
-    fetch('http://localhost:5000/readValues')
+    fetch('/readValues')
         .then(response => response.json())
         .then(data => {
             console.log("Live PLC Data API Response:", data); // Debugging log
