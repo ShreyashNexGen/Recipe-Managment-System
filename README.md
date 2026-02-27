@@ -48,3 +48,6 @@ If this fails, Please Check:
 ✔ SQL service running
 ✔ Correct instance name
 ✔ Database name exactly A2Z_DB
+
+
+Command to create exe file - python -m PyInstaller --onefile --icon=static/N-LOG.ico --add-data "templates;templates" --add-data "static;static" --name flask_app final.py
